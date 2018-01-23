@@ -18,10 +18,11 @@ int main( int argc, char** argv) {
    socklen_t clilen;
    char buffer[buff_size];
    struct sockaddr_in serv_addr, cli_addr;
-   int  n; // number of characters read from fread exclude \0
-   n=0; // just to shut up the complaning
+   int  n=0; // number of characters read from fread exclude \0
+   //n=0; // just to shut up the complaning
    int buff_to_send=0;//size of buffer to send, sum of all n's
    FILE* file = NULL;
+   char error[] = "command not found";
    
 
    if (argc < 2) {
@@ -101,8 +102,7 @@ while(x == 0){
          pclose(file);
          /* Write a response to the client, need to check for oversized file*/
          if(buff_to_send < 1){
-            perror("ERROR on zero buffer size");
-            char error[] = "error";
+            //perror("ERROR on zero buffer size");
             n = write(clisockfd,error,sizeof(error));
          }
          else{
