@@ -68,8 +68,8 @@ while(1){
       perror("ERROR on accept");
       exit(EXIT_FAILURE);
    }
-   bzero(buffer,buff_size);
    while(strcmp(buffer,"exit") != 0){
+      bzero(buffer,buff_size);
       char c = 'a';
       int count = 0; // buffer read
       while(c != '\0'){ // read everything
@@ -81,26 +81,41 @@ while(1){
          }
          c = buffer[count]; // to see if \0 has been read
       }//end
-      write(STDOUT_FILENO,buffer,count);
-   //printf("Here is the command: %s\n",buffer);
-/*
-   char * str = NULL;
-   struct stat s;
-   off_t buff_size_byte; // file size in bytes for the file descriptor
+      write(STDOUT_FILENO,buffer,count); //printf("Here is the command: %s\n",buffer);
+      FILE* file = popen(buffer,"r");
 
-   if(fstat(fd,&s) != -1){ // get files status
-      buff_size_byte = s.st_size; // size of file
-      str = malloc(sizeof(char)*buff_size_byte);  // allocate string of size file
-   }
-   if(read(fd,str,s.st_size) < 0){ // 0 means the there is no more to read, -1 means an error has occured
-      perror("read\n");
-      exit(EXIT_FAILURE);
-   }   
-*/
+      while(fread(buffer,1,buff_size,file)>0){
+
+      }
+      printf("%s\n",buffer);
+      pclose(file);
+   // check for \n and replace it with >
+   // if(strcmp(&buffer[count-1],"\n") == 0){
+   //    buffer[count-1] = '\0';
+   //    printf("here\n");
+   // }
+   // char redirect[] = " > temp";
+   // char concat[sizeof(redirect)+count];
+   // strcpy(concat,buffer);
+   // strcat(concat,redirect);
+   // system(concat);
+   // int fd = open("temp",O_RDONLY);
+   // char * str = NULL;
+   // struct stat s;
+   // off_t buff_size_byte; // file size in bytes for the file descriptor
+
+   // if(fstat(fd,&s) != -1){ // get files status
+   //    buff_size_byte = s.st_size; // size of file
+   //    str = malloc(sizeof(char)*buff_size_byte);  // allocate string of size file
+   // }
+   // if(read(fd,str,s.st_size) < 0){ // 0 means the there is no more to read, -1 means an error has occured
+   //    perror("read\n");
+   //    exit(EXIT_FAILURE);
+   // }   
+
    /* Write a response to the client, need to check for oversized file*/
-  char str[] = "I got your shit\n";
-   n = write(clisockfd,str,sizeof(str));
-  // free(str);
+   n = write(clisockfd,buffer,buff_size);
+   //free(str);
    if (n < 0) {
       perror("ERROR writing to socket");
       exit(EXIT_FAILURE);
