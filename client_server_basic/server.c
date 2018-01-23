@@ -22,7 +22,8 @@ int main( int argc, char** argv) {
    //n=0; // just to shut up the complaning
    int buff_to_send=0;//size of buffer to send, sum of all n's
    FILE* file = NULL;
-   char error[] = "command not found";
+   char error[] = "command not found\n";
+   int e_size = sizeof(error);
    
 
    if (argc < 2) {
@@ -102,8 +103,8 @@ while(x == 0){
          pclose(file);
          /* Write a response to the client, need to check for oversized file*/
          if(buff_to_send < 1){
-            //perror("ERROR on zero buffer size");
-            n = write(clisockfd,error,sizeof(error));
+            perror("ERROR on zero buffer size");
+            n = write(clisockfd,error,e_size);
          }
          else{
             n = write(clisockfd,buffer,buff_to_send);
