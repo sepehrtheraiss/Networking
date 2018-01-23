@@ -71,7 +71,7 @@ while(x == 0){
       perror("ERROR on accept");
       exit(EXIT_FAILURE);
    }
-   while(strcmp(buffer,"exit") != 0){
+   while(strcmp(buffer,"exit\n") != 0){
       bzero(buffer,buff_size);
       char c = 'a';
       int count = 0; // buffer read
@@ -84,34 +84,36 @@ while(x == 0){
          }
          c = buffer[count]; // to see if \0 has been read
       }//end
-      write(STDOUT_FILENO,buffer,count); //printf("Here is the command: %s\n",buffer);
+      write(STDOUT_FILENO,buffer,count); // outputs the received command
 
-
-      buff_to_send = 0;
-      n = 1;
-      file = popen(buffer,"r");
-      while(n > 0){
-         n = fread(buffer,1,buff_size,file);
-         if(n > 0){
-            // need to allocate more size for the buffer
+      if(strcmp(buffer,"exit\n") != 0){
+         buff_to_send = 0;
+         n = 1;
+         file = popen(buffer,"r");
+         while(n > 0){
+            n = fread(buffer,1,buff_size,file);
+            if(n > 0){
+               // need to allocate more size for the buffer
+            }
+            buff_to_send += n;
          }
-         buff_to_send += n;
-      }
-      // printf("%s\n",buffer);
-      pclose(file);
-      /* Write a response to the client, need to check for oversized file*/
-      if(buff_to_send < 1){
-         perror("ERROR on zero buffer size");
-         char error[] = "error";
-         n = write(clisockfd,error,sizeof(error));
-      }
-      else{
-         n = write(clisockfd,buffer,buff_to_send);
-      }
-      if (n < 0) {
-         perror("ERROR writing to socket");
-         exit(EXIT_FAILURE);
-      }
+         // printf("%s\n",buffer);
+         pclose(file);
+         /* Write a response to the client, need to check for oversized file*/
+         if(buff_to_send < 1){
+            perror("ERROR on zero buffer size");
+            char error[] = "error";
+            n = write(clisockfd,error,sizeof(error));
+         }
+         else{
+            n = write(clisockfd,buffer,buff_to_send);
+         }
+         if (n < 0) {
+            perror("ERROR writing to socket");
+            exit(EXIT_FAILURE);
+         }
+      } // end exit check if
+  
 
  }// end inner server while loop, waiting for exit command
    if(close(clisockfd) != 0){
