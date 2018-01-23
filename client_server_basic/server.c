@@ -18,7 +18,10 @@ int main( int argc, char** argv) {
    socklen_t clilen;
    char buffer[buff_size];
    struct sockaddr_in serv_addr, cli_addr;
-   int  n;
+   int  n; // number of characters read from fread exclude \0
+   n=0; // just to shut up the complaning
+   int buff_to_send=0;//size of buffer to send, sum of all n's
+   FILE* file = NULL;
    
 
    if (argc < 2) {
@@ -58,8 +61,8 @@ int main( int argc, char** argv) {
    
    listen(sockfd,5);
    clilen = sizeof(cli_addr);
-   
-while(1){
+const int x =0;
+while(x == 0){
    /* Accept actual connection from the client */
    clisockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
   // printf("my newsocket file descriptor %i and orign socket is:%i\n",newsockfd,sockfd);
@@ -82,44 +85,34 @@ while(1){
          c = buffer[count]; // to see if \0 has been read
       }//end
       write(STDOUT_FILENO,buffer,count); //printf("Here is the command: %s\n",buffer);
-      FILE* file = popen(buffer,"r");
 
-      while(fread(buffer,1,buff_size,file)>0){
 
+      buff_to_send = 0;
+      n = 1;
+      file = popen(buffer,"r");
+      while(n > 0){
+         n = fread(buffer,1,buff_size,file);
+         if(n > 0){
+            // need to allocate more size for the buffer
+         }
+         buff_to_send += n;
       }
-      printf("%s\n",buffer);
+      // printf("%s\n",buffer);
       pclose(file);
-   // check for \n and replace it with >
-   // if(strcmp(&buffer[count-1],"\n") == 0){
-   //    buffer[count-1] = '\0';
-   //    printf("here\n");
-   // }
-   // char redirect[] = " > temp";
-   // char concat[sizeof(redirect)+count];
-   // strcpy(concat,buffer);
-   // strcat(concat,redirect);
-   // system(concat);
-   // int fd = open("temp",O_RDONLY);
-   // char * str = NULL;
-   // struct stat s;
-   // off_t buff_size_byte; // file size in bytes for the file descriptor
+      /* Write a response to the client, need to check for oversized file*/
+      if(buff_to_send < 1){
+         perror("ERROR on zero buffer size");
+         char error[] = "error";
+         n = write(clisockfd,error,sizeof(error));
+      }
+      else{
+         n = write(clisockfd,buffer,buff_to_send);
+      }
+      if (n < 0) {
+         perror("ERROR writing to socket");
+         exit(EXIT_FAILURE);
+      }
 
-   // if(fstat(fd,&s) != -1){ // get files status
-   //    buff_size_byte = s.st_size; // size of file
-   //    str = malloc(sizeof(char)*buff_size_byte);  // allocate string of size file
-   // }
-   // if(read(fd,str,s.st_size) < 0){ // 0 means the there is no more to read, -1 means an error has occured
-   //    perror("read\n");
-   //    exit(EXIT_FAILURE);
-   // }   
-
-   /* Write a response to the client, need to check for oversized file*/
-   n = write(clisockfd,buffer,buff_size);
-   //free(str);
-   if (n < 0) {
-      perror("ERROR writing to socket");
-      exit(EXIT_FAILURE);
-   }
  }// end inner server while loop, waiting for exit command
    if(close(clisockfd) != 0){
       perror("ERROR close clisockfd");

@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
 
     int flag = 1;
    while(flag != 0){ // while user hasnt typed exit 
-	bzero(buffer,buff_size);
+	  bzero(buffer,buff_size);
       //printf("Enter command: ");
       char msg[] = "Client$ ";
       n = write(STDOUT_FILENO,msg,sizeof(msg)); 
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
             exit(EXIT_FAILURE);
          }
          c = buffer[count]; // to see if \0 has been read
-	}// end
+	  }// end while loop
       printf("%s",buffer);
    }//while
    if(close(sockfd) != 0){
