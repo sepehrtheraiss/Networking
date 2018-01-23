@@ -50,11 +50,7 @@ int main(int argc, char** argv) {
 
     int flag = 1;
    while(flag != 0){ // while user hasnt typed exit 
-
-   // init buffer to $'s
-   for(int i =0;i<buff_size;i++){
-      buffer[i] = '$';
-   }
+	bzero(buffer,buff_size);
       //printf("Enter command: ");
       char msg[] = "Client$ ";
       n = write(STDOUT_FILENO,msg,sizeof(msg)); 
@@ -62,7 +58,7 @@ int main(int argc, char** argv) {
     //  fgets(buffer,buff_size,stdin);
       n = read(STDIN_FILENO,buffer,buff_size); // returns counted characters, exclude \0
       //printf("%i %s\n",n,buffer);
-      if(n > buff_size){
+      if(n >= buff_size){
          perror("what are you typing bro!");
          exit(EXIT_FAILURE);
       }
@@ -70,7 +66,7 @@ int main(int argc, char** argv) {
          flag = 0;
       }
       // should be already appenped, but just in case
-      buffer[n] = '$'; // assuming user is not going to type a command longer than 2MB, append \0 after \n
+      buffer[n] = '\0'; // assuming user is not going to type a command longer than 2MB, append \0 after \n
       // Send command to the server
       n = write(sockfd, buffer, n+1);
       // n not -1
@@ -78,16 +74,11 @@ int main(int argc, char** argv) {
          perror("ERROR writing to socket");
          exit(EXIT_FAILURE);
       }
-      
-      // Now read server response
-         // init buffer to $'s
-      for(int i =0;i<buff_size;i++){
-         buffer[i] = '$';
-      }
-
+    // servers response
+      bzero(buffer,buff_size);
       char c = 'a';
       int count = 0; // buffer read
-      while(c != '\0'){ // read everything
+      while(c != '\0' && flag != 0){ // read everything, dont need to wait for reading
          // need to check for timeout
          count = read(sockfd,buffer,buff_size); // returns num of chars read up to \n, but \0 is still inserted into the buffer
          if(count < 0){
@@ -95,8 +86,7 @@ int main(int argc, char** argv) {
             exit(EXIT_FAILURE);
          }
          c = buffer[count]; // to see if \0 has been read
-      }//end read checking
-
+	}// end
       printf("%s",buffer);
    }//while
    if(close(sockfd) != 0){

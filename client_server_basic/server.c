@@ -68,15 +68,11 @@ while(1){
       perror("ERROR on accept");
       exit(EXIT_FAILURE);
    }
-
+   bzero(buffer,buff_size);
    while(strcmp(buffer,"exit") != 0){
-      // init buffer to $'s
-      for(int i =0;i<buff_size;i++){
-         buffer[i] = '$';
-      }
       char c = 'a';
       int count = 0; // buffer read
-      while(c != '$'){ // read everything
+      while(c != '\0'){ // read everything
          // need to check for timeout
          count = read(clisockfd,buffer,buff_size); // returns chars read up until null terminator
          if(count < 0){
@@ -84,28 +80,10 @@ while(1){
             exit(EXIT_FAILURE);
          }
          c = buffer[count]; // to see if \0 has been read
-      }
+      }//end
       write(STDOUT_FILENO,buffer,count);
    //printf("Here is the command: %s\n",buffer);
-   
-   // remove \n from buffer
-   int i=0;
-   while(buffer[i] != '\n' && i < buff_size){ // just in case no infinite loop
-      i++;
-   }   
-   buffer[i] = '\0';
-   char redirect[] = " > temp_file";
-   char superBuff[buff_size];
-   strcpy(superBuff,buffer);
-   strcat(superBuff,redirect);
-   system(superBuff);// execute command then redirect it to a file
-
-   int fd = open("temp_file",O_RDONLY);
-   if(fd == -1){
-         perror("open\n");
-         exit(EXIT_FAILURE);
-      }
-
+/*
    char * str = NULL;
    struct stat s;
    off_t buff_size_byte; // file size in bytes for the file descriptor
@@ -118,9 +96,11 @@ while(1){
       perror("read\n");
       exit(EXIT_FAILURE);
    }   
+*/
    /* Write a response to the client, need to check for oversized file*/
-   n = write(clisockfd,str,buff_size_byte);
-   free(str);
+  char str[] = "I got your shit\n";
+   n = write(clisockfd,str,sizeof(str));
+  // free(str);
    if (n < 0) {
       perror("ERROR writing to socket");
       exit(EXIT_FAILURE);
