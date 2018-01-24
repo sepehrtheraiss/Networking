@@ -1,4 +1,4 @@
-#include "../Header/node.h"
+#include "../header/node.h"
 /*
 typedef struct Node{
     struct Node* prev;
@@ -8,7 +8,8 @@ typedef struct Node{
 */
 node* newNode(char* str){
     node* n = malloc(sizeof(node));
-    n->str = str;
+    n->str = malloc(sizeof(char)*512);
+    strcpy(n->str,str);
     n->prev = NULL;
     n->next = NULL;
     return n;
@@ -16,6 +17,7 @@ node* newNode(char* str){
 
 void freeNode(node* n){
     if(n != NULL){
+        free(n->str);
         n->str = NULL;
         n->prev = NULL;
         n->next = NULL;

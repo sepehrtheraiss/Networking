@@ -1,8 +1,11 @@
-#include "../Header/stack.h"
+#include "../header/stack.h"
+#include <unistd.h>
+#define buff_size 512
 typedef struct stack_node{
     unsigned int size;
     node* head;
     node* tail;
+    node** pCounter; // will be used for bottoms up, once it reaches null it gets set back to head 
 }stack_node;
 
 stack_node* cast(void* n){return n;}
@@ -12,6 +15,7 @@ void* stack_init(){
     sPtr->size = 0;
     sPtr->head = NULL;
     sPtr->tail = NULL;
+    sPtr->pCounter = &(sPtr->head);
     return sPtr;
 }
 void stack_deinit(void* n){
@@ -30,6 +34,7 @@ int stack_empty(void* n){
 int stack_size(void* n){
     return cast(n)->size;
 }
+void* bottom(void* n){return (char*)cast(n)->tail->str;}
 void* back(void* n){return (char*)cast(n)->tail->str;}
 // both will return 1 on success and 0 on fail
 int push_back(void* s,char* str){
@@ -70,7 +75,8 @@ char* pop_bottom(void *s){
     printf("poping on empty stack\n");
     exit(EXIT_FAILURE);
     }
-    char* str = cast(s)->head->str;
+    char* str = malloc(sizeof(char)*512);// could be optimzed using strlen 
+    str = cast(s)->head->str;
     node* d = cast(s)->head;
     cast(s)->head = cast(s)->head->next;
     freeNode(d);
@@ -86,7 +92,37 @@ char* pop_bottom(void *s){
 void printStack(FILE* out,void* s){
     node* ptr = cast(s)->head;
     while(ptr != NULL){
-        fprintf(out,"%s\n",ptr->str);
+        //fprintf(out,"%s",ptr->str);
+        write(STDOUT_FILENO,ptr->str,buff_size);
         ptr = ptr->next;
+    }
+}
+void writeOut(void *s,int fd){
+    node* ptr = cast(s)->head;
+    while(ptr != NULL){
+        //fprintf(out,"%s",ptr->str);
+        write(fd,ptr->str,buff_size);
+        ptr = ptr->next;
+    }
+}
+// probably best not to use
+int bottomsUP(void *s,char* str){
+ if(cast(s)->size == 0){
+    printf("bottomsUP on empty stack\n");
+    exit(EXIT_FAILURE);
+    }
+    if(*(cast(s)->pCounter) != NULL){
+        str = (*(cast(s)->pCounter))->str;
+        *(cast(s)->pCounter) = (*(cast(s)->pCounter))->next; 
+        return 1;
+    }
+    else{
+        return 0;
+    }
+
+}
+void clear(void *s){
+    while(cast(s)->size != 0){
+        pop_back(s);
     }
 }

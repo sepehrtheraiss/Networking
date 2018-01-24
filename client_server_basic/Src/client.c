@@ -8,14 +8,14 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-
-#define buff_size 2048 // 2MB 
+#include "../header/stack.h"
+#define buff_size 512//2048 // 2MB 
 
 int main(int argc, char** argv) {
    int sockfd, portno, n;
    struct sockaddr_in serv_addr;
-   
    char buffer[buff_size];
+   stack* stack = stack_init();
    
    if (argc < 2) {
       fprintf(stderr,"usage %s port\n", argv[0]);
@@ -81,18 +81,21 @@ int main(int argc, char** argv) {
       while(c != '\0' && flag != 0){ // read everything, dont need to wait for reading
          // need to check for timeout
          count = read(sockfd,buffer,buff_size); // returns num of chars read up to \n, but \0 is still inserted into the buffer
+         push_back(stack,buffer);
          if(count < 0){
             perror("ERROR reading from socket");
             exit(EXIT_FAILURE);
          }
          c = buffer[count]; // to see if \0 has been read
 	  }// end while loop
-      printf("%s",buffer);
+      //printf("%s",buffer);
+      printStack(stdout,stack);
    }//while
    if(close(sockfd) != 0){
       perror("ERROR on close sockfd");
       exit(EXIT_FAILURE);
 
    }
+   stack_deinit(stack);
    return 0;
 }

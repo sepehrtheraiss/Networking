@@ -1,27 +1,33 @@
 FLAG = -std=c99 -Wall
-SRC  = server.c client.c stack.c node.c
-OBJ  = Src/server.o Src/client.o Src/stack.o Src/node.o 
-EXE  = bin/server bin/client
+SRC  = server.c client.c stack.c node.c test/test.c
+OBJ  = src/server.o src/client.o src/stack.o src/node.o src/test.o
+EXE  = bin/server bin/client 
 
 all: $(EXE)
 
-server: Src/server.o Src/stack.o Src/node.o    
-	cc -o bin/server Src/server.o Src/stack.o Src/node.o 
+bin/server: src/server.o src/stack.o src/node.o    
+	cc -o bin/server src/server.o src/stack.o src/node.o 
 
-server.o: Src/server.c Header/stack.h
-	cc -c $(FLAG) Src/server.c
+server.o: src/server.c header/stack.h
+	cc -c $(FLAG) src/server.c
 
-stack.o: Src/stack.c Header/stack.h Header/node.h
-	cc -c $(FLAG) Src/stack.c
+bin/client: src/client.o src/stack.o src/node.o     
+	cc -o bin/client src/client.o src/stack.o src/node.o 
 
-node.o: Src/node.c Header/node.h
-	cc -c $(FLAG) Src/node.c
+test: src/test.o src/stack.o src/node.o
+	cc -o bin/test src/test.o src/stack.o src/node.o 
 
-client: Src/client.o	 
-	cc -o bin/client Src/client.o
+test.o: src/test.c header/stack.h 
+	cc -c src/test.c
 
-client.o: Src/client.c 
-	cc -c $(FLAG) Src/client.c
+client.o: src/client.c header/stack.h
+	cc -c $(FLAG) src/client.c
+
+stack.o: src/stack.c header/stack.h header/node.h
+	cc -c $(FLAG) src/stack.c
+
+node.o: src/node.c header/node.h
+	cc -c $(FLAG) src/node.c
 
 clean:
-	rm -f $(OBJ) $(EXE)
+	rm -f $(OBJ) $(EXE) bin/test

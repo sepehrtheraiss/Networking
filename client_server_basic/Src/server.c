@@ -10,9 +10,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "../Header/stack.h"
+#include "../header/stack.h"
 
-#define buff_size 2048 // 2MB 
+#define buff_size 512//2048 // 2MB 
 
 int main( int argc, char** argv) {
    int sockfd, clisockfd, portno;
@@ -49,7 +49,6 @@ int main( int argc, char** argv) {
    /* INADDR_ANY (0.0.0.0) means any address for binding*/
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr=htonl(INADDR_LOOPBACK);//.s_addr = INADDR_ANY; 
-   printf("my loopback address is: %u\n",INADDR_LOOPBACK );
    serv_addr.sin_port = htons(portno);
 
    
@@ -108,7 +107,9 @@ while(x == 0){
             n = write(clisockfd,error,e_size);
          }
          else{
+            //printStack(stdout,stack);
             while(stack_size(stack) != 0){
+               write(STDOUT_FILENO,bottom(stack),buff_size);
                n = write(clisockfd,pop_bottom(stack),buff_size);
                if (n < 0) {
                perror("ERROR writing to socket");
