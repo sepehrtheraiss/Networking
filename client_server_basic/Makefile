@@ -1,7 +1,7 @@
 FLAG = -std=c99 -Wall
 SRC  = server.c client.c stack.c node.c
-OBJ  = server.o client.o stack.o node.o 
-EXE  = server client
+OBJ  = Src/server.o Src/client.o Src/stack.o Src/node.o 
+EXE  = bin/server bin/client
 
 all: $(EXE)
 
