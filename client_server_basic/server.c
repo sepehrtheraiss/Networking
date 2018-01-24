@@ -10,18 +10,20 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "./Header/stack.h"
 
 #define buff_size 2048 // 2MB 
 
 int main( int argc, char** argv) {
    int sockfd, clisockfd, portno;
    socklen_t clilen;
-   char buffer[buff_size];
+   char* buffer = malloc(sizeof(char)*buff_size);
+   stack* stack = stack_init();
    struct sockaddr_in serv_addr, cli_addr;
    int  n=0; // number of characters read from fread exclude \0
    //n=0; // just to shut up the complaning
-   int buff_to_send=0;//size of buffer to send, sum of all n's
-   FILE* file = NULL;
+   int buff_to_send=2;//size of buffer to send, sum of all n's
+   FILE* file = NULL; // for popen
    char error[] = "command not found\n";
    int e_size = sizeof(error);
    
@@ -89,15 +91,15 @@ while(x == 0){
       write(STDOUT_FILENO,buffer,count); // outputs the received command
 
       if(strcmp(buffer,"exit\n") != 0){
-         buff_to_send = 0;
+        // buff_to_send = 0;
          n = 1;
          file = popen(buffer,"r");
-         while(n > 0){
-            n = fread(buffer,1,buff_size,file);
+         printf("file:%i\n",file);
+         while((n = fread(buffer,1,buff_size,file)) > 0){
+           // buff_to_send += n;
             if(n > 0){
-               // need to allocate more size for the buffer
+               push_back(stack,buffer);
             }
-            buff_to_send += n;
          }
          // printf("%s\n",buffer);
          pclose(file);
@@ -107,12 +109,14 @@ while(x == 0){
             n = write(clisockfd,error,e_size);
          }
          else{
-            n = write(clisockfd,buffer,buff_to_send);
-         }
-         if (n < 0) {
-            perror("ERROR writing to socket");
-            exit(EXIT_FAILURE);
-         }
+            while(stack_size(stack) != 0){
+               n = write(clisockfd,pop_bottom(stack),buff_size);
+               if (n < 0) {
+               perror("ERROR writing to socket");
+               exit(EXIT_FAILURE);
+               }// end if
+            }//end while
+         }//end else 
       } // end exit check if
   
 
@@ -126,6 +130,7 @@ while(x == 0){
       perror("ERROR close sockfd");
       exit(EXIT_FAILURE);  
    }
-
+   stack_deinit(stack);
+   free(buffer);
    return EXIT_SUCCESS;
 }
