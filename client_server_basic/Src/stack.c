@@ -27,6 +27,7 @@ void stack_deinit(void* n){
     }
     cast(n)->tail = NULL;
     cast(n)->size = 0;
+    free(n);
 }
 int stack_empty(void* n){
     return (cast(n)->size == 0);
@@ -39,6 +40,7 @@ void* back(void* n){return (char*)cast(n)->tail->str;}
 // both will return 1 on success and 0 on fail
 int push_back(void* s,char* str){
     node* n = newNode(str);
+    printf("%s", n->str);
     if(cast(s)->head == NULL){
         cast(s)->head = n;
         cast(s)->tail = n;
@@ -64,7 +66,11 @@ char* pop_back(void* s){
     if(cast(s)->tail != NULL){
         cast(s)->tail->next = NULL;
     }
-    if(cast(s)->tail == cast(s)->head){
+
+    /*if(cast(s)->tail == cast(s)->head){
+        cast(s)->head = NULL;
+    }*/
+    if(cast(s)->tail == NULL){
         cast(s)->head = NULL;
     }
     cast(s)->size--;
@@ -100,7 +106,6 @@ void printStack(FILE* out,void* s){
 void writeOut(void *s,int fd){
     node* ptr = cast(s)->head;
     while(ptr != NULL){
-        //fprintf(out,"%s",ptr->str);
         write(fd,ptr->str,buff_size);
         ptr = ptr->next;
     }
@@ -125,4 +130,5 @@ void clear(void *s){
     while(cast(s)->size != 0){
         pop_back(s);
     }
+
 }
