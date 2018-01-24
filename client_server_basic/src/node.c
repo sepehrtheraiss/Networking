@@ -1,4 +1,5 @@
 #include "../header/node.h"
+#include <string.h>
 /*
 typedef struct Node{
     struct Node* prev;
@@ -8,7 +9,9 @@ typedef struct Node{
 */
 node* newNode(char* str){
     node* n = malloc(sizeof(node));
-    n->str = malloc(sizeof(char)*512);
+    int l = strlen(str);
+    str[l] = '\0';
+    n->str = malloc(sizeof(char)*l);
     strcpy(n->str,str);
     n->prev = NULL;
     n->next = NULL;
