@@ -84,15 +84,15 @@ int main(int argc, char** argv) {
       //printf("Client$: ");
       write(STDOUT_FILENO,msg,8); 
       //printf("%s",msg);
-      // get users input
+      // ***get users command input****
       n = read(STDIN_FILENO,buffer,buff_size); // returns counted characters, exclude \0
-      buffer[n] ='\0';
       //fgets(buffer,BUFF_SIZE,stdin);
       //printf("%i %s\n",n,buffer);
       if(n >= buff_size){
          perror("what are you typing bro!");
          exit(EXIT_FAILURE);
       }
+      buffer[n] ='\0';
 
       if(strcmp(buffer,"exit\n")==0){ // set flag to zero to exit the loop and end the client
          flag = 0;
@@ -101,7 +101,9 @@ int main(int argc, char** argv) {
       else{
         // buffer[n] = '\0';
          // **Send command to the server**
-         n = write(sockfd, buffer, n);// +1 for \0  n = num characters read from user
+         printf("1here\n");
+         n = write(sockfd, buffer, n);// n = num characters read from user
+         printf("2here\n");
          // n not -1
          if (n < 1) {
             perror("ERROR writing to socket");

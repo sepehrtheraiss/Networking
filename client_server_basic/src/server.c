@@ -117,9 +117,9 @@ int main( int argc, char** argv) {
        while(flag != 1){
          // need to check for timeout
          // get command
-         // *****reads garbage before even client issues a command ****
          count = read(clisockfd,buffer,buff_size); // returns chars read up until null terminator
-         if(count < 1 || count > buff_size){
+         printf("here\n");
+         if(count < 1 || count >= buff_size){
             perror("ERROR reading command from socket");
             exit(EXIT_FAILURE);
             }
