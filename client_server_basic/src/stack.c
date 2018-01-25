@@ -66,6 +66,9 @@ char* pop_back(void* s){
         if(cast(s)->tail != NULL){
             cast(s)->tail->next = NULL;
         }
+        else{
+            cast(s)->head = NULL;
+        }
         freeNode(d);
     }
     else{

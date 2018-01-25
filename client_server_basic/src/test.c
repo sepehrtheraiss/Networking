@@ -14,6 +14,6 @@ int main(int argc,char** argv){
     writeOut(s,STDOUT_FILENO);
    
     clear(s);
-    //stack_deinit(s);
+    stack_deinit(s);
     return (EXIT_SUCCESS);
 }
