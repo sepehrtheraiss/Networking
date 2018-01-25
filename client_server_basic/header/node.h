@@ -7,8 +7,9 @@ typedef struct Node{
     struct Node* prev;
     struct Node* next;
     char* str;
+    int len;
 }node;
 
-node* newNode(char* str);
+node* newNode(char* str,int l);
 void freeNode(node* n);
 #endif

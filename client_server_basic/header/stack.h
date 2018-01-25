@@ -10,7 +10,7 @@ int stack_size(void* n);
 void* bottom(void* n);
 void* back(void* n);
 // both will return 1 on success and 0 on fail
-int push_back(void* s,char* str);
+int push_back(void* s,char* str,int l);
 char* pop_back(void* s);
 // return new allocated string, client needs to free it.
 char* pop_bottom(void* s);

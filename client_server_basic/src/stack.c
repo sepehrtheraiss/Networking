@@ -5,7 +5,6 @@ typedef struct stack_node{
     unsigned int size;
     node* head;
     node* tail;
-    node** pCounter; // will be used for bottoms up, once it reaches null it gets set back to head 
 }stack_node;
 
 stack_node* cast(void* n){return n;}
@@ -15,7 +14,6 @@ void* stack_init(){
     sPtr->size = 0;
     sPtr->head = NULL;
     sPtr->tail = NULL;
-    sPtr->pCounter = &(sPtr->head);
     return sPtr;
 }
 void stack_deinit(void* n){
@@ -38,9 +36,9 @@ int stack_size(void* n){
 void* bottom(void* n){return (char*)cast(n)->tail->str;}
 void* back(void* n){return (char*)cast(n)->tail->str;}
 // both will return 1 on success and 0 on fail
-int push_back(void* s,char* str){
-    node* n = newNode(str);
-    printf("%s", n->str);
+int push_back(void* s,char* str,int l){
+    //write(0,str,512);
+    node* n = newNode(str,l);
     if(cast(s)->head == NULL){
         cast(s)->head = n;
         cast(s)->tail = n;
@@ -106,26 +104,11 @@ void printStack(FILE* out,void* s){
 void writeOut(void *s,int fd){
     node* ptr = cast(s)->head;
     while(ptr != NULL){
-        write(fd,ptr->str,buff_size);
+        write(fd,ptr->str,ptr->len);
         ptr = ptr->next;
     }
 }
-// probably best not to use
-int bottomsUP(void *s,char* str){
- if(cast(s)->size == 0){
-    printf("bottomsUP on empty stack\n");
-    exit(EXIT_FAILURE);
-    }
-    if(*(cast(s)->pCounter) != NULL){
-        str = (*(cast(s)->pCounter))->str;
-        *(cast(s)->pCounter) = (*(cast(s)->pCounter))->next; 
-        return 1;
-    }
-    else{
-        return 0;
-    }
 
-}
 void clear(void *s){
     while(cast(s)->size != 0){
         pop_back(s);
