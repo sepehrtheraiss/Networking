@@ -25,7 +25,7 @@ void stack_deinit(void* n){
     }
     cast(n)->tail = NULL;
     cast(n)->size = 0;
-    free(n);
+    free(cast(n));
 }
 int stack_empty(void* n){
     return (cast(n)->size == 0);
