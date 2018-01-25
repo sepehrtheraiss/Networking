@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
    char msg[] = "Client$ ";
 
    char accepted = '1';
-   const char key[] = "f2567239h6015\0"; 
+   const char key[] = "f2567239h6015"; 
    const int key_size = sizeof(key);
    int sockfd, portno, n;
    uint32_t IP;
@@ -86,6 +86,7 @@ int main(int argc, char** argv) {
       //printf("%s",msg);
       // get users input
       n = read(STDIN_FILENO,buffer,buff_size); // returns counted characters, exclude \0
+      buffer[n] ='\0';
       //fgets(buffer,BUFF_SIZE,stdin);
       //printf("%i %s\n",n,buffer);
       if(n >= buff_size){
@@ -98,19 +99,20 @@ int main(int argc, char** argv) {
          printf("exiting remote shell\n");
       }
       else{
-         buffer[n] = '\0';
+        // buffer[n] = '\0';
          // **Send command to the server**
-         n = write(sockfd, buffer, n+1);// +1 for \0  n = num characters read from user
+         n = write(sockfd, buffer, n);// +1 for \0  n = num characters read from user
          // n not -1
          if (n < 1) {
             perror("ERROR writing to socket");
             exit(EXIT_FAILURE);
          }
          // try read stack size
-         if(read(sockfd,serverStackSizeChar,buff_size) < 1){
+         if((n=read(sockfd,serverStackSizeChar,buff_size)) < 1){
             perror("ERROR reading from server stack size");
             exit(EXIT_FAILURE);  
          }
+         serverStackSizeChar[n]='\0';
          // if valid command
          // get the stack size
          // read until stack sizes matches server stack size
@@ -127,12 +129,14 @@ int main(int argc, char** argv) {
             }
          }// end servers response
             // get key
-            if(read(sockfd,buffer,100) < 1){
+            if((n=read(sockfd,buffer,key_size)) < 1){
                   perror("ERROR reading key from socket");
                   exit(EXIT_FAILURE);
             }
+            buffer[n]='\0';
             // if mathced
             if(strcmp(buffer,key) != 0){
+               printf("keys dont match\n");
                flag = 0;
             }
             printStack(stdout,stack);

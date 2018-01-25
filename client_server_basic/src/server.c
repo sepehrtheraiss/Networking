@@ -21,6 +21,7 @@ int main( int argc, char** argv) {
    char accepted = '0'; // 1 if the client has been accepted as a valid user
    unsigned int buff_size = BUFF_SIZE; // the buffer size can be modified if client agrees to another buffer size; 
    char client_key[STRING_SIZE];// = malloc(sizeof(char)*STRING_SIZE); // clients key to be return once server is done with its operation
+   unsigned int key_size =0;
    //unsigned int stack_size = 0; // size will be send to client before servers operation. clients decrementation on stack_size should become zero
    char string[STRING_SIZE]; // for temporaly formated strings to be used for write()
    int flag = 0; // for users exit loop
@@ -91,14 +92,16 @@ int main( int argc, char** argv) {
          exit(EXIT_FAILURE);
       }     
       // read if client aggress to the buffer
-      if(read(clisockfd,buffer,BUFF_SIZE) > 0){
+      if((n=read(clisockfd,buffer,BUFF_SIZE)) > 0){
+         buffer[n] ='\0';
          if(atoi(buffer) == 1){
             printf("client has accepted BUFF_SIZE of %i\n",BUFF_SIZE); // expecting a accepted : 1
             // continue with second rule, get key
-            if((n=read(clisockfd,client_key,BUFF_SIZE)) > 0){
+            if((key_size=read(clisockfd,client_key,BUFF_SIZE)) > 0){
                accepted = '1';
-               write(STDOUT_FILENO,client_key,n);
-               //printf("key:%s\n",client_key);
+               client_key[key_size] = '\0';
+               //write(STDOUT_FILENO,client_key,n);
+               printf("key:%s\n",client_key);
             }
          }
          else{
@@ -120,6 +123,7 @@ int main( int argc, char** argv) {
             perror("ERROR reading command from socket");
             exit(EXIT_FAILURE);
             }
+         buffer[count]= '\0';
          write(STDOUT_FILENO,buffer,count); // outputs the received command
 
          if(strcmp(buffer,"exit\n") == 0){
@@ -147,7 +151,7 @@ int main( int argc, char** argv) {
                exit(EXIT_FAILURE);
             }
             // send stack size
-            if(write(clisockfd,string,buff_size)<1){
+            if(write(clisockfd,string,n)<1){
                perror("sending stack size");
                exit(EXIT_FAILURE);
             }
@@ -160,7 +164,7 @@ int main( int argc, char** argv) {
                }// end if
                clear(stack); // empties the stack
             }//end while != 0
-            write(clisockfd,client_key,STRING_SIZE);
+            write(clisockfd,client_key,key_size); //+1 for \0
          }//else not exit
     }// end inner server while loop, waiting for exit command
       if(close(clisockfd) != 0){
