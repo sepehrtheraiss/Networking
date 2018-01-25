@@ -103,6 +103,9 @@ int main( int argc, char** argv) {
                //write(STDOUT_FILENO,client_key,n);
                printf("key:%s\n",client_key);
             }
+            else{
+               perror("ERROR: No key given");
+            }
          }
          else{
             // shrink buff_size, leaving as error handler for now
@@ -118,7 +121,6 @@ int main( int argc, char** argv) {
          // need to check for timeout
          // get command
          count = read(clisockfd,buffer,buff_size); // returns chars read up until null terminator
-         printf("here\n");
          if(count < 1 || count >= buff_size){
             perror("ERROR reading command from socket");
             exit(EXIT_FAILURE);
@@ -139,11 +141,14 @@ int main( int argc, char** argv) {
          pclose(file);
          // Write a response to the client, either command not found or doesnt have a response, like exit
          if(stack_size(stack) == 0){
-            perror("ERROR on zero buffer size");
+            perror("ERROR on zero stack size");
             if(write(clisockfd,error,e_size)<1){
                perror("sending error");
                exit(EXIT_FAILURE);
             }
+         }
+         else{
+            printf("stack size:%i\n",stack_size(stack));
          } 
             // formate stack size
             if((n=sprintf(string,"%i",stack_size(stack))) == -1){ //formate the message
@@ -164,7 +169,9 @@ int main( int argc, char** argv) {
                }// end if
                clear(stack); // empties the stack
             }//end while != 0
-            write(clisockfd,client_key,key_size); //+1 for \0
+            //printf("key:%s\n",client_key);
+            // send the key to client
+            write(clisockfd,client_key,key_size); 
          }//else not exit
     }// end inner server while loop, waiting for exit command
       if(close(clisockfd) != 0){

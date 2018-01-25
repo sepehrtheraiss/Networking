@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
    struct sockaddr_in serv_addr;
    char buffer[buff_size];
    char serverStackSizeChar [BUFF_SIZE];
-   unsigned int serverStackSize = 0;
+   int serverStackSize = 0;
    stack* stack = stack_init();
    
    if (argc < 3) {
@@ -72,6 +72,7 @@ int main(int argc, char** argv) {
       exit(EXIT_FAILURE);  
    }
    // generate key, generate a manual custome key
+   // send key
    if(write(sockfd,key,key_size)<1){
       perror("write key");
       exit(EXIT_FAILURE);  
@@ -99,11 +100,8 @@ int main(int argc, char** argv) {
          printf("exiting remote shell\n");
       }
       else{
-        // buffer[n] = '\0';
          // **Send command to the server**
-         printf("1here\n");
          n = write(sockfd, buffer, n);// n = num characters read from user
-         printf("2here\n");
          // n not -1
          if (n < 1) {
             perror("ERROR writing to socket");
@@ -119,7 +117,11 @@ int main(int argc, char** argv) {
          // get the stack size
          // read until stack sizes matches server stack size
          if(strcmp(serverStackSizeChar,"command not found\n") !=0 ){
-            serverStackSize = atoi(serverStackSizeChar);
+            if((serverStackSize = atoi(serverStackSizeChar)) >= buff_size){
+               perror("stack size too big");
+               exit(EXIT_FAILURE);
+            }
+            //printf("stack size:%i\n",serverStackSize);
             int count = 0; // buffer read
             while(stack_size(stack) != serverStackSize){
                // returns num of chars read up to \n, but \0 is still inserted into the buffer
@@ -128,8 +130,8 @@ int main(int argc, char** argv) {
                   exit(EXIT_FAILURE);
                } 
                push_back(stack,buffer,count);
-            }
-         }// end servers response
+            }//end while stack size check
+         }// end servers response if valid
             // get key
             if((n=read(sockfd,buffer,key_size)) < 1){
                   perror("ERROR reading key from socket");
@@ -139,9 +141,13 @@ int main(int argc, char** argv) {
             // if mathced
             if(strcmp(buffer,key) != 0){
                printf("keys dont match\n");
+               // printf("your key:%s\n",buffer);
+               // printf("my key:%s\n",key);
                flag = 0;
             }
-            printStack(stdout,stack);
+            else{
+               printStack(stdout,stack);
+            }
 
          }//end else not exit
    }//end flag loop
