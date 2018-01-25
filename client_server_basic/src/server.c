@@ -12,21 +12,27 @@
 #include <unistd.h>
 #include "../header/stack.h"
 
-#define buff_size 512//2048 // 2MB 
-
+#define BUFF_SIZE 512
+#define STRING_SIZE 100
 int main( int argc, char** argv) {
    int sockfd, clisockfd, portno;
    socklen_t clilen;
-   char* buffer = malloc(sizeof(char)*buff_size);
+   // Setting up rules for the protocol
+   char accepted = '0'; // 1 if the client has been accepted as a valid user
+   unsigned int buff_size = BUFF_SIZE; // the buffer size can be modified if client agrees to another buffer size; 
+   char* client_key = malloc(sizeof(char)*STRING_SIZE); // clients key to be return once server is done with its operation
+   //unsigned int stack_size = 0; // size will be send to client before servers operation. clients decrementation on stack_size should become zero
+   char string[STRING_SIZE]; // for temporaly formated strings to be used for write()
+
+   char* buffer = malloc(sizeof(char)*BUFF_SIZE);
    stack* stack = stack_init();
+   int count = 0; // buffer read
    struct sockaddr_in serv_addr, cli_addr;
-   int  n=0; // number of characters read from fread exclude \0
-   //n=0; // just to shut up the complaning
-   int buff_read=0;//size of buffer read, sum of all n's, if command return or was an error
+   int  n=0; // number of characters read from fread exclude \0, temp number
    FILE* file = NULL; // for popen
    char error[] = "command not found\n";
    int e_size = sizeof(error);
-   
+   // protocol tell each other the size of stack + server and client agree on a random number 
 
    if (argc < 2) {
       fprintf(stderr,"usage %s port\n", argv[0]);
@@ -57,80 +63,113 @@ int main( int argc, char** argv) {
       perror("ERROR on binding");
       exit(EXIT_FAILURE);
    }
-      
+   listen(sockfd,5);
+
    /* Now start listening for the clients, here process will
       * go in sleep mode and will wait for the incoming connection
    */
    
-   listen(sockfd,5);
+   bzero(buffer,BUFF_SIZE); //init everything to zero
+
    clilen = sizeof(cli_addr);
-const int x =0;
-while(x == 0){
-   /* Accept actual connection from the client */
-   clisockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
-  // printf("my newsocket file descriptor %i and orign socket is:%i\n",newsockfd,sockfd);
-	
-   if (clisockfd < 0) {
-      perror("ERROR on accept");
-      exit(EXIT_FAILURE);
-   }
-   while(strcmp(buffer,"exit\n") != 0){
-      bzero(buffer,buff_size);
-      char c = 'a';
-      int count = 0; // buffer read
-      while(c != '\0'){ // read everything
-         // need to check for timeout
-         count = read(clisockfd,buffer,buff_size); // returns chars read up until null terminator
-         if(count < 0){
-            perror("ERROR reading from socket");
+   const int x =0; 
+   while(x == 0){ // loop forever
+      /* Accept actual connection from the client */
+      clisockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
+      bzero(client_key,STRING_SIZE);
+
+      if (clisockfd < 0) { // client connection
+         perror("ERROR on accept");
+         exit(EXIT_FAILURE);
+      }
+      if((n=sprintf(string,"%i",BUFF_SIZE)) == -1){ //formate the message
+         perror("sprintf");
+         exit(EXIT_FAILURE);
+      }
+      if(write(clisockfd,string,n) < 0){ // send the size of buffer to client
+         perror("write");
+         exit(EXIT_FAILURE);
+      }     
+      if(read(clisockfd,buffer,BUFF_SIZE) > 0){
+         if(atoi(buffer) == 1){
+            printf("client has accepted BUFF_SIZE of %i\n",BUFF_SIZE); // expecting a accepted : 1
+            // continue with second rule, get key
+            if(read(clisockfd,client_key,STRING_SIZE) > 0){
+               accepted = '1';
+               printf("key:%s\n",client_key);
+            }
+         else{
+            // shrink buff_size, leaving as error handler for now
+            perror("atoi failed");
             exit(EXIT_FAILURE);
          }
-         c = buffer[count]; // to see if \0 has been read
-      }//end
-      write(STDOUT_FILENO,buffer,count); // outputs the received command
+      }
 
-      if(strcmp(buffer,"exit\n") != 0){
-        buff_read = 0;
-         n = 1;
-         file = popen(buffer,"r"); 
-         while((n = fread(buffer,1,buff_size,file)) > 0){
-            buff_read += n;
-            if(n > 0){// probably dont need it
-               push_back(stack,buffer);
+      // remote shell
+      bzero(buffer,buff_size);
+      while(strcmp(buffer,"exit\n") != 0){
+         // need to check for timeout
+         count = read(clisockfd,buffer,buff_size); // returns chars read up until null terminator
+         if(count < 1){
+            perror("ERROR reading command from socket");
+            exit(EXIT_FAILURE);
             }
-         }
-         // printf("%s\n",buffer);
-         pclose(file);
-         /* Write a response to the client, need to check for oversized file*/
-         if(buff_read < 1){
-            perror("ERROR on zero buffer size");
-            n = write(clisockfd,error,e_size);
-         }
-         else{
-            //printStack(stdout,stack);
-            while(stack_size(stack) != 0){
-               write(STDOUT_FILENO,bottom(stack),buff_size);
-               n = write(clisockfd,pop_bottom(stack),buff_size);
-               if (n < 0) {
-               perror("ERROR writing to socket");
-               exit(EXIT_FAILURE);
-               }// end if
-            }//end while
-         }//end else 
-      } // end exit check if
-  
+         }//end
+         write(STDOUT_FILENO,buffer,count); // outputs the received command
 
- }// end inner server while loop, waiting for exit command
-   if(close(clisockfd) != 0){
-      perror("ERROR close clisockfd");
-      exit(EXIT_FAILURE);
-   }
-}//end outter while main server loop to accept
+         if(strcmp(buffer,"exit\n") != 0){
+            n = 1;
+            file = popen(buffer,"r"); 
+            while((n = fread(buffer,1,buff_size,file)) > 0){
+               push_back(stack,buffer,n);
+            }
+            // printf("%s\n",buffer);
+            pclose(file);
+            // Write a response to the client, either command not found or doesnt have a response, like exit
+            if(stack_size(stack) == 0){
+               perror("ERROR on zero buffer size");
+               if(write(clisockfd,error,e_size)<1){
+                  perror("sending error");
+                  exit(EXIT_FAILURE);
+               }
+            }
+            else{
+               // formate stack size
+               if((n=sprintf(string,"%i",stack_size(stack))) == -1){ //formate the message
+                  perror("sprintf");
+                  exit(EXIT_FAILURE);
+               }
+               // send stack size
+               if(write(clisockfd,string,n)<1){
+                  perror("sending stack size");
+                  exit(EXIT_FAILURE);
+               }
+
+               while(stack_size(stack) != 0){
+                  //write(clisockfd,pop_bottom(stack),buff_size);
+                  if (writeOut(stack,clisockfd) < 1) {
+                  perror("ERROR writeout to socket");
+                  exit(EXIT_FAILURE);
+                  }// end if
+                  clear(stack); // empties the stack
+               }//end while
+               write(clisockfd,client_key,STRING_SIZE);
+            }//end else 
+         } // end exit check if
+
+
+    }// end inner server while loop, waiting for exit command
+      if(close(clisockfd) != 0){
+         perror("ERROR close clisockfd");
+         exit(EXIT_FAILURE);
+      }
+   }//end outter while main server loop to accept
    if(close(sockfd) != 0){
       perror("ERROR close sockfd");
       exit(EXIT_FAILURE);  
    }
    stack_deinit(stack);
    free(buffer);
+   free(client_key);
    return EXIT_SUCCESS;
 }

@@ -105,12 +105,14 @@ void printStack(FILE* out,void* s){
         ptr = ptr->next;
     }
 }
-void writeOut(void *s,int fd){
+int writeOut(void *s,int fd){
+    int n =0;
     node* ptr = cast(s)->head;
     while(ptr != NULL){
-        write(fd,ptr->str,ptr->len);
+        n = write(fd,ptr->str,ptr->len);
         ptr = ptr->next;
     }
+    return n;
 }
 
 void clear(void *s){

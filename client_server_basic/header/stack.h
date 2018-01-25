@@ -16,7 +16,7 @@ char* pop_back(void* s);
 char* pop_bottom(void* s);
 // sequentially return chars from bottom to up, if ptr != NULL return 1 else 0
 int bottomsUP(void *s,char* str);
-void writeOut(void *s,int fd);
+int writeOut(void *s,int fd);
 // clear the stack to its initial zero state
 void clear(void *);
 void printStack(FILE* out,void* s);

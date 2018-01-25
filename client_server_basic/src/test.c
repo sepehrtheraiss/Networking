@@ -15,5 +15,6 @@ int main(int argc,char** argv){
    
     clear(s);
     stack_deinit(s);
+
     return (EXIT_SUCCESS);
 }
