@@ -18,14 +18,14 @@ void* stack_init(){
 }
 void stack_deinit(void* n){
     node* ptr = cast(n)->head;
-    while(cast(n)->head != NULL){
-        cast(n)->head = cast(n)->head->next;
+    while(ptr != NULL){
         freeNode(ptr);
-        ptr = cast(n)->head;
+        cast(n)->head = cast(n)->head->next;
+        ptr = cast(n)->head; 
     }
     cast(n)->tail = NULL;
     cast(n)->size = 0;
-    free(cast(n));
+    free(n);
 }
 int stack_empty(void* n){
     return (cast(n)->size == 0);
