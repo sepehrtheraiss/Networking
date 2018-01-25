@@ -52,23 +52,23 @@ int push_back(void* s,char* str,int l){
     cast(s)->size++;
     return 1;
 }
+// needs to be changed such that it returns new allocated memory
 char* pop_back(void* s){
     if(cast(s)->size == 0){
         printf("poping on empty stack\n");
         exit(EXIT_FAILURE);
     }
-    char* str = cast(s)->tail->str;
+    char* str = NULL;
     node* d = cast(s)->tail;
-    cast(s)->tail = cast(s)->tail->prev;
-    freeNode(d);
-    if(cast(s)->tail != NULL){
-        cast(s)->tail->next = NULL;
+    if(d != NULL){
+        str = cast(s)->tail->str;
+        cast(s)->tail = cast(s)->tail->prev;
+        if(cast(s)->tail != NULL){
+            cast(s)->tail->next = NULL;
+        }
+        freeNode(d);
     }
-
-    /*if(cast(s)->tail == cast(s)->head){
-        cast(s)->head = NULL;
-    }*/
-    if(cast(s)->tail == NULL){
+    else{
         cast(s)->head = NULL;
     }
     cast(s)->size--;
