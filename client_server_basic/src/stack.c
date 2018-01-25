@@ -59,17 +59,18 @@ char* pop_back(void* s){
         exit(EXIT_FAILURE);
     }
     char* str = NULL;
-    node* d = cast(s)->tail;
-    if(d != NULL){
-        str = cast(s)->tail->str;
+    if(cast(s)->tail != NULL){
+        //str = malloc(sizeof(char)*cast(s)->tail->len);
+        //str = cast(s)->tail->str;
         cast(s)->tail = cast(s)->tail->prev;
         if(cast(s)->tail != NULL){
+            freeNode(cast(s)->tail->next);
             cast(s)->tail->next = NULL;
         }
         else{
             cast(s)->head = NULL;
         }
-        freeNode(d);
+        //freeNode(d);
     }
     else{
         cast(s)->head = NULL;
@@ -113,8 +114,16 @@ void writeOut(void *s,int fd){
 }
 
 void clear(void *s){
-    while(cast(s)->size != 0){
+/*    while(cast(s)->size != 0){
         pop_back(s);
+    }*/
+ node* ptr = cast(s)->head;
+    while(ptr != NULL){
+        freeNode(ptr);
+        cast(s)->head = cast(s)->head->next;
+        ptr = cast(s)->head; 
     }
+    cast(s)->tail = NULL;
+    cast(s)->size = 0;
 
 }

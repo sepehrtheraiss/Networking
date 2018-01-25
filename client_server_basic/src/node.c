@@ -11,7 +11,7 @@ typedef struct Node{
 node* newNode(char* str,int l){
     node* n = malloc(sizeof(node));
     n->len = l; //strlen(str); => 518?!?! posibly because didnt use bzero
-    n->str = malloc(sizeof(char)*n->len); 
+    n->str = malloc(sizeof(char)*l); 
     strcpy(n->str,str);
     n->prev = NULL;
     n->next = NULL;
