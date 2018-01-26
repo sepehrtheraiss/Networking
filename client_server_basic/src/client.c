@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
             else{
                printStack(stdout,stack);
             }
-            }//end else if stack size valid
+         }//end else if stack size valid
 
          }//end else not exit
    }//end flag loop
