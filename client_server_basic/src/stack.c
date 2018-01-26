@@ -101,7 +101,7 @@ void printStack(FILE* out,void* s){
     node* ptr = cast(s)->head;
     while(ptr != NULL){
         //fprintf(out,"%s",ptr->str);
-        write(STDOUT_FILENO,ptr->str,buff_size);
+        write(STDOUT_FILENO,ptr->str,ptr->len);//buff_size);
         ptr = ptr->next;
     }
 }
