@@ -83,20 +83,17 @@ int main(int argc, char** argv) {
    bzero(buffer,buff_size);
    //n=0;
    while(flag != 0){ // while user hasnt typed exit 
-      //printf("Client$: ");
-      write(STDOUT_FILENO,msg,8); 
-      //printf("%s",msg);
+      write(STDOUT_FILENO,msg,8); //printf("Client$: ");
       // ***get users command input****
       n = read(STDIN_FILENO,buffer,buff_size); // returns counted characters, exclude \0
-      //fgets(buffer,BUFF_SIZE,stdin);
-      //printf("%i %s\n",n,buffer);
+
       if(n >= buff_size){
          perror("what are you typing bro!");
          exit(EXIT_FAILURE);
       }
       buffer[n] ='\0';
 
-      if(strcmp(buffer,"exit\n")==0){ // set flag to zero to exit the loop and end the client
+      if(strcmp(buffer,"exit\n")==0 || strcmp(buffer,"exit")==0){ // set flag to zero to exit the loop and end the client
          flag = 0;
          if(write(sockfd, buffer, n) < 1) {
             perror("ERROR writing exit to socket");
@@ -106,6 +103,7 @@ int main(int argc, char** argv) {
       }
       else{
          // **Send command to the server**
+         sleep(0.5);
          n = write(sockfd, buffer, n);// n = num characters read from user
          // n not -1
          if (n < 1) {
@@ -125,19 +123,22 @@ int main(int argc, char** argv) {
             write(STDOUT_FILENO,serverStackSizeChar,n);
           }// end servers response if not valid
           else{//if stack size valid
+               // get stack size
               if((serverStackSize = atoi(serverStackSizeChar)) >= buff_size){
                   perror("ERROR stack size too big");
                   exit(EXIT_FAILURE);
                }
-                // int count = 0; // buffer read
-                // while(stack_size(stack) != serverStackSize){
-                //    // returns num of chars read up to \n, but \0 is still inserted into the buffer
-                //   if((count = read(sockfd,buffer,buff_size)) < 1){
-                //       perror("ERROR reading messages from socket");
-                //       exit(EXIT_FAILURE);
-                //    } 
-                //    push_back(stack,buffer,count);
-                // }//end while stack size check
+               // get servers respond
+                int count = 0; // buffer read
+                while(stack_size(stack) != serverStackSize){
+                   // returns num of chars read up to \n, but \0 is still inserted into the buffer
+                  if((count = read(sockfd,buffer,buff_size)) < 1){
+                      perror("ERROR reading messages from socket");
+                      exit(EXIT_FAILURE);
+                   }
+                   buffer[count] = '\0';
+                   push_back(stack,buffer,count);
+                }//end while stack size check
 
             // get key
             if((n=read(sockfd,buffer,key_size)) < 1){
@@ -148,12 +149,11 @@ int main(int argc, char** argv) {
             // if mathced
             if(strcmp(buffer,key) != 0){
                printf("keys dont match\n");
-               // printf("your key:%s\n",buffer);
-               // printf("my key:%s\n",key);
                flag = 0;
             }
             else{
                printStack(stdout,stack);
+               clear(stack);
             }
          }//end else if stack size valid
 

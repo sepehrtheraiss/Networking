@@ -13,7 +13,7 @@ node* newNode(char* str,int l){
     n->len = l; //strlen(str); => 518?!?! posibly because didnt use bzero
     n->str = malloc(sizeof(char)*l); 
     strcpy(n->str,str);
-    n->prev = NULL;
+   // n->prev = NULL;
     n->next = NULL;
     return n;
 }
@@ -23,7 +23,7 @@ void freeNode(node* n){
         free(n->str);
         n->str = NULL;
         n->len = 0;
-        n->prev = NULL;
+      //  n->prev = NULL;
         n->next = NULL;
         free(n);
     }

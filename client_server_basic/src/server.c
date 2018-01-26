@@ -128,7 +128,7 @@ int main( int argc, char** argv) {
          buffer[count]= '\0';
          write(STDOUT_FILENO,buffer,count); // outputs the received command
 
-         if(strcmp(buffer,"exit\n") == 0){
+         if(strcmp(buffer,"exit\n") == 0 || strcmp(buffer,"exit")==0){
             flag = 1;
          } // end exit check if
           else{
@@ -149,6 +149,7 @@ int main( int argc, char** argv) {
                exit(EXIT_FAILURE);
             }
          }
+         // stack size is > 0
          else{
             //printf("stack size:%i\n",stack_size(stack)); 
             // formate stack size
@@ -162,12 +163,14 @@ int main( int argc, char** argv) {
                exit(EXIT_FAILURE);
             }
 
-            // if (writeOut(stack,clisockfd) < 1) {
-            //    perror("ERROR writeout to socket");
-            //    exit(EXIT_FAILURE);
-            // }// end if
+            // writes all the stacks to the client
+            if (writeOut(stack,clisockfd) < 1) {
+               perror("ERROR writeout to socket");
+               exit(EXIT_FAILURE);
+            }// end if
                 clear(stack); // empties the stack to intial state
-         //    //printf("key:%s\n",client_key);
+                //wait?
+               // sleep(3);
          //    // send the key to client
              write(clisockfd,client_key,key_size); 
             }//end else if stack size is not zero

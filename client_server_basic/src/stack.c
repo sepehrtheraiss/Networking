@@ -46,13 +46,13 @@ int push_back(void* s,char* str,int l){
     else{
         node* tmp = cast(s)->tail;
         tmp->next = n;
-        n->prev = tmp;
+        //n->prev = tmp;
         cast(s)->tail = n;
     }
     cast(s)->size++;
     return 1;
 }
-// needs to be changed such that it returns new allocated memory
+// needs to be changed such that it returns new allocated memory, dont use it prev removed
 char* pop_back(void* s){
     if(cast(s)->size == 0){
         printf("poping on empty stack\n");
@@ -62,7 +62,7 @@ char* pop_back(void* s){
     if(cast(s)->tail != NULL){
         //str = malloc(sizeof(char)*cast(s)->tail->len);
         //str = cast(s)->tail->str;
-        cast(s)->tail = cast(s)->tail->prev;
+      //  cast(s)->tail = cast(s)->tail->prev;
         if(cast(s)->tail != NULL){
             freeNode(cast(s)->tail->next);
             cast(s)->tail->next = NULL;
@@ -89,7 +89,7 @@ char* pop_bottom(void *s){
     cast(s)->head = cast(s)->head->next;
     freeNode(d);
     if(cast(s)->head != NULL){
-        cast(s)->head->prev = NULL;
+ //       cast(s)->head->prev = NULL;
     }
     if(cast(s)->tail == cast(s)->head){
         cast(s)->tail = NULL;
@@ -122,9 +122,7 @@ void clear(void *s){
  node* ptr = cast(s)->head;
    // printf("size:%i\n",cast(s)->size);
     while(ptr != NULL){
-     //   printf("pre free\n");
         freeNode(ptr);
-       // printf("free\n");
         cast(s)->head = cast(s)->head->next;
         ptr = cast(s)->head; 
     }
