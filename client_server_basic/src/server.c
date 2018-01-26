@@ -144,7 +144,7 @@ int main( int argc, char** argv) {
           //either command not found or doesnt have a response, like exit
           if(stack_size(stack) == 0){
             perror("ERROR on zero stack size");
-            if(write(clisockfd,error,e_size)<1){
+            if(write(clisockfd,error,e_size)<1){ // sends command not found to the client
                perror("sending error");
                exit(EXIT_FAILURE);
             }
