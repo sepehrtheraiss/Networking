@@ -23,6 +23,5 @@ int main(int argc,char** argv){// going to pass in cat a big file
         printf("stack size after clearing:%i\n",stack_size(stack));
     }
     stack_deinit(stack);
-    printf("stack size after deinit:%i\n",stack_size(stack));
     return (EXIT_SUCCESS);
 }
