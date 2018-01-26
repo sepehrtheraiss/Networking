@@ -56,7 +56,7 @@ int push_back(void* s,char* str,int l){
 // needs to be changed such that it returns new allocated memory, dont use it prev removed
 char* pop_back(void* s){
     if(cast(s)->size == 0){
-        printf("poping on empty stack\n");
+        printf("popping on empty stack\n");
         exit(EXIT_FAILURE);
     }
     char* str = NULL;
@@ -81,7 +81,7 @@ char* pop_back(void* s){
 }
 char* pop_bottom(void *s){
     if(cast(s)->size == 0){
-    printf("poping on empty stack\n");
+    printf("popping on empty stack\n");
     exit(EXIT_FAILURE);
     }
     char* str = malloc(sizeof(char)*512);// could be optimzed using strlen 
