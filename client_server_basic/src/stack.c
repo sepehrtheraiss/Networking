@@ -126,6 +126,7 @@ void clear(void *s){
         cast(s)->head = cast(s)->head->next;
         ptr = cast(s)->head; 
     }
+    cast(s)->head = NULL;
     cast(s)->tail = NULL;
     cast(s)->size = 0;
 
