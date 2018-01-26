@@ -2,6 +2,7 @@ FLAG = -std=c99 -Wall
 SRC  = server.c client.c stack.c node.c test/test.c
 OBJ  = src/server.o src/client.o src/stack.o src/node.o src/test.o
 EXE  = bin/server bin/client 
+MEMCHECK = valgrind --leak-check=full
 
 all: $(EXE)
 
@@ -35,5 +36,8 @@ stack.o: src/stack.c header/stack.h header/node.h
 node.o: src/node.c header/node.h
 	cc -c $(FLAG) src/node.c
 
+checkStack: testStack
+	$(MEMCHECK) ./bin/testStack "cat src/stack.c"
+	
 clean:
 	rm -f $(OBJ) $(EXE) bin/test
