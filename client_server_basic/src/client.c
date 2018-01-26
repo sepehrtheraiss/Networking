@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
       }
       else{
          // **Send command to the server**
-         sleep(0.5);
+         sleep(1);
          n = write(sockfd, buffer, n);// n = num characters read from user
          // n not -1
          if (n < 1) {
