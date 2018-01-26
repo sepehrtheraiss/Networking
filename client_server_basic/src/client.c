@@ -129,15 +129,15 @@ int main(int argc, char** argv) {
                   perror("ERROR stack size too big");
                   exit(EXIT_FAILURE);
                }
-            //    int count = 0; // buffer read
-            //    while(stack_size(stack) != serverStackSize){
-            //       // returns num of chars read up to \n, but \0 is still inserted into the buffer
-            //       if((count = read(sockfd,buffer,buff_size)) < 1){
-            //          perror("ERROR reading messages from socket");
-            //          exit(EXIT_FAILURE);
-            //       } 
-            //       push_back(stack,buffer,count);
-            //    }//end while stack size check
+                // int count = 0; // buffer read
+                // while(stack_size(stack) != serverStackSize){
+                //    // returns num of chars read up to \n, but \0 is still inserted into the buffer
+                //   if((count = read(sockfd,buffer,buff_size)) < 1){
+                //       perror("ERROR reading messages from socket");
+                //       exit(EXIT_FAILURE);
+                //    } 
+                //    push_back(stack,buffer,count);
+                // }//end while stack size check
 
             // get key
             if((n=read(sockfd,buffer,key_size)) < 1){

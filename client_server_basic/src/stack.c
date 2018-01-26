@@ -109,19 +109,22 @@ int writeOut(void *s,int fd){
     int n =0;
     node* ptr = cast(s)->head;
     while(ptr != NULL){
-        n = write(fd,ptr->str,ptr->len);
+        if((n = write(fd,ptr->str,ptr->len))<1){
+            perror("ERROR: internal write out");
+            exit(EXIT_FAILURE);
+        }
         ptr = ptr->next;
     }
     return n;
 }
 
 void clear(void *s){
-/*    while(cast(s)->size != 0){
-        pop_back(s);
-    }*/
  node* ptr = cast(s)->head;
+   // printf("size:%i\n",cast(s)->size);
     while(ptr != NULL){
+     //   printf("pre free\n");
         freeNode(ptr);
+       // printf("free\n");
         cast(s)->head = cast(s)->head->next;
         ptr = cast(s)->head; 
     }

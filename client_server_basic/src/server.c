@@ -150,7 +150,7 @@ int main( int argc, char** argv) {
             }
          }
          else{
-            printf("stack size:%i\n",stack_size(stack)); 
+            //printf("stack size:%i\n",stack_size(stack)); 
             // formate stack size
             if((n=sprintf(string,"%i",stack_size(stack))) == -1){ //formate the message
                perror("sprintf");
@@ -162,14 +162,11 @@ int main( int argc, char** argv) {
                exit(EXIT_FAILURE);
             }
 
-         //    while(stack_size(stack) != 0){
-         //       //write(clisockfd,pop_bottom(stack),buff_size);
-         //       if (writeOut(stack,clisockfd) < 1) {
-         //       perror("ERROR writeout to socket");
-         //       exit(EXIT_FAILURE);
-         //       }// end if
-                clear(stack); // empties the stack
-         //    }//end while != 0
+            // if (writeOut(stack,clisockfd) < 1) {
+            //    perror("ERROR writeout to socket");
+            //    exit(EXIT_FAILURE);
+            // }// end if
+                clear(stack); // empties the stack to intial state
          //    //printf("key:%s\n",client_key);
          //    // send the key to client
              write(clisockfd,client_key,key_size); 
