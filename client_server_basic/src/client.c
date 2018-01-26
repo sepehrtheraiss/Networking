@@ -72,6 +72,7 @@ int main(int argc, char** argv) {
       perror("write buffer");
       exit(EXIT_FAILURE);  
    }
+   sleep(1);
    // generate key, generate a manual custome key
    // send key
    if(write(sockfd,key,key_size)<1){
