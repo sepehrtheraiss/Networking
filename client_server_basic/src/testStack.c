@@ -9,7 +9,7 @@ int main(int argc,char** argv){// going to pass in cat a big file
     int n =0;
     int i;
     
-    for(int j =0;j<3;j++){
+    for(int j =0;j<1;j++){
         file = popen(argv[1],"r");
         printf("stack size:%i\n",stack_size(stack));
         i=0;
@@ -23,6 +23,5 @@ int main(int argc,char** argv){// going to pass in cat a big file
         printf("stack size after clearing:%i\n",stack_size(stack));
     }
     stack_deinit(stack);
-    printf("stack size after deinit:%i\n",stack_size(stack));
     return (EXIT_SUCCESS);
 }
