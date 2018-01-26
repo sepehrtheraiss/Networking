@@ -20,6 +20,12 @@ test: src/test.o src/stack.o src/node.o
 test.o: src/test.c header/stack.h 
 	cc -c src/test.c
 
+testStack: src/testStack.o src/stack.o src/node.o
+	cc -o bin/testStack src/testStack.o src/stack.o src/node.o 
+
+testStack.o: src/testStack.c header/stack.h 
+	cc -c src/testStack.c
+
 client.o: src/client.c header/stack.h
 	cc -c $(FLAG) src/client.c
 
