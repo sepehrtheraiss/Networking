@@ -1,5 +1,27 @@
-to compress: tar -zcvf file.tar.gz dir_name
-to uncompress: tar zxvf file.tar.gz
+Sepehr Raissian
+sraissia@ucsc.edu
+CMPE 156 
+Assignment 1: basic server client remote shell
+
+Files:
+    src/            contains source files
+    header/         contains source files headers
+    bin/            contains executable files
+    src/server.c    server code    
+    src/client.c    client code
+    src/stack.c     stack data structure
+    src/node.c      stacks main node structure
+    src/test.c      basic test file for various reasons
+    src/testStack.c test file for stack, making sure there is no memory leak
+
+Instructions:
+    1. make
+    2. ./bin/server 8080
+    3. ./bin/client 127.0.0.1 8080
+        a. client sends commands to server and gets the results back.
+        b. To only support given functions, if the executed command doesn't return a response it tells client command not found.
+        c. to exit, type exit
+
 client and server must agree on a protocol
     1. server proposes a buffer_size. (for this assignment servers buffer_size is immidiately accepted)
     2. client sends a random key (done manually for now) to the server and wants that back when server is finished sending the messages.
@@ -11,6 +33,14 @@ server's task:
     1. accepts a command from the client, executes it. Server will add to its stack each message of size buffer_size. 
     2. server sends its stack size to the client, indicating its going to start setting the messages.
     3. once server stack is empty, it sends back the key, indicating it has completed its task.
-    4. for the next promt
+    4. repeat
 
+basic design steps:
+    server opens a connection, listens then accepts. Once it accepts a client, client and server exchange the neccessary information, then waits for clients input to execute a command.
+    once it has been executed it has a certian buffer size and adds each buffer size segment to stack. Then sends the stack size to client. Server then sends each segment to the client. Once done
+    server sends the key indicating end of transmition. and the process repeats until client enters exit then client closes and server waits for the next client to connect.
 
+Testing: testing was done manually 
+
+to compress: tar -zcvf file.tar.gz dir_name
+to uncompress: tar zxvf file.tar.gz
