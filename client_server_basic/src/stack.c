@@ -120,12 +120,12 @@ int writeOut(void *s,int fd){
 }
 
 void clear(void *s){
- node* ptr = cast(s)->head;
-   // printf("size:%i\n",cast(s)->size);
+    node* ptr = cast(s)->head;
+    int i=0;
     while(ptr != NULL){
         cast(s)->head = cast(s)->head->next;
         freeNode(ptr);
-        ptr = cast(s)->head; 
+        ptr = cast(s)->head;
     }
     cast(s)->head = NULL;
     cast(s)->tail = NULL;
