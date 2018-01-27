@@ -14,9 +14,9 @@ int main(int argc,char** argv){// going to pass in cat a big file
         printf("stack size:%i\n",stack_size(stack));
         i=0;
         while((n = fread(buffer,1,512,file)) > 0){
-                buffer[n]=0;
-                push_back(stack,buffer,n);
-                printf("%i, ",i++);
+            buffer[n]=0;
+            push_back(stack,buffer,n);
+            printf("%i\n",n);
         }
         printf("\nstack size after adding:%i\n",stack_size(stack));
         //writeOut(s,STDOUT_FILENO);
