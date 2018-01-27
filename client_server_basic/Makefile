@@ -22,10 +22,10 @@ test.o: src/test.c header/List.h
 	cc -c src/test.c
 
 testList: src/testList.o src/List.o
-	cc -o bin/testStack src/testList.o src/List.o
+	cc -o bin/testList src/testList.o src/List.o
 
 testList.o: src/testList.c header/List.h 
-	cc -c src/testStack.c
+	cc -c src/testList.c
 
 client.o: src/client.c header/List.h
 	cc -c $(FLAG) src/client.c
@@ -33,7 +33,7 @@ client.o: src/client.c header/List.h
 List.o: src/List.c header/List.h
 	cc -c $(FLAG) src/List.c
 
-checkStack: testList
+checkList: testList
 	$(MEMCHECK) ./bin/testList "cat src/List.c"
 	
 clean:
