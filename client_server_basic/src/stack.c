@@ -123,8 +123,8 @@ void clear(void *s){
  node* ptr = cast(s)->head;
    // printf("size:%i\n",cast(s)->size);
     while(ptr != NULL){
-        freeNode(ptr);
         cast(s)->head = cast(s)->head->next;
+        freeNode(ptr);
         ptr = cast(s)->head; 
     }
     cast(s)->head = NULL;
