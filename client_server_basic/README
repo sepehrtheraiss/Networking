@@ -1,3 +1,5 @@
+to compress: tar -zcvf file.tar.gz dir_name
+to uncompress: tar zxvf file.tar.gz
 client and server must agree on a protocol
     1. server proposes a buffer_size. (for this assignment servers buffer_size is immidiately accepted)
     2. client sends a random key (done manually for now) to the server and wants that back when server is finished sending the messages.
