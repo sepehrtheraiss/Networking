@@ -24,7 +24,7 @@ test.o: src/test.c header/List.h
 testList: src/testList.o src/List.o
 	cc -o bin/testStack src/testList.o src/List.o
 
-testList.o: src/testStack.c header/List.h 
+testList.o: src/testList.c header/List.h 
 	cc -c src/testStack.c
 
 client.o: src/client.c header/List.h
