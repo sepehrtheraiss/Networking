@@ -12,9 +12,9 @@ import tempfile as tf
 port = "1238"
 ip = "127.0.0.1"
 server_name = os.path.abspath(os.path.join(os.getcwd(),
-                                           "ex1/bin/remotesrv"))
+                                           "../bin/server"))
 client_name = os.path.abspath(os.path.join(os.getcwd(),
-                                           "ex1/bin/remotecli"))
+                                           "../bin/client"))
 prompt = "> "
 
 class TestClient(ut.TestCase):

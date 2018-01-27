@@ -13,6 +13,7 @@ Files:
     src/node.c      stacks main node structure
     src/test.c      basic test file for various reasons
     src/testStack.c test file for stack, making sure there is no memory leak
+    testScript.py   given sample test script
 
 Instructions:
     1. make
