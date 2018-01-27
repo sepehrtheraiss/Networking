@@ -135,7 +135,8 @@ int main( int argc, char** argv) {
           n = 1;
           file = popen(buffer,"r"); 
           while((n = fread(buffer,1,buff_size,file)) > 0){
-             push_back(stack,buffer,n);
+            buffer[n]=0;
+            push_back(stack,buffer,n+1);
           }
          // // printf("%s\n",buffer);
           pclose(file);
