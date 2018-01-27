@@ -131,7 +131,6 @@ int main(int argc, char** argv) {
                }
                // get servers respond
                 int count = 0; // buffer read
-                printf("sever stack size:%i\n",serverStackSize);
                 while(stack_size(stack) != serverStackSize){
                    // returns num of chars read up to \n, but \0 is still inserted into the buffer
                   if((count = read(sockfd,buffer,buff_size)) < 1){
