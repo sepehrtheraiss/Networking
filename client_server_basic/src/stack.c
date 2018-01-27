@@ -110,7 +110,7 @@ int writeOut(void *s,int fd){
     int n =0;
     node* ptr = cast(s)->head;
     while(ptr != NULL){
-        if((n = write(fd,ptr->str,ptr->len))<1){
+        if((n = write(fd,ptr->str,ptr->len-1))<1){ // dont want to send the 0 dont need it, if used for printf it will stop early
             perror("ERROR: internal write out");
             exit(EXIT_FAILURE);
         }

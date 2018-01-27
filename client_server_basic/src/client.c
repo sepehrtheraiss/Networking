@@ -138,8 +138,10 @@ int main(int argc, char** argv) {
                       perror("ERROR reading messages from socket");
                       exit(EXIT_FAILURE);
                    }
-                   buffer[count] = '\0';
-                   push_back(stack,buffer,count);
+                   if(stack_size(stack) == serverStackSize-1){ // last string needs to be added a \0
+                        buffer[count]=0;
+                   }
+                    push_back(stack,buffer,count);
                 }//end while stack size check
 
             // get key
