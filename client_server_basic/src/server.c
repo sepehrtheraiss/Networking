@@ -163,7 +163,7 @@ int main( int argc, char** argv) {
                perror("sending stack size");
                exit(EXIT_FAILURE);
             }
-            sleep(1);
+            usleep(20000);
             // writes all the stacks to the client
             if (writeOut(stack,clisockfd) < 1) {
                perror("ERROR writeout to socket");
@@ -172,7 +172,7 @@ int main( int argc, char** argv) {
                 clear(stack); // empties the stack to intial state
                 //wait?
                // send the key to client
-               sleep(1);
+               usleep(20000);
              write(clisockfd,client_key,key_size); 
             }//end else if stack size is not zero
           }//else not exit

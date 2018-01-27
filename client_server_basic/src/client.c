@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
       perror("write buffer");
       exit(EXIT_FAILURE);  
    }
-   sleep(1);
+   usleep(20000);
    // generate key, generate a manual custome key
    // send key
    if(write(sockfd,key,key_size)<1){
@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
       }
       else{
          // **Send command to the server**
-         sleep(1);
+         usleep(20000);
          n = write(sockfd, buffer, n);// n = num characters read from user
          // n not -1
          if (n < 1) {
