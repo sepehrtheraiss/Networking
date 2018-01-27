@@ -1,6 +1,6 @@
 FLAG=-std=c99 -Wall -ggdb
 SRC=server.c client.c stack.c node.c test/test.c
-OBJ=src/server.o src/client.o src/stack.o src/node.o src/test.o
+OBJ=src/server.o src/client.o src/stack.o src/node.o src/test.o src/testStack.o
 EXE=bin/server bin/client 
 MEMCHECK=valgrind --leak-check=full --track-origins=yes
 
