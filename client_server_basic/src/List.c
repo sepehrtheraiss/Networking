@@ -8,7 +8,7 @@
 // List.c
 // Implementation file for List ADT
 //-----------------------------------------------------------------------------
-#include "../src/List.h"
+#include "../header/List.h"
 // structs --------------------------------------------------------------------
 
 // private NodeObj type
@@ -100,7 +100,7 @@ int length(List L)
 // pre: L != NULL
 // If cursor is defined, returns the index of the cursor element,
 // otherwise returns -1.
-int index(List L)
+int indexL(List L)
 {
     if( L==NULL ){
         printf("List Error: calling index() on NULL List reference\n");
@@ -161,7 +161,7 @@ char* get(List L)
         printf("List Error: calling get() on an empty List\n");
         exit(EXIT_FAILURE);
     }
-    if( index(L)==-1 ){
+    if( indexL(L)==-1 ){
         printf("List Error: calling get() on index -1\n");
         exit(EXIT_FAILURE);
     }
@@ -365,7 +365,7 @@ void insertBefore(List L,char* data)
         printf("List Error: calling insertBefore() on empty List\n");
         exit(EXIT_FAILURE);
     }
-    if(index(L)<0)
+    if(indexL(L)<0)
     {
         printf("List Error: calling insertBefore() on a cursor pointed to NULL\n");
         exit(EXIT_FAILURE);
@@ -403,7 +403,7 @@ void insertAfter(List L,char* data)
         printf("List Error: calling insertAfter() on empty List\n");
         exit(EXIT_FAILURE);
     }
-    if(index(L)<0)
+    if(indexL(L)<0)
     {
         printf("List Error: calling insertAfter() on a cursor pointed to NULL\n");
         exit(EXIT_FAILURE);
@@ -418,7 +418,7 @@ void insertAfter(List L,char* data)
     {
         next->prev = n;
     }
-    if(index(L) == length(L)-1) //cursor is at tail therefore tail needs to be relocated
+    if(indexL(L) == length(L)-1) //cursor is at tail therefore tail needs to be relocated
     {
         L->tail = n;
     }
@@ -498,7 +498,7 @@ void delete(List L)
         printf("List Error: calling delete() on empty List\n");
         exit(EXIT_FAILURE);
     }
-    if(index(L)<0)
+    if(indexL(L)<0)
     {
         printf("List Error: calling delete() on a cursor pointed to NULL\n");
         exit(EXIT_FAILURE);
@@ -539,11 +539,11 @@ void printList(FILE* out, List L)
         exit(EXIT_FAILURE);
     }
     moveFront(L);
-    while(index(L)!=-1)
+    while(indexL(L)!=-1)
     {
         fprintf(out,"%s",get(L));
         moveNext(L);
-        if(index(L)!=-1)
+        if(indexL(L)!=-1)
         {
             fprintf(out," ");
         }
@@ -564,30 +564,32 @@ List copyList(List L)
     List n = newList();
     for(Node ptr = L->head;ptr!=NULL;ptr=ptr->next)
     {
-        append(n,ptr->data);
+        append(n,ptr->data,0);
     }
     return n;
 }
 int getLength(List l)
 {
-    if( L==NULL ){
+    if( l==NULL ){
         printf("List Error: calling getLength() on NULL List reference\n");
         exit(EXIT_FAILURE);
     }
-    if( length(L)<=0 ){
+    if( length(l)<=0 ){
         printf("List Error: calling getLength() on an empty List\n");
         exit(EXIT_FAILURE);
     }
-    if( index(L)==-1 ){
+    if( indexL(l)==-1 ){
         printf("List Error: calling getLength() on index -1\n");
         exit(EXIT_FAILURE);
     }
-    return L->cursor->l;
+    return l->cursor->l;
 }
 int writeOut(List l,int fd){
+    int n =0;
     moveFront(l);
-    while(index(l)!=-1){
-        write(fd,get(l),getLength)
+    while(indexL(l)!=-1){
+        n=write(fd,get(l),getLength(l));
         moveNext(l);
     }
+    return n;
 }

@@ -41,7 +41,7 @@ int length(List L);
 // pre: L != NULL
 // If cursor is defined, returns the index of the cursor element,
 // otherwise returns -1.
-int index(List L);
+int indexL(List L);
 
 // front()
 // Pre: L != NULL, length()>0
