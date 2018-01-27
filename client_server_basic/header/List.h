@@ -12,8 +12,10 @@
 #ifndef _LIST_H_INCLUDE_
 #define _LIST_H_INCLUDE_
 
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 // Exported type --------------------------------------------------------------
 typedef struct ListObj* List;
 
@@ -55,7 +57,10 @@ char* back(List L);
 // Pre: L != NULL, length()>0, index()>=0
 // Returns cursor element.
 char* get(List L);
-
+// returns the length of the string
+int getLength(List l);
+// writes out everything to the given fd
+int writeOut(List l,int fd);
 // equals()
 // pre: L != NULL
 // Returns true if this List and L are the same integer
@@ -105,7 +110,7 @@ void prepend(List L,char* data);
 // pre: L != NULL
 // Insert new element into this List. If List is non-empty,
 // insertion takes place after back element.
-void append(List L,char* data);
+void append(List L,char* data,int l);
 
 // insertBefore()
 // Pre: L != NULL,length()>0, index()>=0

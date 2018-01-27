@@ -8,13 +8,13 @@
 // List.c
 // Implementation file for List ADT
 //-----------------------------------------------------------------------------
-#include "List.h"
-#include <string.h>
+#include "../src/List.h"
 // structs --------------------------------------------------------------------
 
 // private NodeObj type
 typedef struct NodeObj{
     char* data;
+    int l; // length of data
     struct NodeObj* next;
     struct NodeObj* prev;
 } NodeObj;
@@ -39,6 +39,7 @@ typedef struct ListObj{
 Node newNode(char* data,int l){
     Node N = malloc(sizeof(NodeObj));
     N->data = malloc(sizeof(char)*l);
+    N->l = l;
     strcpy(N->data,data);
     N->next = N->prev = NULL;
     return(N);
@@ -316,13 +317,13 @@ void prepend(List L,char* data)
     }
     if(length(L) != 0)
     {
-        L->head->prev = newNode(data);
+        L->head->prev = newNode(data,0);
         L->head->prev->next = L->head;
         L->head = L->head->prev;
     }
     else
     {
-        L->tail = L->head = newNode(data);
+        L->tail = L->head = newNode(data,0);
     }
     L->length++;
 }
@@ -331,7 +332,7 @@ void prepend(List L,char* data)
 // pre: L != NULL
 // Insert new element into this List. If List is non-empty,
 // insertion takes place after back element.
-void append(List L,char* data)
+void append(List L,char* data,int l)
 {
     if( L==NULL ){
         printf("List Error: calling append() on NULL List reference\n");
@@ -339,13 +340,13 @@ void append(List L,char* data)
     }
     if(length(L) != 0)
     {
-        L->tail->next =  newNode(data);
+        L->tail->next =  newNode(data,l);
         L->tail->next->prev = L->tail;
         L->tail = L->tail->next;
     }
     else
     {
-        L->tail = L->head = newNode(data);
+        L->tail = L->head = newNode(data,l);
     }
     L->length++;
 }
@@ -371,7 +372,7 @@ void insertBefore(List L,char* data)
     }
 
     Node prev = L->cursor->prev;
-    Node n = newNode(data); // new node
+    Node n = newNode(data,0); // new node
     L->cursor->prev = n;
     n->next = L->cursor;
     if(prev != NULL) // assuming the cursor is at head
@@ -408,7 +409,7 @@ void insertAfter(List L,char* data)
         exit(EXIT_FAILURE);
     }
 
-    Node n = newNode(data);
+    Node n = newNode(data,0);
     Node next = L->cursor->next;
     L->cursor->next = n;
     n->prev = L->cursor;
@@ -566,4 +567,27 @@ List copyList(List L)
         append(n,ptr->data);
     }
     return n;
+}
+int getLength(List l)
+{
+    if( L==NULL ){
+        printf("List Error: calling getLength() on NULL List reference\n");
+        exit(EXIT_FAILURE);
+    }
+    if( length(L)<=0 ){
+        printf("List Error: calling getLength() on an empty List\n");
+        exit(EXIT_FAILURE);
+    }
+    if( index(L)==-1 ){
+        printf("List Error: calling getLength() on index -1\n");
+        exit(EXIT_FAILURE);
+    }
+    return L->cursor->l;
+}
+int writeOut(List l,int fd){
+    moveFront(l);
+    while(index(l)!=-1){
+        write(fd,get(l),getLength)
+        moveNext(l);
+    }
 }
