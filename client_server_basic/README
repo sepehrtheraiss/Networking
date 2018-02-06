@@ -4,15 +4,17 @@ CMPE 156
 Assignment 1: basic server client remote shell
 
 Files:
-    src/            contains source files
-    header/         contains source files headers
-    bin/            contains executable files
-    src/server.c    server code    
-    src/client.c    client code
-    src/stack.c     stack data structure
-    src/node.c      stacks main node structure
-    src/test.c      basic test file for various reasons
-    src/testStack.c test file for stack, making sure there is no memory leak
+    src/                        contains source files
+    header/                     contains source files headers
+    bin/                        contains executable files
+    testScripts/                python test script
+    src/server.c                server code    
+    src/client.c                client code
+    src/stack.c                 stack data structure
+    src/node.c                  stacks main node structure
+    src/test.c                  basic test file for various reasons
+    src/testStack.c             test file for stack, making sure there is no memory leak
+    testScripts/myTestScipt.py  basic test script
 
 Instructions:
     1. make
@@ -41,6 +43,7 @@ basic design steps:
     server sends the key indicating end of transmition. and the process repeats until client enters exit then client closes and server waits for the next client to connect.
 
 Testing: testing was done manually 
+myTestScipt.py: does not work probably as manual testing works.
 
 to compress: tar -zcvf file.tar.gz dir_name
 to uncompress: tar zxvf file.tar.gz
