@@ -9,17 +9,15 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#define BUFF_SIZE 512
+#define BUFF_SIZE 32
 int main(int argc, char** argv) {
    // need to first accept a buffer size
    // to produce the key for ending a connection
-   unsigned int buff_size = BUFF_SIZE;
    int sockfd, portno;
    uint32_t IP;
    struct sockaddr_in serv_addr;
-   char buffer[buff_size];
-   char serverStackSizeChar [BUFF_SIZE];
-   
+   char buff[BUFF_SIZE];
+   int buff_read;
    if (argc < 3) {
       fprintf(stderr,"usage %s IP port\n", argv[0]);
       exit(0);
@@ -49,7 +47,9 @@ int main(int argc, char** argv) {
       perror("ERROR connecting");
       exit(EXIT_FAILURE);
    }
-     
+   write(sockfd,"file_name bin/file1",25);
+   buff_read = read(sockfd,buff,BUFF_SIZE);
+   write(1,buff,buff_read);
    if(close(sockfd) != 0){
       perror("ERROR on close sockfd");
       exit(EXIT_FAILURE);

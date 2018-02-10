@@ -6,14 +6,17 @@ MEMCHECK = valgrind --leak-check=full --track-origins=yes
 
 all: $(EXE)
 
-bin/server: src/server.o src/stack.o src/node.o src/functions.o
-	cc -o bin/server src/server.o src/stack.o src/node.o src/functions.o $(FLAG)
+bin/server: src/server.o 
+	cc -o bin/server src/server.o $(FLAG)
 
-src/server.o: src/server.c header/stack.h header/header.h
+src/server.o: src/server.c 
 	cc -c $(FLAG) src/server.c -o $@
 
-bin/client: src/client.o src/stack.o src/node.o src/functions.o    
-	cc -o bin/client src/client.o src/stack.o src/node.o src/functions.o $(FLAG)
+bin/client: src/client.o 
+	cc -o bin/client src/client.o $(FLAG)
+
+src/client.o: src/client.c 
+	cc -c $(FLAG) src/client.c -o $@
 
 test: src/test.o src/stack.o src/node.o
 	cc -o bin/test src/test.o src/stack.o src/node.o  $(FLAG)
@@ -30,8 +33,6 @@ testStack.o: src/testStack.c header/stack.h
 src/functions.o: src/functions.c header/header.h 
 	cc -c $(FLAG) src/functions.c -o $@
 
-src/client.o: src/client.c header/stack.h header/header.h
-	cc -c $(FLAG) src/client.c -o $@
 
 src/stack.o: src/stack.c header/stack.h header/node.h
 	cc -c $(FLAG) src/stack.c -o $@

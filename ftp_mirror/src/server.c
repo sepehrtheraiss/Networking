@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #define BUFF_SIZE 512
+#define R_READ    64
 int main( int argc, char** argv) {
    int sockfd, clisockfd, portno;
    socklen_t clilen;
@@ -48,23 +49,74 @@ int main( int argc, char** argv) {
    listen(sockfd,5);
 
    /* Now start listening for the clients, here process will
-      * go in sleep mode and will wait for the incoming connection
-   */
+    * go in sleep mode and will wait for the incoming connection
+    */
    
-
+    char buff[BUFF_SIZE];
+    int buff_read;
+    char r_buff[R_READ]; // read_buffer for requests
+    int fd;
+    struct stat f_stat;
+    const char * PATH = "/afs/cats.ucsc.edu/users/j/sraissia/Git/Networking/ftp_mirror/";
    clilen = sizeof(cli_addr);
    while(1){ // loop forever
       /* Accept actual connection from the client */
       clisockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
 
-      if (clisockfd < 0) { // client connection
+      if (clisockfd < 0) { // client connection failed
          perror("ERROR on accept");
-         exit(EXIT_FAILURE);
+         //exit(EXIT_FAILURE);
       }
+      // connection established
+      else
+      {
+        if((buff_read = read(clisockfd,buff,R_READ)) < 0){
+            perror("ERROR on client read");
+        }
+        else
+        {
+            buff[buff_read] = 0;
+            // making sure that the strcmp only compares the wanted characters
+            memcpy(r_buff,&buff[0],9);
+            r_buff[9] = 0; //null terminator
+            if(strcmp("file_name",r_buff) == 0){
+                // usage: file_name filename. opens the file then returns the file size
+                memcpy(r_buff,&buff[10],54);
+                r_buff[54] = 0;
+                strcpy(buff,PATH);
+                strcat(buff,r_buff);
+                fd = open(buff,O_RDONLY);
+                if(fstat(fd,&f_stat) == -1){
+                    perror("ERROR on fstat");
+                    write(sockfd,"0",2);
+                }
+                else 
+                {
+                    bzero(buff,32);
+                    sprintf(buff,"%li",f_stat.st_blksize); 
+                    write(clisockfd,buff,32);
+                }
+                close(fd);
+            }
+            memcpy(r_buff,&buff,6);
+            r_buff[6] = 0; //null terminator
+            if(strcmp("offset",r_buff) == 0)
+            {
+                // usage: offset (x,y)
+                printf("got it %s\n",buff);
+            }
+            else
+            {
+                perror("ERROR invalid client read request");
+            }
+        }
+      }//end else connection established with the client
+      
       if(close(clisockfd) != 0){
          perror("ERROR close clisockfd");
          exit(EXIT_FAILURE);
       }
+      
    }//end outter while main server loop to accept
 
    if(close(sockfd) != 0){
