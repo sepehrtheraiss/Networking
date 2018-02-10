@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include "../header/stack.h"
+#include "../header/header.h"
 #define BUFF_SIZE 512
 #define STRING_SIZE 100
 int main(int argc, char** argv) {
@@ -19,7 +20,7 @@ int main(int argc, char** argv) {
    char msg[] = "Client$ ";
 
    char accepted = '1';
-   const char key[] = "f2567239h6015"; 
+   char key[] = "f2567239h6015"; 
    const int key_size = sizeof(key);
    int sockfd, portno, n;
    uint32_t IP;
@@ -63,23 +64,30 @@ int main(int argc, char** argv) {
       * will be read by server
    */
    // get buffer size
+   printf("reading buffer: %i\n",readit(sockfd,buffer,buff_size));
+   /*
    if(read(sockfd,buffer,buff_size)<1){
       perror("read buffer");
       exit(EXIT_FAILURE);
    }
+   */
    // just accept for now
+   printf("writeting accept: %i\n",writeit(sockfd,&accepted,2));
+   /*
    if(write(sockfd,&accepted,2)<1){
       perror("write buffer");
       exit(EXIT_FAILURE);  
    }
-   usleep(20000);
+   */
    // generate key, generate a manual custome key
    // send key
+   printf("writing key: %i\n",writeit(sockfd,&(key[0]),key_size));
+   /*
    if(write(sockfd,key,key_size)<1){
       perror("write key");
       exit(EXIT_FAILURE);  
    }
-
+*/
    int flag = 1;
    bzero(buffer,buff_size);
    //n=0;
@@ -87,7 +95,7 @@ int main(int argc, char** argv) {
       write(STDOUT_FILENO,msg,8); //printf("Client$: ");
       // ***get users command input****
       n = read(STDIN_FILENO,buffer,buff_size); // returns counted characters, exclude \0
-
+    printf("your shit: %s\n",buffer);
       if(n >= buff_size){
          perror("what are you typing bro!");
          exit(EXIT_FAILURE);
@@ -104,7 +112,6 @@ int main(int argc, char** argv) {
       }
       else{
          // **Send command to the server**
-         usleep(20000);
          n = write(sockfd, buffer, n);// n = num characters read from user
          // n not -1
          if (n < 1) {
@@ -144,10 +151,13 @@ int main(int argc, char** argv) {
                 }//end while stack size check
 
             // get key
+            printf("reading key: %i\n",readit(sockfd,buffer,key_size));
+            /*
             if((n=read(sockfd,buffer,key_size)) < 1){
                   perror("ERROR reading key from socket");
                   exit(EXIT_FAILURE);
             }
+            */
             buffer[n]='\0';
             // if mathced
             if(strcmp(buffer,key) != 0){

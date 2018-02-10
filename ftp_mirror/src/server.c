@@ -11,7 +11,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "../header/stack.h"
-
+#include "../header/header.h"
 #define BUFF_SIZE 512
 #define STRING_SIZE 100
 int main( int argc, char** argv) {
@@ -87,17 +87,23 @@ int main( int argc, char** argv) {
          perror("sprintf");
          exit(EXIT_FAILURE);
       }
+       printf("writing buffer: %i\n",writeit(clisockfd,string,n));
+       /*
       if(write(clisockfd,string,n) < 0){ // send the size of buffer to client
          perror("write");
          exit(EXIT_FAILURE);
-      }     
+      }  
+      */
       // read if client aggress to the buffer
-      if((n=read(clisockfd,buffer,BUFF_SIZE)) > 0){
+       //printf("reading buffer: %i\n",writeit(clisockfd,buffer,BUFF_SIZE));
+       
+      if((n=readit(clisockfd,buffer,2))>0){//(n=read(clisockfd,buffer,BUFF_SIZE)) > 0){
          buffer[n] ='\0';
+         printf("read accept:%i\n%s\n",n,buffer);
          if(buffer[0] == '1'){
             printf("client has accepted BUFF_SIZE of %i\n",BUFF_SIZE); // expecting a accepted : 1
             // continue with second rule, get key
-            if((key_size=read(clisockfd,client_key,STRING_SIZE)) > 0){
+            if((key_size=readit(clisockfd,client_key,STRING_SIZE))>0){//(clisockfd,client_key,STRING_SIZE)) > 0){
                accepted = '1';
                client_key[key_size] = '\0';
                //write(STDOUT_FILENO,client_key,n);
@@ -163,7 +169,6 @@ int main( int argc, char** argv) {
                perror("sending stack size");
                exit(EXIT_FAILURE);
             }
-            usleep(20000);
             // writes all the stacks to the client
             if (writeOut(stack,clisockfd) < 1) {
                perror("ERROR writeout to socket");
@@ -172,8 +177,9 @@ int main( int argc, char** argv) {
                 clear(stack); // empties the stack to intial state
                 //wait?
                // send the key to client
-               usleep(20000);
-             write(clisockfd,client_key,key_size); 
+            
+            printf("writing key: %i\n",writeit(clisockfd,client_key,key_size));
+             //write(clisockfd,client_key,key_size); 
             }//end else if stack size is not zero
           }//else not exit
     }// end inner server while loop, waiting for exit command
