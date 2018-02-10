@@ -1,4 +1,4 @@
-FLAGi = -std=c99 -Wall -ggdb
+FLAG = -std=c99 -Wall -ggdb
 SRC = server.c client.c stack.c node.c test/test.c
 OBJ = src/server.o src/client.o src/stack.o src/node.o src/test.o src/testStack.o
 EXE = bin/server bin/client bin/testStack
@@ -6,20 +6,20 @@ MEMCHECK = valgrind --leak-check=full --track-origins=yes
 
 all: $(EXE)
 
-bin/server: src/server.o src/stack.o src/node.o    
-	cc -o bin/server src/server.o src/stack.o src/node.o 
+bin/server: src/server.o src/stack.o src/node.o src/functions.o
+	cc -o bin/server src/server.o src/stack.o src/node.o src/functions.o $(FLAG)
 
-server.o: src/server.c header/stack.h
-	cc -c $(FLAG) src/server.c
+src/server.o: src/server.c header/stack.h header/header.h
+	cc -c $(FLAG) src/server.c -o $@
 
-bin/client: src/client.o src/stack.o src/node.o     
-	cc -o bin/client src/client.o src/stack.o src/node.o 
+bin/client: src/client.o src/stack.o src/node.o src/functions.o    
+	cc -o bin/client src/client.o src/stack.o src/node.o src/functions.o $(FLAG)
 
 test: src/test.o src/stack.o src/node.o
-	cc -o bin/test src/test.o src/stack.o src/node.o 
+	cc -o bin/test src/test.o src/stack.o src/node.o  $(FLAG)
 
-test.o: src/test.c header/stack.h 
-	cc -c src/test.c
+src/test.o: src/test.c header/stack.h 
+	cc -c src/test.c $(FLAG)
 
 bin/testStack: src/testStack.o src/stack.o src/node.o
 	cc -o bin/testStack src/testStack.o src/stack.o src/node.o 
@@ -27,14 +27,17 @@ bin/testStack: src/testStack.o src/stack.o src/node.o
 testStack.o: src/testStack.c header/stack.h 
 	cc -c src/testStack.c
 
-client.o: src/client.c header/stack.h
-	cc -c $(FLAG) src/client.c
+src/functions.o: src/functions.c header/header.h 
+	cc -c $(FLAG) src/functions.c -o $@
 
-stack.o: src/stack.c header/stack.h header/node.h
-	cc -c $(FLAG) src/stack.c
+src/client.o: src/client.c header/stack.h header/header.h
+	cc -c $(FLAG) src/client.c -o $@
 
-node.o: src/node.c header/node.h
-	cc -c $(FLAG) src/node.c
+src/stack.o: src/stack.c header/stack.h header/node.h
+	cc -c $(FLAG) src/stack.c -o $@
+
+src/node.o: src/node.c header/node.h
+	cc -c $(FLAG) src/node.c -o $@
 
 checkStack: testStack
 	$(MEMCHECK) ./bin/testStack "cat src/stack.c"
