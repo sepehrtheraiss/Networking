@@ -72,7 +72,6 @@ int main(int argc, char** argv) {
       perror("write buffer");
       exit(EXIT_FAILURE);  
    }
-   usleep(20000);
    // generate key, generate a manual custome key
    // send key
    if(write(sockfd,key,key_size)<1){
@@ -104,7 +103,6 @@ int main(int argc, char** argv) {
       }
       else{
          // **Send command to the server**
-         usleep(20000);
          n = write(sockfd, buffer, n);// n = num characters read from user
          // n not -1
          if (n < 1) {
@@ -143,6 +141,8 @@ int main(int argc, char** argv) {
                     push_back(stack,buffer,count);
                 }//end while stack size check
 
+            // read will try to read up to buff_size, so its up to me to check if there are stuff inserted into the last stack after the \0
+           printf("back: %s\n",back(stack)); 
             // get key
             if((n=read(sockfd,buffer,key_size)) < 1){
                   perror("ERROR reading key from socket");
