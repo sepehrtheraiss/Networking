@@ -1,4 +1,6 @@
 #include<unistd.h>
+#include<stdlib.h>
+#include<stdio.h>
 
 // attemps to write a message and read the response if message recieved was correct
 // returns 1 on true the users message has ok else 0 and on waittime exeteeded

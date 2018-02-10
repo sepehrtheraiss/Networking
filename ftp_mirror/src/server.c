@@ -94,12 +94,13 @@ int main( int argc, char** argv) {
          exit(EXIT_FAILURE);
       }  
       */
-      // read if client aggress to the buffer
+      // read if client agrees to the buffer
        //printf("reading buffer: %i\n",writeit(clisockfd,buffer,BUFF_SIZE));
        
-      if((n=readit(clisockfd,buffer,2))>0){//(n=read(clisockfd,buffer,BUFF_SIZE)) > 0){
+      if((n=readit(clisockfd,buffer,BUFF_SIZE))>0){//(n=read(clisockfd,buffer,BUFF_SIZE)) > 0){
          buffer[n] ='\0';
-         printf("read accept:%i\n%s\n",n,buffer);
+         write(1,buffer,BUFF_SIZE);
+         //printf("read accept:%i\n%s\n",n,buffer);
          if(buffer[0] == '1'){
             printf("client has accepted BUFF_SIZE of %i\n",BUFF_SIZE); // expecting a accepted : 1
             // continue with second rule, get key
