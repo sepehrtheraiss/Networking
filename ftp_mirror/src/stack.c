@@ -1,4 +1,4 @@
-#include "../header/stack.h"
+#include "../include/stack.h"
 #include <unistd.h>
 #define buff_size 512
 typedef struct stack_node{

@@ -1,4 +1,4 @@
-#include "../header/node.h"
+#include "../include/node.h"
 #include <string.h>
 /*
 typedef struct Node{

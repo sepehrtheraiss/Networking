@@ -57,7 +57,26 @@ int main( int argc, char** argv) {
     char r_buff[R_READ]; // read_buffer for requests
     int fd;
     struct stat f_stat;
-    const char * PATH = "/afs/cats.ucsc.edu/users/j/sraissia/Git/Networking/ftp_mirror/";
+    off_t file_size;
+    char PATH[BUFF_SIZE];
+    //const char * PATH = "/afs/cats.ucsc.edu/users/j/sraissia/Git/Networking/ftp_mirror/";
+    FILE* pwd = popen("pwd","r");
+    buff_read = fread(PATH,1,BUFF_SIZE,pwd);
+    pclose(pwd);
+    if(buff_read+1 > BUFF_SIZE){ // +1 for null
+        perror("buff read > buff size");
+        exit(1);
+    }
+    if((int)PATH[buff_read-1] == 10) // new line feed
+    {
+        PATH[buff_read-1] = '/';
+        PATH[buff_read] = 0;
+    }
+    else
+    {
+        PATH[buff_read] = '/';
+        PATH[buff_read+1] = 0;
+    }
    clilen = sizeof(cli_addr);
    while(1){ // loop forever
       /* Accept actual connection from the client */
@@ -93,8 +112,9 @@ int main( int argc, char** argv) {
                 else 
                 {
                     bzero(buff,32);
-                    sprintf(buff,"%li",f_stat.st_blksize); 
+                    sprintf(buff,"%lli",f_stat.st_size); 
                     write(clisockfd,buff,32);
+                    file_size = f_stat.st_size; 
                 }
                 close(fd);
             }
@@ -105,11 +125,7 @@ int main( int argc, char** argv) {
                 // usage: offset (x,y)
                 printf("got it %s\n",buff);
             }
-            else
-            {
-                perror("ERROR invalid client read request");
-            }
-        }
+       }// end else success reading from client
       }//end else connection established with the client
       
       if(close(clisockfd) != 0){

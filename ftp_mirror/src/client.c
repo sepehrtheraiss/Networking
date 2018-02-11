@@ -9,8 +9,16 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#define BUFF_SIZE 32
+#include "../include/header.h"
+#define BUFF_SIZE 128
+#define IP_SIZE   16 
 int main(int argc, char** argv) {
+    /*usage: server-info.txt num-connections filename*/
+    FILE* s_file = fopen(argv[1],"r");
+    server servers[10];
+    server_info(s_file,servers);
+    fclose(s_file);
+    exit(1);
    // need to first accept a buffer size
    // to produce the key for ending a connection
    int sockfd, portno;
@@ -47,7 +55,7 @@ int main(int argc, char** argv) {
       perror("ERROR connecting");
       exit(EXIT_FAILURE);
    }
-   write(sockfd,"file_name bin/file1",25);
+   write(sockfd,"file_name bin/testStack",25);
    buff_read = read(sockfd,buff,BUFF_SIZE);
    write(1,buff,buff_read);
    if(close(sockfd) != 0){

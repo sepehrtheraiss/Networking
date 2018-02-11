@@ -1,7 +1,7 @@
 FLAG = -std=c99 -Wall -ggdb
-SRC = server.c client.c stack.c node.c test/test.c
-OBJ = src/server.o src/client.o src/stack.o src/node.o src/test.o src/testStack.o
-EXE = bin/server bin/client bin/testStack
+SRC = server.c client.c stack.c node.c 
+OBJ = src/server.o src/client.o src/stack.o src/node.o src/functions.o
+EXE = bin/server bin/client 
 MEMCHECK = valgrind --leak-check=full --track-origins=yes
 
 all: $(EXE)
@@ -12,32 +12,19 @@ bin/server: src/server.o
 src/server.o: src/server.c 
 	cc -c $(FLAG) src/server.c -o $@
 
-bin/client: src/client.o 
-	cc -o bin/client src/client.o $(FLAG)
+bin/client: src/client.o src/functions.o
+	cc -o bin/client src/client.o src/functions.o $(FLAG)
 
-src/client.o: src/client.c 
+src/client.o: src/client.c include/header.h 
 	cc -c $(FLAG) src/client.c -o $@
 
-test: src/test.o src/stack.o src/node.o
-	cc -o bin/test src/test.o src/stack.o src/node.o  $(FLAG)
-
-src/test.o: src/test.c header/stack.h 
-	cc -c src/test.c $(FLAG)
-
-bin/testStack: src/testStack.o src/stack.o src/node.o
-	cc -o bin/testStack src/testStack.o src/stack.o src/node.o 
-
-testStack.o: src/testStack.c header/stack.h 
-	cc -c src/testStack.c
-
-src/functions.o: src/functions.c header/header.h 
+src/functions.o: src/functions.c include/header.h 
 	cc -c $(FLAG) src/functions.c -o $@
 
-
-src/stack.o: src/stack.c header/stack.h header/node.h
+src/stack.o: src/stack.c include/stack.h include/node.h
 	cc -c $(FLAG) src/stack.c -o $@
 
-src/node.o: src/node.c header/node.h
+src/node.o: src/node.c include/node.h
 	cc -c $(FLAG) src/node.c -o $@
 
 checkStack: testStack
