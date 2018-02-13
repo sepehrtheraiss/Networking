@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
       fprintf(stderr,"usage %s IP port\n", argv[0]);
       exit(0);
    }
-	
+   write(1,argv[1],10);
    if(inet_pton(AF_INET,argv[1],&IP)<1){
       perror("ERROR pasring IP address");
       exit(EXIT_FAILURE);

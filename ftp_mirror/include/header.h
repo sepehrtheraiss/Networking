@@ -7,12 +7,22 @@
 
 #ifndef _HEADER_H_INCLUDE_
 #define _HEADER_H_INCLUDE_
+#include <stdio.h>
 #include <stdlib.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <strings.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 #define IP_SIZE 16
 #define PORT_SIZE 4
 typedef struct server{
-    char IP[IP_SIZE+1];
-    char port[PORT_SIZE+1];
+    uint32_t IP;
+    int port;
 }server;
 
 // takes in a file descriptor
