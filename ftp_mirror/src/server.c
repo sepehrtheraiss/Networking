@@ -59,7 +59,6 @@ int main( int argc, char** argv) {
     struct stat f_stat;
     off_t file_size;
     char PATH[BUFF_SIZE];
-    //const char * PATH = "/afs/cats.ucsc.edu/users/j/sraissia/Git/Networking/ftp_mirror/";
     FILE* pwd = popen("pwd","r");
     buff_read = fread(PATH,1,BUFF_SIZE,pwd);
     pclose(pwd);
@@ -67,6 +66,7 @@ int main( int argc, char** argv) {
         perror("buff read > buff size");
         exit(1);
     }
+    // appending / to the path
     if((int)PATH[buff_read-1] == 10) // new line feed
     {
         PATH[buff_read-1] = '/';

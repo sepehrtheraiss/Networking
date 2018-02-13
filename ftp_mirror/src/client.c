@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
         exit(0);
     }
     int num_servs; // number of servers in the server-info
-    int servs_requested = atoi(argv[2]); // pass in server nums by the user
+    int servs_req = atoi(argv[2]); // pass in server nums by the user
     char filename[32];
     strcpy(filename,argv[3]);
     FILE* s_file = fopen(argv[1],"r");
@@ -32,10 +32,20 @@ int main(int argc, char** argv) {
     struct sockaddr_in serv_addr;
     char buff[BUFF_SIZE];
     int buff_read;
+    unsigned int fileSize;
+    // gets the file size from the first responsive server
+    if((fileSize = getFileSize(servers,filename,num_servs,servs_req)) < 1)
+    {
+        perror("file either does not exist or all the servers are down");
+        exit(1);
+    }
+    const unsigned int frag = fileSize / servs_req; // ?? at compile time
+    printf("%i \n",frag); 
 
+/*
+    // make connections
     for(int i=0;i < num_servs && i < servs_requested ;i++)
     {
-        /* Create a socket point */
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
        
         if (sockfd < 0) {
@@ -48,7 +58,6 @@ int main(int argc, char** argv) {
         serv_addr.sin_addr.s_addr = servers[i].IP;
         serv_addr.sin_port = servers[i].port;
        
-        /* Now connect to the server */
         if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
             perror("ERROR connecting");
             exit(EXIT_FAILURE);
@@ -65,6 +74,6 @@ int main(int argc, char** argv) {
         }//end close socket
 
     }//end for loop
-
+*/
     return 0;
 }

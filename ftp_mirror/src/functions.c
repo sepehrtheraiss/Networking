@@ -37,6 +37,60 @@ int server_info(FILE *file,struct server* s)
     }
     return n;
 }
+
+
+int getFileSize(server* servers,char* filename,int num_servs,int servs_req)
+{
+    // to produce the key for ending a connection
+    int sockfd;
+    struct sockaddr_in serv_addr;
+    char buff[BUFF_SIZE];
+    int buff_read;
+    int sup =0 ;//number of up servers
+    
+    for(int i=0;i < num_servs && sup < servs_req ;i++)
+    {
+           /* Create a socket point */
+        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+       
+        if (sockfd < 0) {
+          perror("ERROR opening socket");
+          exit(EXIT_FAILURE);
+        }
+        //make connection
+        bzero((char *) &serv_addr, sizeof(serv_addr));
+        serv_addr.sin_family = AF_INET;
+        serv_addr.sin_addr.s_addr = servers[i].IP;
+        serv_addr.sin_port = servers[i].port;
+       
+        /* Now connect to the server */
+        if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+            perror("ERROR connecting");
+        }
+        else
+        {
+            sup++;
+         sprintf(buff,"file_name %s",filename);
+         printf("%s\n",buff);
+         write(sockfd,buff,50);
+        // write(sockfd,"file_name bin/testStack",25);
+            buff_read = read(sockfd,buff,BUFF_SIZE);
+            //write(1,buff,buff_read);
+         if(close(sockfd) != 0){
+                perror("ERROR on close sockfd");
+                exit(EXIT_FAILURE);
+            }//end close socket
+            buff[buff_read] = 0;
+            return atoi(buff);
+        }//end else made a connections
+    }//end for loop
+    return 0;
+}
+void read_offset(FILE *file,int off, int bytes,char *buffer)
+{
+   fseek(file,off,SEEK_SET);
+   fread(buffer,1,bytes,file);
+}
 // attemps to write a message and read the response if message recieved was correct
 // returns 1 on true the users message has ok else 0 and on waittime exeteeded
 int writeit(int fd,char* buffer,int size)
