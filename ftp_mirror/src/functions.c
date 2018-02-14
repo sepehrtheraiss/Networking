@@ -68,18 +68,19 @@ int getFileSize(server* servers,char* filename,int num_servs,int servs_req)
         {
             sup++;
          sprintf(buff,"file_name %s",filename);
-         printf("%s\n",buff);
+    //     printf("%s\n",buff);
          write(sockfd,buff,64);
         // write(sockfd,"file_name bin/testStack",25);
             buff_read = read(sockfd,buff,BUFF_SIZE);
             //write(1,buff,buff_read);
-         if(close(sockfd) != 0){
-                perror("ERROR on close sockfd");
-                exit(EXIT_FAILURE);
-            }//end close socket
             buff[buff_read] = 0;
             return atoi(buff);
         }//end else made a connections
+        if(close(sockfd) != 0){
+            perror("ERROR on close sockfd");
+            exit(EXIT_FAILURE);
+        }//end close socket
+
     }//end for loop
     return 0;
 }
@@ -119,12 +120,70 @@ void sendOffsetRead(server* s,int off,int bytes,char* buffer,char* filename)
             buff_read = read(sockfd,buffer,bytes);
             buffer[buff_read] = 0;
             write(1,buffer,buff_read);
-         if(close(sockfd) != 0){
-                perror("ERROR on close sockfd");
-                exit(EXIT_FAILURE);
-            }//end close socket
         }//end else made a connections
+        if(close(sockfd) != 0){
+            perror("ERROR on close sockfd");
+            exit(EXIT_FAILURE);
+        }//end close socket
 
+
+}
+
+void* initThread(server* s)
+{
+    int sockfd;
+    struct sockaddr_in serv_addr;
+    int buff_read;
+    char buffer[BUFF_SIZE]; 
+           /* Create a socket point */
+        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+       
+        if (sockfd < 0) {
+          perror("ERROR opening socket");
+          exit(EXIT_FAILURE);
+        }
+        //make connection
+        bzero((char *) &serv_addr, sizeof(serv_addr));
+        serv_addr.sin_family = AF_INET;
+        serv_addr.sin_addr.s_addr = s->IP;
+        serv_addr.sin_port = s->port;
+       
+        /* Now connect to the server */
+        if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+            t_servers--;
+            perror("ERROR connecting");
+        }
+        else
+        {
+            // on success decrement the servers requested
+            // if its less than zero than we dont need it
+            // race condition can be avoided by letting n = servs_r, since n will be in this scope
+            int n = --servs_req;
+            printf("servs req: %i\n",servs_req);
+            if(n < 0)
+            {
+                pthread_exit(NULL);
+            }
+            t_servers--;
+            sup++;
+            //while(t_servers != 0){} // busy waiting
+            pthread_cond_wait(&lock,&m);
+            // fragment size, need to take the ceiling if frag size has a floating number
+            unsigned int FRAG_SIZE = ceil((double)fileSize / sup); 
+            sprintf(buffer,"offset %s(%i,%i)",filename,s->id*FRAG_SIZE,FRAG_SIZE);
+            //printf("%s\n",buffer);
+            write(sockfd,buffer,BUFF_SIZE);
+            buff_read = read(sockfd,buffer,FRAG_SIZE);
+            buffer[buff_read] = 0;
+            s->str = malloc(sizeof(char)*buff_read);
+            strcpy(s->str,buffer);
+            //write(1,buffer,buff_read);
+        }//end else made a connections
+        if(close(sockfd) != 0){
+            perror("ERROR on close sockfd");
+            exit(EXIT_FAILURE);
+        }//end close socket
+return NULL;
 }
 // attemps to write a message and read the response if message recieved was correct
 // returns 1 on true the users message has ok else 0 and on waittime exeteeded
