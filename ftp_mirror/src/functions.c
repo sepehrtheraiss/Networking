@@ -88,6 +88,7 @@ void read_offset(FILE *file,int off, int bytes,char *buffer)
 {
    fseek(file,off,SEEK_SET);
    fread(buffer,1,bytes,file);
+   buffer[bytes]=0;
 }
 void sendOffsetRead(server* s,int off,int bytes,char* buffer,char* filename)
 {
@@ -161,7 +162,7 @@ void* initThread(server* s)
 {
     int sockfd;
     struct sockaddr_in serv_addr;
-    int buff_read;
+    int buff_read = 0;
     char buffer[BUFF_SIZE]; 
            /* Create a socket point */
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -188,10 +189,15 @@ void* initThread(server* s)
             sprintf(buffer,"offset %s(%i,%i)",filename,s->id*FRAG_SIZE,FRAG_SIZE);
             printf("%s\n",buffer);
             write(sockfd,buffer,BUFF_SIZE);
-            buff_read = read(sockfd,buffer,FRAG_SIZE);// need to do the whole while != \0 thing
-            buffer[buff_read] = 0;
-            s->str = malloc(sizeof(char)*BUFF_SIZE);//buff_read);
-            strcpy(s->str,buffer);
+            read(sockfd,buffer,FRAG_SIZE+1);// need to do the whole while != \0 thing
+            // get the actual size 
+
+            while(buffer[buff_read++]!= 0 && buff_read < FRAG_SIZE+1);
+            char t_buff[buff_read];
+            memcpy(t_buff,&buffer[0],buff_read);
+            //t_buff[buff_read] = 0;
+            s->str = malloc(sizeof(char)*buff_read);
+            strcpy(s->str,t_buff);
             //write(1,buffer,buff_read);
         }//end else made a connections
         --up;

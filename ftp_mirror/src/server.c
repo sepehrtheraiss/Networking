@@ -173,7 +173,7 @@ int main( int argc, char** argv) {
                 else
                 {
                     read_offset(file,off_set,bytes,buff);
-                    write(clisockfd,buff,bytes);
+                    write(clisockfd,buff,bytes+1);
                 }
                 printf("offset (%i,%i)\n",off_set,bytes);
 
