@@ -37,16 +37,13 @@ int server_info(FILE *file,struct server* s)
     }
     return n;
 }
-
-
 int getFileSize(server* servers,char* filename,int num_servs,int servs_req)
 {
-    // to produce the key for ending a connection
     int sockfd;
     struct sockaddr_in serv_addr;
     char buff[BUFF_SIZE];
     int buff_read;
-    int sup =0 ;//number of up servers
+    int sup =0 ;//number of servers up
     
     for(int i=0;i < num_servs && sup < servs_req ;i++)
     {
@@ -90,6 +87,44 @@ void read_offset(FILE *file,int off, int bytes,char *buffer)
 {
    fseek(file,off,SEEK_SET);
    fread(buffer,1,bytes,file);
+}
+void sendOffsetRead(server* s,int off,int bytes,char* buffer,char* filename)
+{
+    int sockfd;
+    struct sockaddr_in serv_addr;
+    int buff_read;
+    
+           /* Create a socket point */
+        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+       
+        if (sockfd < 0) {
+          perror("ERROR opening socket");
+          exit(EXIT_FAILURE);
+        }
+        //make connection
+        bzero((char *) &serv_addr, sizeof(serv_addr));
+        serv_addr.sin_family = AF_INET;
+        serv_addr.sin_addr.s_addr = s->IP;
+        serv_addr.sin_port = s->port;
+       
+        /* Now connect to the server */
+        if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+            perror("ERROR connecting");
+        }
+        else
+        {
+            sprintf(buffer,"offset %s(%i,%i)",filename,off,bytes);
+            printf("%s\n",buffer);
+            write(sockfd,buffer,BUFF_SIZE);
+            buff_read = read(sockfd,buffer,bytes);
+            buffer[buff_read] = 0;
+            write(1,buffer,buff_read);
+         if(close(sockfd) != 0){
+                perror("ERROR on close sockfd");
+                exit(EXIT_FAILURE);
+            }//end close socket
+        }//end else made a connections
+
 }
 // attemps to write a message and read the response if message recieved was correct
 // returns 1 on true the users message has ok else 0 and on waittime exeteeded

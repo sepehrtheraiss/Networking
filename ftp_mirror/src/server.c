@@ -10,8 +10,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#define BUFF_SIZE 512
-#define R_READ    64
+#include "../include/header.h"
+#define R_READ    128
 int main( int argc, char** argv) {
    int sockfd, clisockfd, portno;
    socklen_t clilen;
@@ -52,9 +52,11 @@ int main( int argc, char** argv) {
     * go in sleep mode and will wait for the incoming connection
     */
    
-    char buff[BUFF_SIZE];
+    char buff[BUFF_SIZE]; // will be used for the original copy of the request and for writing 
     int buff_read;
-    char r_buff[R_READ]; // read_buffer for requests
+    char r_buff[R_READ]; // read_buffer for requests, temporaly copies string from buff
+    unsigned int off_set; // file off set 
+    unsigned int bytes; // bytes to read
     int fd;
     struct stat f_stat;
     off_t file_size;
@@ -99,11 +101,23 @@ int main( int argc, char** argv) {
             memcpy(r_buff,&buff[0],9);
             r_buff[9] = 0; //null terminator
             if(strcmp("file_name",r_buff) == 0){
+                r_buff[0] = 0;
                 // usage: file_name filename. opens the file then returns the file size
-                memcpy(r_buff,&buff[10],54);
-                r_buff[54] = 0;
-                strcpy(buff,PATH);
-                strcat(buff,r_buff);
+                // get last index of filename
+                for(int i =10;buff[i] != 0;i++)
+                {
+                    if(buff[i+1] == 0)
+                    {
+                        memcpy(r_buff,&buff[10],i);
+                        r_buff[i+1] = 0;
+                    
+                    }
+                }
+
+               // memcpy(r_buff,&buff[10],54);
+                //r_buff[54] = 0;
+                strcpy(buff,PATH);// add path
+                strcat(buff,r_buff);// add filename
                 fd = open(buff,O_RDONLY);
                 if(fstat(fd,&f_stat) == -1){
                     perror("ERROR on fstat");
@@ -118,12 +132,43 @@ int main( int argc, char** argv) {
                 }
                 close(fd);
             }
+            // 
             memcpy(r_buff,&buff,6);
             r_buff[6] = 0; //null terminator
             if(strcmp("offset",r_buff) == 0)
             {
-                // usage: offset (x,y)
-                printf("got it %s\n",buff);
+                // usage: offset filename(x,y)
+                // find (x,y) 
+                // filename
+                int i = 7;
+                while((int)buff[i] != (int)'(')
+                {
+                    r_buff[i-7] = buff[i];
+                    ++i;
+                }
+                r_buff[i] = 0;
+                FILE* file = fopen(r_buff,"r"); // would it work since r_buff will change
+                // off set
+                i++;// cursor after (
+                int j = 0;
+                while((int)buff[i] != (int)',')
+                {
+                    r_buff[j++] = buff[i++];
+                }
+                r_buff[i] = 0;
+                off_set = atoi(r_buff);
+                i++;// after ','
+                j=0;
+                while((int)buff[i] != (int)')')
+                {
+                    r_buff[j++]= buff[i++];
+                }
+                r_buff[i] = 0;
+                bytes = atoi(r_buff);
+                printf("offset (%i,%i)\n",off_set,bytes);
+                read_offset(file,off_set,bytes,buff);
+                write(clisockfd,buff,bytes);
+
             }
        }// end else success reading from client
       }//end else connection established with the client
