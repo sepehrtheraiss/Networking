@@ -33,11 +33,14 @@ typedef struct server{
 // global variables
 char filename[32];
 unsigned int fileSize;
+unsigned int up; // servers up
+/*
 int servs_req;
 unsigned int sup; // servers up
 // total number of servers found in the server-info.txt
 // it will be decremented. Once it reaches zero threads can continue
 unsigned int t_servers; 
+*/
 pthread_cond_t lock;
 pthread_mutex_t m;
 // takes in a file descriptor
@@ -55,6 +58,9 @@ int getFileSize(server* servers,char* filename,int num_servs,int servs_req);
 void read_offset(FILE* file,int off, int bytes,char* buffer);
 // writes the offset request to the given server and reads n bytes 
 void sendOffsetRead(server* s,int off,int bytes,char* buffer,char* filename);
+
+// returns 1 if server is up else 0
+int isUp(server* s);
 // will be used for creating a new thread.
 // each thread will first check for connectivity and for each connection it increments the sup
 // then will read file from the given server
