@@ -48,9 +48,14 @@ int main(int argc, char** argv) {
         servers[i].id = i;
         servers[i].str = NULL;
         pthread_create(&thread[i],NULL,(void *)initThread,(server*)&servers[i]); 
+       // pthread_join(thread[i],NULL);
+    }
+    while(servs_req != 0);
+    for(int i =0;i< num_servs;i++)
+    {
         pthread_join(thread[i],NULL);
     }
-    pthread_cond_broadcast(&lock);
+    //pthread_cond_broadcast(&lock);
     for(int i =0;i< num_servs;i++)
     {
        if(servers[i].str != NULL)

@@ -166,12 +166,13 @@ void* initThread(server* s)
             }
             t_servers--;
             sup++;
-            //while(t_servers != 0){} // busy waiting
-            pthread_cond_wait(&lock,&m);
+            while(t_servers != 0); // busy waiting
+//            pthread_cond_wait(&lock,&m);
             // fragment size, need to take the ceiling if frag size has a floating number
             unsigned int FRAG_SIZE = ceil((double)fileSize / sup); 
+            //printf("%i %i %i\n",FRAG_SIZE,fileSize,sup);
             sprintf(buffer,"offset %s(%i,%i)",filename,s->id*FRAG_SIZE,FRAG_SIZE);
-            //printf("%s\n",buffer);
+            printf("%s\n",buffer);
             write(sockfd,buffer,BUFF_SIZE);
             buff_read = read(sockfd,buffer,FRAG_SIZE);
             buffer[buff_read] = 0;
