@@ -69,7 +69,7 @@ int getFileSize(server* servers,char* filename,int num_servs,int servs_req)
             sup++;
          sprintf(buff,"file_name %s",filename);
          printf("%s\n",buff);
-         write(sockfd,buff,50);
+         write(sockfd,buff,64);
         // write(sockfd,"file_name bin/testStack",25);
             buff_read = read(sockfd,buff,BUFF_SIZE);
             //write(1,buff,buff_read);

@@ -23,6 +23,7 @@ int main(int argc, char** argv) {
     char filename[32];
     strcpy(filename,argv[3]);
     FILE* s_file = fopen(argv[1],"r");
+    if(s_file == NULL){perror("error fopen on argv[1]");exit(1);}
     int num_servs = server_info(s_file,servers); // number of servers in the server-info
     fclose(s_file);
     // gets the file size from the first responsive server
@@ -33,7 +34,7 @@ int main(int argc, char** argv) {
     }
     // fragment size
     const unsigned int FRAG_SIZE = fileSize / servs_req; // ?? at compile time
-    printf("frag: %i \n",FRAG_SIZE);
+    printf("filesize: %i fragment: %i \n",fileSize,FRAG_SIZE);
     
     // seek and read
     sendOffsetRead(&servers[0],0,FRAG_SIZE,buffer,&filename[0]);

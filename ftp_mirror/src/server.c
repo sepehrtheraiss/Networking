@@ -165,9 +165,17 @@ int main( int argc, char** argv) {
                 }
                 r_buff[i] = 0;
                 bytes = atoi(r_buff);
+                if(bytes > BUFF_SIZE)
+                {
+                    char error[] = "fragment size should be < 512\n";
+                    write(clisockfd,error,sizeof(error));
+                }
+                else
+                {
+                    read_offset(file,off_set,bytes,buff);
+                    write(clisockfd,buff,bytes);
+                }
                 printf("offset (%i,%i)\n",off_set,bytes);
-                read_offset(file,off_set,bytes,buff);
-                write(clisockfd,buff,bytes);
 
             }
        }// end else success reading from client
