@@ -180,7 +180,7 @@ void* initThread(server* s)
        
         
             // fragment size, need to take the ceiling if frag size has a floating number
-            printf("ups in thread: %i\n",SUP);
+            //printf("ups in thread: %i\n",SUP);
             unsigned int FRAG_SIZE = ceil((double)fileSize / SUP); 
             int d_i =0 ; // number of times divided will tell us how many new allocations we neeed
 
@@ -189,9 +189,9 @@ void* initThread(server* s)
                 d_i++;
                 FRAG_SIZE /= 2;
             }
-            if(d_i > 10)
+            if(d_i > 30)
             {
-                perror("sorry I've only provided space for half a Gig");
+                perror("sorry I've only provided space for 1 GIB");
                 exit(1);
             }
             // always need the first index to be allocated

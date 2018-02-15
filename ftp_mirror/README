@@ -1,7 +1,7 @@
 Sepehr Raissian
 sraissia@ucsc.edu
 CMPE 156 
-Assignment 1: basic server client remote shell
+Assignment 2: ftp mirror
 
 Files:
     src/            contains source files
@@ -10,37 +10,23 @@ Files:
     src/server.c    server code    
     src/client.c    client code
     src/stack.c     stack data structure
-    src/node.c      stacks main node structure
-    src/test.c      basic test file for various reasons
-    src/testStack.c test file for stack, making sure there is no memory leak
 
 Instructions:
     1. make
-    2. ./bin/server 8080
-    3. ./bin/client 127.0.0.1 8080
-        a. client sends commands to server and gets the results back.
-        b. To only support given functions, if the executed command doesn't return a response it tells client command not found.
-        c. to exit, type exit
+    2. ./bin/server 4200, ./bin/server 8080, ... ports have to be included in the server-info.txt
+    3. ./bin/client server-info.txt number-of-connections filename
+    filenames path starts in the ftp_mirror, for any file with path just include the path like so bin/file
 
-client and server must agree on a protocol
-    1. server proposes a buffer_size. (for this assignment servers buffer_size is immidiately accepted)
-    2. client sends a random key (done manually for now) to the server and wants that back when server is finished sending the messages.
-        this is the second validation of server is done setting messages.
-    3. server sends its stack size, client keeps on getting messages and increments its stack counter until it matches the servers stack size.
-        first validation of server is done when client reaches the same stack size of server. If stack size is 0 its indication of an error.
+1. tries to make connection as many as provided 
+2. returns the file size
+3. based on number of connections it has established it makes that many threads
+4. each thread downloads a frament of the file, it is decied by the file size / number conections established
+5. if file is still too big after fragmenting it will keep on dividing unitl it reaches a reasonable size
+6. in the main thread client.main waits until all the threads are done with their task
+7. then writes the read file to a filename appended with 01 as indicating of copy to the path reached for the file
 
-server's task:
-    1. accepts a command from the client, executes it. Server will add to its stack each message of size buffer_size. 
-    2. server sends its stack size to the client, indicating its going to start setting the messages.
-    3. once server stack is empty, it sends back the key, indicating it has completed its task.
-    4. repeat
-
-basic design steps:
-    server opens a connection, listens then accepts. Once it accepts a client, client and server exchange the neccessary information, then waits for clients input to execute a command.
-    once it has been executed it has a certian buffer size and adds each buffer size segment to stack. Then sends the stack size to client. Server then sends each segment to the client. Once done
-    server sends the key indicating end of transmition. and the process repeats until client enters exit then client closes and server waits for the next client to connect.
-
-Testing: testing was done manually 
+doesn't work well with big files:
+    defenitly has to do with my buffering allocation. At some point my fragmenation gets inccorect
 
 to compress: tar -zcvf file.tar.gz dir_name
 to uncompress: tar zxvf file.tar.gz

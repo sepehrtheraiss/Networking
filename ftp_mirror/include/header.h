@@ -24,7 +24,7 @@
 
 #define IP_SIZE 16
 #define PORT_SIZE 4
-#define BUFF_SIZE 512
+#define BUFF_SIZE 1024
 typedef struct server{
     int id;
     uint32_t IP;
@@ -33,7 +33,7 @@ typedef struct server{
 }server;
 
 // global variables
-char filename[32];
+char filename[128];
 unsigned int fileSize;
 unsigned int up; // servers up
 unsigned int SUP; // servers up will not be modified
