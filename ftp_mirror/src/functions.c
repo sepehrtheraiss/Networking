@@ -158,54 +158,82 @@ int isUp(server* s)
     return up;
 
 }
+void conn(int* sockfd,server* s)
+{
+    struct sockaddr_in serv_addr;
+    *sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) {
+        perror("ERROR opening socket");
+        exit(EXIT_FAILURE);
+    }
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = s->IP;
+    serv_addr.sin_port = s->port;
+    if (connect(*sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+        perror("ERROR connecting need to restart client");
+        exit(1);
+    }
+}
 void* initThread(server* s)
 {
     int sockfd;
-    struct sockaddr_in serv_addr;
     int buff_read = 0;
     char buffer[BUFF_SIZE]; 
-           /* Create a socket point */
-        sockfd = socket(AF_INET, SOCK_STREAM, 0);
        
-        if (sockfd < 0) {
-          perror("ERROR opening socket");
-          exit(EXIT_FAILURE);
-        }
-        //make connection
-        bzero((char *) &serv_addr, sizeof(serv_addr));
-        serv_addr.sin_family = AF_INET;
-        serv_addr.sin_addr.s_addr = s->IP;
-        serv_addr.sin_port = s->port;
-        /* Now connect to the server */
-        if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
-            perror("ERROR connecting need to restart the isup loop");
-            pthread_exit(NULL);
-        }
-        else
-        {
+        
             // fragment size, need to take the ceiling if frag size has a floating number
             unsigned int FRAG_SIZE = ceil((double)fileSize / up); 
-            //printf("%i %i %i\n",FRAG_SIZE,fileSize,sup);
-            sprintf(buffer,"offset %s(%i,%i)",filename,s->id*FRAG_SIZE,FRAG_SIZE);
-            printf("%s\n",buffer);
-            write(sockfd,buffer,BUFF_SIZE);
-            read(sockfd,buffer,FRAG_SIZE+1);// need to do the whole while != \0 thing
-            // get the actual size 
+            int d_i =0 ; // number of times divided will tell us how many new allocations we neeed
 
-            while(buffer[buff_read++]!= 0 && buff_read < FRAG_SIZE+1);
-            char t_buff[buff_read];
-            memcpy(t_buff,&buffer[0],buff_read);
-            //t_buff[buff_read] = 0;
-            s->str = malloc(sizeof(char)*buff_read);
-            strcpy(s->str,t_buff);
-            //write(1,buffer,buff_read);
-        }//end else made a connections
+            while(FRAG_SIZE > BUFF_SIZE)
+            {
+                d_i++;
+                FRAG_SIZE /= 2;
+            }
+            if(d_i > 10)
+            {
+                perror("sorry I've only provided space for half a Gig");
+                exit(1);
+            }
+            // always need the first index to be allocated
+            int counter =0;
+            do
+            {
+                s->str_arr[counter] = malloc(sizeof(char)*BUFF_SIZE);
+            }while(counter++ < d_i);
+            if(counter < 10)
+            {
+                s->str_arr[counter]=NULL;
+            }
+            //printf("%i %i %i\n",FRAG_SIZE,fileSize,sup);
+            counter = 0;
+            int seek = s->id*FRAG_SIZE;
+            do
+            {
+                conn(&sockfd,s);
+                sprintf(buffer,"offset %s(%i,%i)",filename,seek,FRAG_SIZE);
+                //printf("%s\n",buffer);
+                write(sockfd,buffer,BUFF_SIZE);
+                buff_read = read(sockfd,buffer,FRAG_SIZE+1);// need to do the whole while != \0 thing
+                buffer[buff_read] = 0;
+                buff_read = 0;
+                // get the actual size 
+                while(buffer[buff_read++]!= 0 && buff_read < FRAG_SIZE+1);
+                char t_buff[buff_read];
+                memcpy(t_buff,&buffer[0],buff_read);
+                //t_buff[buff_read] = 0;
+                s->str_arr[counter] = malloc(sizeof(char)*buff_read);
+                strcpy(s->str_arr[counter],t_buff);
+                //write(1,buffer,buff_read);
+                if(close(sockfd) != 0){
+                    perror("ERROR on close sockfd");
+                    exit(EXIT_FAILURE);
+                }//end close socket
+                seek += FRAG_SIZE ;
+            }while(counter++ < d_i);
         --up;
-        if(close(sockfd) != 0){
-            perror("ERROR on close sockfd");
-            exit(EXIT_FAILURE);
-        }//end close socket
-return NULL;
+        return NULL;
 }
 // attemps to write a message and read the response if message recieved was correct
 // returns 1 on true the users message has ok else 0 and on waittime exeteeded

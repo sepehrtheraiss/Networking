@@ -27,7 +27,7 @@ typedef struct server{
     int id;
     uint32_t IP;
     int port;
-    char* str;
+    char** str_arr;
 }server;
 
 // global variables

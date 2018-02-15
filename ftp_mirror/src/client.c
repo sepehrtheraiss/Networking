@@ -55,9 +55,9 @@ int main(int argc, char** argv) {
     // need to find max number of servers up
     for(int i=0; i < num_servs && up < nc;i++)
     {
-        servers[i].str = NULL;
         if(isUp(&servers[i]) == 1)
         {
+            servers[i].str_arr = malloc(sizeof(char*)*10);
             servers[i].id = up++;
         }
     }
@@ -75,7 +75,12 @@ int main(int argc, char** argv) {
     {
         if(servers[i].id != -1)
         {
-            printf("%s",servers[i].str);
+            for(int j=0;servers[i].str_arr[j]!=NULL && j < 10;j++)
+            {
+                printf("%s",servers[i].str_arr[j]);
+                free(servers[i].str_arr[j]);
+            }
+            free(servers[i].str_arr);
         }
     }
     
