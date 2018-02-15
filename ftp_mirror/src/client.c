@@ -1,16 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <strings.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <pthread.h>
-#include <math.h>
 #include "../include/header.h"
 int main(int argc, char** argv) {
     /*usage: server-info.txt num-connections filename*/
@@ -61,6 +48,7 @@ int main(int argc, char** argv) {
         }
     }
     while(up != 0);// busy waiting until all servs have done their job
+    usleep(500);
     char newFile[64];
     strcpy(newFile,filename);
     strcat(newFile,"01");
@@ -72,7 +60,7 @@ int main(int argc, char** argv) {
         {
             for(int j=0;servers[i].str_arr[j]!=NULL && j < 10;j++)
             {
-                //printf("%s",servers[i].str_arr[j]);
+                printf("%s",servers[i].str_arr[j]);
                 fprintf(nf,"%s",servers[i].str_arr[j]);
                 free(servers[i].str_arr[j]);
             }

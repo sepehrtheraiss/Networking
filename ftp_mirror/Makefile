@@ -1,26 +1,26 @@
-EXTRA = -lpthread
-FLAG = -std=c99 -Wall -ggdb -lm $(EXTRA)
+EXTRA = -lm -lpthread
+FLAG = -std=c99 -Wall -ggdb $(EXTRA)
 SRC = server.c client.c
-OBJ = src/server.o src/client.o src/functions.o
+OBJ = server.o client.o functions.o
 EXE = bin/server bin/client 
 MEMCHECK = valgrind --leak-check=full --track-origins=yes
 
 all: $(EXE)
 
-bin/server: src/server.o src/functions.o 
-	gcc -o bin/server src/server.o  src/functions.o $(FLAG)
+bin/server: src/server.o functions.o 
+	gcc -o bin/server src/server.o  functions.o $(FLAG)
 
-src/server.o: src/server.c include/header.h 
-	gcc -c $(FLAG) src/server.c -o $@
+server.o: src/server.c include/header.h 
+	gcc -c $(FLAG) src/server.c 
 
-bin/client: src/client.o src/functions.o
-	gcc -o bin/client src/client.o src/functions.o $(FLAG)
+bin/client: src/client.o functions.o
+	gcc -o bin/client src/client.o functions.o $(FLAG)
 
-src/client.o: src/client.c include/header.h 
-	gcc -c $(FLAG) src/client.c -o $@
+client.o: src/client.c include/header.h 
+	gcc -c $(FLAG) src/client.c 
 
-src/functions.o: src/functions.c include/header.h 
-	gcc -c $(FLAG) src/functions.c -o $@
+functions.o: src/functions.c include/header.h 
+	gcc -c $(FLAG) src/functions.c 
 
 checkStack: testStack
 	$(MEMCHECK) ./bin/testStack "cat src/stack.c"
