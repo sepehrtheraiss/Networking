@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
         perror("file either does not exist or all the servers are down");
         exit(1);
     }
-    printf("File size: %li\n",fileSize);
+    //printf("File size: %li\n",fileSize);
     for(int i =0;i < num_servs;i++)
     {
         servers[i].id = -1;
@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
             servers[i].id = up++;
         }
     }
-
+    SUP = up ;// serves up this cannot be modified
     pthread_t thread[up];
     for(int i =0; i < num_servs;i++)
     {

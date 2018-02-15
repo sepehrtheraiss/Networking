@@ -36,6 +36,7 @@ typedef struct server{
 char filename[32];
 unsigned int fileSize;
 unsigned int up; // servers up
+unsigned int SUP; // servers up will not be modified
 // takes in a file descriptor
 // writes to IP[] and port[]
 // returns number of server read from the file ( based on \n )
