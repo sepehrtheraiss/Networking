@@ -34,15 +34,6 @@ typedef struct server{
 char filename[32];
 unsigned int fileSize;
 unsigned int up; // servers up
-/*
-int servs_req;
-unsigned int sup; // servers up
-// total number of servers found in the server-info.txt
-// it will be decremented. Once it reaches zero threads can continue
-unsigned int t_servers; 
-*/
-pthread_cond_t lock;
-pthread_mutex_t m;
 // takes in a file descriptor
 // writes to IP[] and port[]
 // returns number of server read from the file ( based on \n )

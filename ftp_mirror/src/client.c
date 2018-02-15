@@ -20,20 +20,11 @@ int main(int argc, char** argv) {
     }
     server servers[10];
     up = 0;
-    pthread_cond_init(&lock,NULL);
-    //lock = PTHREAD_COND_INITIALIZER;
-    pthread_mutex_init(&m,NULL);
-    //m = PTHREAD_MUTEX_INITIALIZER;
-    //char buffer[BUFF_SIZE];
-    //unsigned int fileSize; global
-    //int servs_req; global
     int nc = atoi(argv[2]); // pass in server nums by the user
-   // char filename[32];
     strcpy(filename,argv[3]);
     FILE* s_file = fopen(argv[1],"r");
     if(s_file == NULL){perror("error fopen on argv[1]");exit(1);}
     int num_servs = server_info(s_file,servers); // number of servers in the server-info
-    // global t_servers
     fclose(s_file);
     // number of connections can't be more than the number of servers in the server-info.txt
     if(nc > num_servs)
@@ -46,7 +37,6 @@ int main(int argc, char** argv) {
         perror("file either does not exist or all the servers are down");
         exit(1);
     }
-    // init serves id = -1
     for(int i =0;i < num_servs;i++)
     {
         servers[i].id = -1;
@@ -71,54 +61,24 @@ int main(int argc, char** argv) {
         }
     }
     while(up != 0);// busy waiting until all servs have done their job
+    char newFile[64];
+    strcpy(newFile,filename);
+    strcat(newFile,"01");
+    creat(newFile, S_IRUSR+S_IWUSR);
+    FILE* nf = fopen(newFile,"a");
     for(int i =0; i < num_servs;i++)
     {
         if(servers[i].id != -1)
         {
             for(int j=0;servers[i].str_arr[j]!=NULL && j < 10;j++)
             {
-                printf("%s",servers[i].str_arr[j]);
+                //printf("%s",servers[i].str_arr[j]);
+                fprintf(nf,"%s",servers[i].str_arr[j]);
                 free(servers[i].str_arr[j]);
             }
             free(servers[i].str_arr);
         }
     }
-    
-    /*
-    pthread_t thread[nc];
-    for(int i =0;i < num_servs;i++) // go thru much servers as possible
-    {
-        servers[i].id = i;
-        servers[i].str = NULL;
-        pthread_create(&thread[i],NULL,(void *)initThread,(server*)&servers[i]); 
-       // pthread_join(thread[i],NULL);
-    }
-    // can go negative for the extra undeeded connections
-    while(nc > 0);
-    for(int i =0;i< num_servs;i++)
-    {
-        pthread_join(thread[i],NULL);
-    }
-    //pthread_cond_broadcast(&lock);
-    for(int i =0;i < num_servs;i++)
-    {
-       if(servers[i].str != NULL)
-       {
-            printf("%s",servers[i].str);
-       }
-    }*/
-   /* 
-    // seek and read
-    // fragment size, need to take the ceiling if frag size has a floating number
-    const unsigned int FRAG_SIZE = ceil((double)fileSize / nc); // ?? at compile time
-    char buffer[BUFF_SIZE];
-    //printf("filesize: %i fragment: %i \n",fileSize,FRAG_SIZE);
-    int j=0;
-    for(int i =0;i<nc;i++)
-    {
-        sendOffsetRead(&servers[i],j,FRAG_SIZE,buffer,&filename[0]);
-        j += FRAG_SIZE;
-    }
-    */
+    fclose(nf);
     return 0;
 }
