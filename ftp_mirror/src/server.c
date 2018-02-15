@@ -1,15 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <strings.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include "../include/header.h"
 #define R_READ    128
 int main( int argc, char** argv) {
@@ -83,7 +71,7 @@ int main( int argc, char** argv) {
    while(1){ // loop forever
       /* Accept actual connection from the client */
       clisockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
-
+        bzero(buff,BUFF_SIZE);
       if (clisockfd < 0) { // client connection failed
          perror("ERROR on accept");
          //exit(EXIT_FAILURE);
@@ -126,7 +114,7 @@ int main( int argc, char** argv) {
                 else 
                 {
                     bzero(buff,32);
-                    sprintf(buff,"%lli",f_stat.st_size); 
+                    sprintf(buff,"%li",f_stat.st_size); 
                     write(clisockfd,buff,32);
                     file_size = f_stat.st_size; 
                 }

@@ -20,6 +20,8 @@
 #include <arpa/inet.h>
 #include <math.h>
 #include <pthread.h>
+#include <sys/socket.h>
+
 #define IP_SIZE 16
 #define PORT_SIZE 4
 #define BUFF_SIZE 512

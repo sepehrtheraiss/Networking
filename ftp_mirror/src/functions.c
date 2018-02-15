@@ -1,7 +1,3 @@
-#include<unistd.h>
-#include<stdlib.h>
-#include<stdio.h>
-#include<string.h>
 #include "../include/header.h"
 // takes in a file descriptor
 // converts string to unit32_t and int 
@@ -183,7 +179,8 @@ void* initThread(server* s)
        
         
             // fragment size, need to take the ceiling if frag size has a floating number
-            unsigned int FRAG_SIZE = ceil((double)fileSize / up); 
+            unsigned int FRAG_SIZE = ceil((double)fileSize / (double)up); 
+            //unsigned int FRAG_SIZE = fileSize / up; 
             int d_i =0 ; // number of times divided will tell us how many new allocations we neeed
 
             while(FRAG_SIZE > BUFF_SIZE)
