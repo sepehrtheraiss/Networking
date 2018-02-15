@@ -49,7 +49,6 @@ int main(int argc, char** argv) {
         }
     }
     while(up != 0);// busy waiting until all servs have done their job
-    usleep(500);
     char newFile[64];
     strcpy(newFile,filename);
     strcat(newFile,"01");
