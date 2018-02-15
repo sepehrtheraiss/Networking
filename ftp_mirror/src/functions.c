@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "../include/header.h"
 // takes in a file descriptor
 // converts string to unit32_t and int 
