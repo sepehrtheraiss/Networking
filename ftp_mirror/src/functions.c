@@ -215,6 +215,7 @@ void* initThread(server* s)
                 write(sockfd,buffer,BUFF_SIZE);
                 buff_read = read(sockfd,buffer,FRAG_SIZE+1);// need to do the whole while != \0 thing
                 buffer[buff_read] = 0;
+                write(1,buffer,buff_read);
                 buff_read = 0;
                 // get the actual size 
                 while(buffer[buff_read++]!= 0 && buff_read < FRAG_SIZE+1);
