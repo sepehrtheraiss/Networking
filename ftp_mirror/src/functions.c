@@ -180,9 +180,8 @@ void* initThread(server* s)
        
         
             // fragment size, need to take the ceiling if frag size has a floating number
-            //printf("ups in thread: %i\n",up);
+            printf("ups in thread: %i\n",SUP);
             unsigned int FRAG_SIZE = ceil((double)fileSize / SUP); 
-            //unsigned int FRAG_SIZE = fileSize / up; 
             int d_i =0 ; // number of times divided will tell us how many new allocations we neeed
 
             while(FRAG_SIZE > BUFF_SIZE)

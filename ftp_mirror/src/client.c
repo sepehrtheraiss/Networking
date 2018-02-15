@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
         perror("file either does not exist or all the servers are down");
         exit(1);
     }
-    //printf("File size: %li\n",fileSize);
+    printf("File size: %li\n",fileSize);
     for(int i =0;i < num_servs;i++)
     {
         servers[i].id = -1;
