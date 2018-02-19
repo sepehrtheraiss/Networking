@@ -1,7 +1,7 @@
 FLAG = -std=c99 -Wall -ggdb
 SRC = src/queue.c 
-OBJ = queue.o
-EXE = queue_test
+OBJ = queue.o queue_test.o
+EXE = q_test
 TST = test/queue_test.c 
 MEMCHECK = valgrind --leak-check=full --track-origins=yes
 
