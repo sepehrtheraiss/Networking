@@ -23,6 +23,7 @@ void q_deinit(queue* q)
         free(q->head);
         free(q->tail);
     }
+    free(q);
 }
 void q_clear(queue* q)
 {
