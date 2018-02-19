@@ -13,7 +13,7 @@ bin/server: src/server.o functions.o
 server.o: src/server.c include/header.h 
 	gcc -c $(FLAG) src/server.c 
 
-bin/client: src/client.o functions.o
+bin/client: src/client.o src/functions.o
 	gcc -o bin/client src/client.o functions.o $(FLAG)
 
 client.o: src/client.c include/header.h 
