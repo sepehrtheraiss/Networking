@@ -2,7 +2,7 @@
 int main(int argc, char** argv) {
     /*usage: server-info.txt num-connections filename*/
     if (argc < 4) {
-        fprintf(stderr,"usage %s server-info.txt num-connections filename\n", argv[0]);
+        fprintf(stderr,"usage: %s server-info.txt num-connections filename\n", argv[0]);
         exit(0);
     }
     server servers[10];
@@ -25,6 +25,11 @@ int main(int argc, char** argv) {
         exit(1);
     }
     //printf("File size: %li\n",fileSize);
+    if(fileSize > 1073741824) // 1 GIG
+    {
+        perror("file too big");
+        exit(1);
+    }
     for(int i =0;i < num_servs;i++)
     {
         servers[i].id = -1;
@@ -35,7 +40,7 @@ int main(int argc, char** argv) {
     {
         if(isUp(&servers[i]) == 1)
         {
-            servers[i].str_arr = malloc(sizeof(char*)*10);
+            servers[i].str_arr = malloc(sizeof(char*)*30); // 1 GIG
             servers[i].id = up++;
         }
     }
@@ -49,7 +54,7 @@ int main(int argc, char** argv) {
         }
     }
     while(up != 0);// busy waiting until all servs have done their job
-    char newFile[64];
+    char newFile[128];
     strcpy(newFile,filename);
     strcat(newFile,"01");
     creat(newFile, S_IRUSR+S_IWUSR);

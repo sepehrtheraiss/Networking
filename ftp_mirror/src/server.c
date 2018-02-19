@@ -1,5 +1,5 @@
 #include "../include/header.h"
-#define R_READ    128
+#define R_READ  512
 int main( int argc, char** argv) {
    int sockfd, clisockfd, portno;
    socklen_t clilen;
@@ -120,7 +120,7 @@ int main( int argc, char** argv) {
                 }
                 close(fd);
             }
-            // 
+            // get offset
             memcpy(r_buff,&buff,6);
             r_buff[6] = 0; //null terminator
             if(strcmp("offset",r_buff) == 0)
@@ -153,17 +153,24 @@ int main( int argc, char** argv) {
                 }
                 r_buff[i] = 0;
                 bytes = atoi(r_buff);
+                printf("%i",BUFF_SIZE);
                 if(bytes > BUFF_SIZE)
                 {
-                    char error[] = "fragment size should be < 512\n";
+                    char error[] = "fragment size too big\n";
                     write(clisockfd,error,sizeof(error));
                 }
                 else
                 {
+                    file_size -= bytes;
+                    if(file_size < 0)
+                    {
+                        bytes += file_size; // file_size will be negative so get remaining bytes left
+                    }
                     read_offset(file,off_set,bytes,buff);
-                    write(clisockfd,buff,bytes+1);
+                    write(1,buff,bytes+1);
+                    write(clisockfd,buff,bytes+1); // read_offset will add an extra 0
                 }
-               // printf("offset (%i,%i)\n",off_set,bytes);
+                //printf("offset (%i,%i)\n",off_set,bytes);
 
             }
        }// end else success reading from client
