@@ -11,19 +11,11 @@ queue* q_init()
 }
 void q_deinit(queue* q)
 {
-    q_clear(q);// its either already set to zero or it will 
-    if(q->head == q->tail)
+    if(q != NULL)
     {
-        free(q->head);
-        q->head = NULL;
-        q->tail = NULL;
+        q_clear(q);
+        free(q);
     }
-    else
-    {
-        free(q->head);
-        free(q->tail);
-    }
-    free(q);
 }
 void q_clear(queue* q)
 {
@@ -39,7 +31,6 @@ int q_size(queue* q)
 // adds to the front of the queue
 void q_insert(queue* q,char* str)
 {
-    q->size++;
     if(q->head == NULL)
     {
         q->head = malloc(sizeof(node));
@@ -58,6 +49,7 @@ void q_insert(queue* q,char* str)
         strcpy(q->tail->str,str);
         q->tail->next = NULL;
     }
+    q->size++;
 }
 // returns a pointer to the string 
 char* q_front(queue* q)
