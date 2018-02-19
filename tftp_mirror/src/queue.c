@@ -16,7 +16,6 @@ void q_deinit(queue* q)
         q_clear(q);
         free(q);
     }
-    free(q);
 }
 void q_clear(queue* q)
 {
