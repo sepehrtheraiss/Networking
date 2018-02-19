@@ -64,10 +64,10 @@ void q_remove(queue* q)
     {
         node* ptr = q->head;
         q->head = q->head->next;
+        free(ptr->str);
         free(ptr);
         q->size--;
     }
-
 }
 
 
