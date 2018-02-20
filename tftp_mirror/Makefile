@@ -1,22 +1,22 @@
 FLAG = -std=c99 -Wall -ggdb
 SRC = src/queue.c 
-OBJ = queue.o queue_test.o
-EXE = q_test
+OBJ = obj/queue.o obj/queue_test.o
+EXE = bin/q_test
 TST = test/queue_test.c 
 MEMCHECK = valgrind --leak-check=full --track-origins=yes
 
 
-q_test: queue_test.o queue.o 
-	cc -o q_test queue_test.o queue.o
+bin/q_test: obj/queue_test.o obj/queue.o 
+	cc -o bin/q_test obj/queue_test.o obj/queue.o
 
-queue_test.o: test/queue_test.c include/queue.h
-	cc -c test/queue_test.c
+obj/queue_test.o: test/queue_test.c include/queue.h
+	cc -c test/queue_test.c -o obj/queue_test.o
 
-queue.o: src/queue.c include/queue.h
-	cc -c $(FLAG) src/queue.c
+obj/queue.o: src/queue.c include/queue.h
+	cc -c $(FLAG) src/queue.c -o obj/queue.o
 
-checkQ: q_test
-	$(MEMCHECK) ./q_test
+checkQ: bin/q_test
+	$(MEMCHECK) ./bin/q_test
 	
 clean:
 	rm -f $(OBJ) $(EXE) 
