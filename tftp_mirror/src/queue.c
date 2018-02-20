@@ -35,7 +35,7 @@ void q_insert(queue* q,char* str)
     {
         q->head = malloc(sizeof(node));
         q->head->len = strlen(str);
-        q->head->str = malloc(sizeof(char)*q->head->len);
+        q->head->str = malloc(sizeof(char)*q->head->len+1);
         strcpy(q->head->str,str);
         q->tail = q->head;
         q->head->next = NULL;
@@ -45,7 +45,7 @@ void q_insert(queue* q,char* str)
         q->tail->next = malloc(sizeof(node));
         q->tail = q->tail->next;
         q->tail->len = strlen(str);
-        q->tail->str = malloc(sizeof(char)*q->tail->len);
+        q->tail->str = malloc(sizeof(char)*q->tail->len+1);
         strcpy(q->tail->str,str);
         q->tail->next = NULL;
     }
