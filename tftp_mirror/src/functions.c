@@ -3,48 +3,50 @@
 
 int parse(char* str,int len)
 {
-    char op = str[1];
+    char op;
     int st_code = -1;
     char buff[BUFF_SIZE];
     int last_index = 0;
     if(str != NULL)
     {
-        if(len <= BUFF_SIZE)
+        if(len <= BUFF_SIZE && str[0] == '{')
         {
+            op = str[1];
             last_index = len-1;
             if(str[last_index] != '}')
             {
                 last_index = 0;
                 // find the last index of '}'
-                while(str[last_index]++!='}');
+                while(str[++last_index]!='}');
                 if(last_index > BUFF_SIZE - 1) // need the last one for \0
                 {
                     return st_code;
                 }
 
             }
-        }
-        // actually dont need this, but just incase if I need to add something later
-        switch(op)
-        {
-            case '0':
-                st_code = 0;
-                break;
-            case '1':
-                st_code = 1;
-                break;
-            case '2':
-                st_code = 2;
-                break;
-            default:
-                st_code = -1;
-        }
-        memcpy(buff,str+3,last_index-3);
-        buff[last_index-2] = 0;
-        //printf("%i\n",buff[last_index-2]);
-        strcpy(str,buff);
-        printf("%s\n",buff);
-    }
+            // actually dont need this, but just incase if I need to add something later
+            switch(op)
+            {
+                case '0':
+                    st_code = 0;
+                    break;
+                case '1':
+                    st_code = 1;
+                    break;
+                case '2':
+                    st_code = 2;
+                    break;
+                default:
+                    st_code = -1;
+            }
+            memcpy(buff,str+3,last_index-3);
+            buff[last_index-2] = 0;
+            //str = buff; why doesnt it work ?
+            strcpy(str,buff);
+            //write(1,buff,last_index-3);
+
+        }// [1] is { and size <= 512
+    }//if no null
     return st_code;
 }
 void 
