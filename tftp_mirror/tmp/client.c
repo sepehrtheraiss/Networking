@@ -4,30 +4,46 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <string.h>
 #define BUFF_LEN 512
-#define SERV_PORT 69
+#define SERV_PORT 4200
 
-void dg_cli(FILE* fp,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
+
+void 
+dg_cli(FILE* fp,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
 {
+    struct timeval timeout;
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+    fd_set readfds;
+
     int n;
     char sendline[BUFF_LEN],recvline[BUFF_LEN];
     socklen_t len;
     struct sockaddr* reply_addr = malloc(servlen);
-
-    //sendto(sockfd,"bitches",strlen(sendline),0,sa,servlen);
+    FD_ZERO(&readfds);
     while(fgets(sendline,BUFF_LEN,fp)!=NULL)
     {
+        FD_SET(sockfd,&readfds);
         sendto(sockfd,sendline,strlen(sendline),0,serv_addr,servlen);
         len = servlen;
-        n = recvfrom(sockfd,recvline,BUFF_LEN,0,reply_addr,&len);
-        if(len != servlen || memcmp(serv_addr,reply_addr,len) != 0)
+        select(sockfd+1,&readfds,NULL,NULL,&timeout);
+        if(FD_ISSET(sockfd,&readfds))
         {
-            printf("reply from %p (ignore)\n",reply_addr);
+            n = recvfrom(sockfd,recvline,BUFF_LEN,0,reply_addr,&len);
+            if(len != servlen || memcmp(serv_addr,reply_addr,len) != 0)
+            {
+                printf("reply from %p (ignore)\n",reply_addr);
+            }
+            recvline[n] = 0;
+            fputs(recvline,stdout);
         }
-        recvline[n] = 0;
-        fputs(recvline,stdout);
+        else
+        {
+            printf("timeout\n");
+        }
     }
 }
 int main(int argc,char** argv)
