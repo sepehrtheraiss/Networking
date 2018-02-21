@@ -7,22 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 #define BUFF_LEN 512
-#define SERV_PORT 69
-
-void dg_echo(int sockfd, struct sockaddr* serv_addr,socklen_t clilen)
-{
-    int n;
-    socklen_t len;
-    char msg[BUFF_LEN];
-
-    for(;;)
-    {
-        len = clilen;
-        n = recvfrom(sockfd,msg,BUFF_LEN,0,serv_addr,&len);
-        //printf("msg: %s\n",msg);
-        sendto(sockfd,msg,n,0,serv_addr,len);
-    }
-}
+#define SERV_PORT 4200
 int main()
 {
     int sockfd;

@@ -1,0 +1,32 @@
+1. create a simple queue, test on large files
+2. test for UDP, implement stop and wait
+3. impelent syn and ack 
+
+protocol:
+    both client and server first send each other the size of the given data
+        syntax: {0:data_size}    //data size cannot be bigger than 4bytes, excludes '\0'
+    client requests file size 
+        syntax: {1:file_name}
+    requesting offset
+        syntax: {2:file_name:i,n}
+on server side:
+    if msg[0] is '{':
+        switch msg[1]
+            case 0:
+                from msg[2] unitl reached '}' get data
+            case 1:
+                from msg[2] until eached '}' get data, inc counter
+                if counter != 0:data_size: perror()
+            case 2:
+                from msg[2] until ':' get file_name
+                    if(file_name != exist): perror()
+                from ':' to ',' get offset
+                from ',' to '}' get bytes to read
+                if counter != data_size: perror()
+on client side:
+    get{0:data_size}
+    then
+        read up until data_size 
+
+1. read
+2. parse
