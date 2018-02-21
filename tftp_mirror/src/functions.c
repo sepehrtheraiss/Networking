@@ -15,12 +15,14 @@ int p_offset(char* str,char* filename,int* offset,int* bytes)
     while(str[++i]!=',');//offset
     memcpy(off,str+j,i-j);
     off[i-j] = 0;
-    printf("%s\n",off);
+    *offset = atoi(off);
+    printf("%i\n",*offset);
     j = i +1;
     while(str[++i]!=0);
     memcpy(byte,str+j,i-j);
     byte[i-j] = 0;
-    printf("%s\n",byte);
+    *bytes = atoi(byte);
+    printf("%i\n",*bytes);
     return 1;
 }
 int parse(char* str,int len)
