@@ -1,6 +1,16 @@
 #define _GNU_SOURCE
 #include "../include/header.h"
 
+// returns number of parses, for now just single index later multiple
+int p_num(char* str,int len)
+{
+    int i =0;
+    while(str[i] != ',' && i < len)
+    {
+        i++;
+    }
+    return i;
+}
 int p_offset(char* str,char* filename,int* offset,int* bytes)
 {
     char off[16];
@@ -11,18 +21,18 @@ int p_offset(char* str,char* filename,int* offset,int* bytes)
     memcpy(filename,str,i);
     filename[i] = 0;
     j = i+1;
-    printf("%s\n",filename);
+    //printf("%s\n",filename);
     while(str[++i]!=',');//offset
     memcpy(off,str+j,i-j);
     off[i-j] = 0;
     *offset = atoi(off);
-    printf("%i\n",*offset);
+    //printf("%i\n",*offset);
     j = i +1;
     while(str[++i]!=0);
     memcpy(byte,str+j,i-j);
     byte[i-j] = 0;
     *bytes = atoi(byte);
-    printf("%i\n",*bytes);
+    //printf("%i\n",*bytes);
     return 1;
 }
 int parse(char* str,int len)
@@ -60,6 +70,9 @@ int parse(char* str,int len)
                 case '2':
                     st_code = 2;
                     break;
+                case '3':
+                    st_code = 3;
+                    break;
                 default:
                     st_code = -1;
             }
@@ -73,20 +86,27 @@ int parse(char* str,int len)
     }//if no null
     return st_code;
 }
+
 void 
 dg_cli(FILE* fp,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
 {
     struct timeval timeout;
-    timeout.tv_sec = 1;
+    timeout.tv_sec  = 1;
     timeout.tv_usec = 0;
     fd_set readfds;
 
     int n;
-    char sendline[BUFF_SIZE],recvline[BUFF_SIZE];
+    char sendline[BUFF_SIZE];
+    char recvline[BUFF_SIZE];
+    char buff[BUFF_SIZE];
     socklen_t len;
     struct sockaddr* reply_addr = malloc(servlen);
     FD_ZERO(&readfds);
-    while(fgets(sendline,BUFF_SIZE,fp)!=NULL)
+    int exit = 0;
+    int p_index = 0; // , index
+    // get file size and port to listen on
+    strcpy(sendline,"{1:taxes.txt}");
+    while(exit != 1)
     {
         FD_SET(sockfd,&readfds);
         sendto(sockfd,sendline,strlen(sendline),0,serv_addr,servlen);
@@ -95,12 +115,13 @@ dg_cli(FILE* fp,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
         if(FD_ISSET(sockfd,&readfds))
         {
             n = recvfrom(sockfd,recvline,BUFF_SIZE,0,reply_addr,&len);
-            if(len != servlen || memcmp(serv_addr,reply_addr,len) != 0)
-            {
-                printf("reply from %p (ignore)\n",reply_addr);
-            }
             recvline[n] = 0;
-            fputs(recvline,stdout);
+            p_index = p_num(recvline,n); 
+            memcpy(buff,recvline,p_index);
+            printf("msg: %s\n",buff);
+            memcpy(buff,recvline+p_index+1,n);
+            printf("msg: %s\n",buff);
+            exit = 1;
         }
         else
         {
@@ -120,7 +141,8 @@ void dg_echo(int sockfd, struct sockaddr* serv_addr,socklen_t clilen)
         len = clilen;
         n = recvfrom(sockfd,msg,BUFF_SIZE,0,serv_addr,&len);
         printf("msg: %s\n",msg);
-        sendto(sockfd,msg,n,0,serv_addr,len);
+        strcpy(msg,"{2:42567},{3:6969}");
+        sendto(sockfd,msg,BUFF_SIZE/4,0,serv_addr,len);
     }
 }
 

@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <string.h>
+#include "../include/header.h"
 #define BUFF_LEN 512
 #define SERV_PORT 4200
 int main()

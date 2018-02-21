@@ -38,6 +38,8 @@ unsigned int fileSize;
 unsigned int up; // servers up
 unsigned int SUP; // servers up will not be modified
 
+// returns number of parses, for now just single index later multiple
+int p_num(char* str,int len);
 // used to parse file name and offset return 1 on success
 int p_offset(char* str,char* filename,int* offset,int* bytes);
 // parses string, points str to the new buffer then returns the corresponding int operation
