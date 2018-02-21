@@ -1,6 +1,28 @@
 #define _GNU_SOURCE
 #include "../include/header.h"
 
+int p_offset(char* str,char* filename,int* offset,int* bytes)
+{
+    char off[16];
+    char byte[16];
+    int i =0;
+    int j=0;//where left off
+    while(str[++i] != ':');
+    memcpy(filename,str,i);
+    filename[i] = 0;
+    j = i+1;
+    printf("%s\n",filename);
+    while(str[++i]!=',');//offset
+    memcpy(off,str+j,i-j);
+    off[i-j] = 0;
+    printf("%s\n",off);
+    j = i +1;
+    while(str[++i]!=0);
+    memcpy(byte,str+j,i-j);
+    byte[i-j] = 0;
+    printf("%s\n",byte);
+    return 1;
+}
 int parse(char* str,int len)
 {
     char op;
@@ -40,10 +62,10 @@ int parse(char* str,int len)
                     st_code = -1;
             }
             memcpy(buff,str+3,last_index-3);
-            buff[last_index-2] = 0;
+            buff[last_index-3] = 0;
             //str = buff; why doesnt it work ?
             strcpy(str,buff);
-            //write(1,buff,last_index-3);
+            //write(1,buff,last_index-2);
 
         }// [1] is { and size <= 512
     }//if no null
