@@ -6,11 +6,11 @@ udp on default will listen on port 4200
 when client sends a request for the packet size, the server sends {1:file_size},{3:port_number}
 protocol:
     both client and server first send each other the size of the given data
-        syntax: {0:data_size}    // data size cannot be bigger than 4bytes, excludes '\0'
+        syntax: {0:data}    
     client requests file size 
         syntax: {1:file_name}   // returns file size
     requesting offset
-        syntax: {2:file_name:i,n}
+        syntax: {2:file_name:i,n} // filename with offset
 requst from client:
     if msg[0] is '{':
         switch msg[1]
@@ -29,4 +29,4 @@ requst from client:
 send to client:
     {2:file_size}   // same clients request
     {3:4200}        // port to listen on
-    {4:file_name:i,n:string}  // sends the filename with its offset followed by the actual data to the client
+    {2:file_name:i,n},{0:string}  // sends the filename with its offset followed by the actual data to the client

@@ -1,7 +1,67 @@
 #define _GNU_SOURCE
 #include "../include/header.h"
+ 
+void newPort(unsigned int* port,int sockfd,struct sockaddr_in* servaddr)
+{
+    bzero(servaddr,sizeof(*servaddr));
+    servaddr->sin_family = AF_INET;
+    servaddr->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    servaddr->sin_port = *port;
+    while(bind(sockfd,(struct sockaddr*)servaddr,sizeof(*servaddr)) != 0) // bind failed
+    {
+        (*port)++;
+        servaddr->sin_port = *port;
+    }
+}
+// gets size then port
+int getFileSize_port(char* file,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
+{
+    struct timeval timeout;
+    timeout.tv_sec  = 1;
+    timeout.tv_usec = 0;
+    fd_set readfds;
 
-// returns number of parses, for now just single index later multiple
+    int port;
+    int n;
+    char sendline[BUFF_SIZE];
+    char recvline[BUFF_SIZE];
+    char buff[BUFF_SIZE];
+    socklen_t len;
+    struct sockaddr* reply_addr = malloc(servlen);
+    FD_ZERO(&readfds);
+    int exit = 0;
+    int p_index = 0; // , index
+    // get file size and port to listen on
+    strcpy(sendline,file);
+    while(exit != 1)
+    {
+        FD_SET(sockfd,&readfds);
+        sendto(sockfd,sendline,strlen(sendline),0,serv_addr,servlen);
+        len = servlen;
+        select(sockfd+1,&readfds,NULL,NULL,&timeout);
+        if(FD_ISSET(sockfd,&readfds))
+        {
+            n = recvfrom(sockfd,recvline,BUFF_SIZE,0,reply_addr,&len);
+            recvline[n] = 0;
+            p_index = p_num(recvline,n); 
+            memcpy(file,recvline,p_index);
+            parse(file,p_index);
+            //printf("msg: %s\n",file);
+            memcpy(buff,recvline+p_index+1,n);
+            if(parse(buff,n-p_index+1) == 3){
+                exit = 1;
+            }
+            //printf("msg: %s\n",buff);
+        }
+        else
+        {
+            fprintf(stderr,"timeout\n");
+        }
+    }
+    return atoi(buff);
+
+}
+// returns index of parses, for now just single index later multiple
 int p_num(char* str,int len)
 {
     int i =0;
