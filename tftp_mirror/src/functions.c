@@ -13,25 +13,21 @@ void newPort(unsigned int* port,int sockfd,struct sockaddr_in* servaddr)
         servaddr->sin_port = *port;
     }
 }
-// gets size then port
-int getFileSize_port(char* file,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
+
+int getFileSize(char* file,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
 {
     struct timeval timeout;
     timeout.tv_sec  = 1;
     timeout.tv_usec = 0;
     fd_set readfds;
 
-    int port;
     int n;
     char sendline[BUFF_SIZE];
     char recvline[BUFF_SIZE];
-    char buff[BUFF_SIZE];
     socklen_t len;
     struct sockaddr* reply_addr = malloc(servlen);
     FD_ZERO(&readfds);
     int exit = 0;
-    int p_index = 0; // , index
-    // get file size and port to listen on
     strcpy(sendline,file);
     while(exit != 1)
     {
@@ -43,22 +39,17 @@ int getFileSize_port(char* file,int sockfd,struct sockaddr* serv_addr,socklen_t 
         {
             n = recvfrom(sockfd,recvline,BUFF_SIZE,0,reply_addr,&len);
             recvline[n] = 0;
-            p_index = p_num(recvline,n); 
-            memcpy(file,recvline,p_index);
-            parse(file,p_index);
-            //printf("msg: %s\n",file);
-            memcpy(buff,recvline+p_index+1,n);
-            if(parse(buff,n-p_index+1) == 3){
+            if(parse(recvline,n) == 1)
+            {
                 exit = 1;
             }
-            //printf("msg: %s\n",buff);
         }
         else
         {
             fprintf(stderr,"timeout\n");
         }
     }
-    return atoi(buff);
+    return atoi(recvline);
 
 }
 // returns index of parses, for now just single index later multiple
@@ -129,9 +120,6 @@ int parse(char* str,int len)
                     break;
                 case '2':
                     st_code = 2;
-                    break;
-                case '3':
-                    st_code = 3;
                     break;
                 default:
                     st_code = -1;
@@ -240,6 +228,7 @@ int server_info(FILE *file,struct server* s)
     }
     return n;
 }
+/*
 int getFileSize(server* servers,char* filename,int num_servs,int servs_req)
 {
     int sockfd;
@@ -250,7 +239,6 @@ int getFileSize(server* servers,char* filename,int num_servs,int servs_req)
     
     for(int i=0;i < num_servs && sup < servs_req ;i++)
     {
-           /* Create a socket point */
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
        
         if (sockfd < 0) {
@@ -263,7 +251,6 @@ int getFileSize(server* servers,char* filename,int num_servs,int servs_req)
         serv_addr.sin_addr.s_addr = servers[i].IP;
         serv_addr.sin_port = servers[i].port;
        
-        /* Now connect to the server */
         if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
             perror("ERROR connecting");
         }
@@ -287,6 +274,7 @@ int getFileSize(server* servers,char* filename,int num_servs,int servs_req)
     }//end for loop
     return 0;
 }
+*/
 void read_offset(FILE *file,int off, int bytes,char *buffer)
 {
    fseek(file,off,SEEK_SET);

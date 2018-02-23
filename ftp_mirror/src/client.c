@@ -3,7 +3,7 @@ int main(int argc, char** argv) {
     /*usage: server-info.txt num-connections filename*/
     if (argc < 4) {
         fprintf(stderr,"usage: %s server-info.txt num-connections filename\n", argv[0]);
-        exit(0);
+        exit(1);
     }
     server servers[10];
     up = 0;

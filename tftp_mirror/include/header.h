@@ -21,7 +21,7 @@
 #include <math.h>
 #include <pthread.h>
 #include <sys/socket.h>
-
+#include "queue.h"
 #define IP_SIZE 16
 #define PORT_SIZE 4
 #define BUFF_SIZE 512
@@ -29,19 +29,19 @@ typedef struct server{
     int id;
     uint32_t IP;
     int port;
-    char** str_arr;
+    queue* q;
 }server;
 
 // global variables
 char filename[128];
-unsigned int fileSize;
+uint32_t fileSize;
 unsigned int up; // servers up
 unsigned int SUP; // servers up will not be modified
 
 // tries to bind the given port if no good then incs it
 void newPort(unsigned int* port,int sockfd,struct sockaddr_in* servaddr);
 // returns the port to request the file, the sets file to file_size
-int getFileSize_port(char* file,int sockfd,struct sockaddr* serv_addr,socklen_t servlen);
+int getFileSize(char* file,int sockfd,struct sockaddr* serv_addr,socklen_t servlen);
 // returns index of parses, for now just single index later multiple
 int p_num(char* str,int len);
 // used to parse file name and offset return 1 on success
@@ -65,7 +65,7 @@ int server_info(FILE* file,server* s);
 // num of servers and number of servers requested
 // returns 0 on no servers up
 // used by client
-int getFileSize(server* servers,char* filename,int num_servs,int servs_req);
+//int getFileSize(server* servers,char* filename,int num_servs,int servs_req);
 // seeks the file then reads n bytes to buffer
 // used by server
 void read_offset(FILE* file,int off, int bytes,char* buffer);
