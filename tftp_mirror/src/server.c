@@ -55,13 +55,17 @@ int main()
         PATH[buff_read] = '/';
         PATH[buff_read+1] = 0;
     }
+    int stat_code = 0;
     for(;;)
     {
+
         n = recvfrom(sockfd,recv_line,BUFF_SIZE,0,(struct sockaddr*)&cliaddr,&cli_len);
         // request for file size
         //printf("msg: %s\n",recv_line);
        // printf("port: %i\n",servaddr.sin_port);
-        if(parse(recv_line,n) == 1) // if client gets a timeout fork will execute again
+        stat_code = parse(recv_line,n);
+        printf("msg:%s\n",recv_line);
+        if(stat_code == 1) // if client gets a timeout fork will execute again
         {
 
             bzero(buff,BUFF_LEN);
@@ -90,6 +94,13 @@ int main()
             }
             */
         }
+        else if(stat_code == -1)
+        {
+            sprintf(send_line,"{im up}");
+            printf("%s\n",send_line );
+            sendto(sockfd,send_line,BUFF_SIZE/4,0,(struct sockaddr*)&cliaddr,cli_len);
+        }
+
 
     }
 

@@ -176,6 +176,7 @@ dg_cli(FILE* fp,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
             printf("timeout\n");
         }
     }
+    free(reply_addr);
 }
 // server
 void dg_echo(int sockfd, struct sockaddr* serv_addr,socklen_t clilen)
@@ -320,12 +321,46 @@ void sendOffsetRead(server* s,int off,int bytes,char* buffer,char* filename)
 
 
 }
+int send_wait(char* msg,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
+{
+    struct timeval timeout;
+    timeout.tv_sec  = 1;
+    timeout.tv_usec = 0;
+    fd_set readfds;
 
+    int n;
+    char sendline[BUFF_SIZE];
+    char recvline[BUFF_SIZE];
+    char buff[BUFF_SIZE];
+    socklen_t len;
+    struct sockaddr* reply_addr = malloc(servlen);
+    FD_ZERO(&readfds);
+    int exit = 0;
+    // get file size and port to listen on
+    strcpy(sendline,msg);
+    FD_SET(sockfd,&readfds);
+    sendto(sockfd,sendline,strlen(sendline),0,serv_addr,servlen);
+    len = servlen;
+    select(sockfd+1,&readfds,NULL,NULL,&timeout);
+    if(FD_ISSET(sockfd,&readfds))
+    {
+        n = recvfrom(sockfd,recvline,BUFF_SIZE,0,reply_addr,&len);
+        recvline[n] = 0;
+        exit = 1;
+    }
+    else
+    {
+        printf("timeout\n");
+    }
+    
+    free(reply_addr);
+    return exit;
+}
 int isUp(server* s)
 {
     int sockfd;
     struct sockaddr_in serv_addr;
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     int up = 0;
        
     if (sockfd < 0) {
@@ -337,11 +372,9 @@ int isUp(server* s)
         serv_addr.sin_family = AF_INET;
         serv_addr.sin_addr.s_addr = s->IP;
         serv_addr.sin_port = s->port;
+        //printf("ip:%i port:%i\n",s->IP,s->port);
         /* Now connect to the server */
-        if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
-            perror("ERROR connecting");
-        }
-        else{up=1;}
+        up = send_wait("you up?",sockfd,(struct sockaddr*)&serv_addr,sizeof(serv_addr));
         if(close(sockfd) != 0){
             perror("ERROR on close sockfd");
             exit(EXIT_FAILURE);
@@ -366,6 +399,7 @@ void conn(int* sockfd,server* s)
         exit(1);
     }
 }
+/*
 void* initThread(server* s)
 {
     int sockfd;
@@ -428,6 +462,7 @@ void* initThread(server* s)
         --up;
         return NULL;
 }
+*/
 // attemps to write a message and read the response if message recieved was correct
 // returns 1 on true the users message has ok else 0 and on waittime exeteeded
 int writeit(int fd,char* buffer,int size)

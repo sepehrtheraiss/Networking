@@ -34,7 +34,7 @@ typedef struct server{
 
 // global variables
 char filename[128];
-uint32_t fileSize;
+uint32_t file_size;
 unsigned int up; // servers up
 unsigned int SUP; // servers up will not be modified
 

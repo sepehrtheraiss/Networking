@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "../include/header.h"
+#include "../include/queue.h"
 #define BUFF_LEN 512
 
 int main(int argc,char** argv)
@@ -40,22 +41,28 @@ int main(int argc,char** argv)
             servers[i].id = up++;
         }
     }
+        printf("num up:%i\n", up);
+    sockfd = socket(AF_INET,SOCK_DGRAM,0);
     struct sockaddr_in tempserv_addr;
+    char file[BUFF_LEN];
+    sprintf(file,"{1:%s}",argv[3]);
     for(int i=0; i < num_servs;i++)
     {
         if(servers[i].id != -1)
         {
-                    //make connection
-            bzero((char *) &serv_addr, sizeof(serv_addr));
+            //make connection
+            bzero((char *) &tempserv_addr, sizeof(tempserv_addr));
             tempserv_addr.sin_family = AF_INET;
             tempserv_addr.sin_addr.s_addr = servers[i].IP;
             tempserv_addr.sin_port = servers[i].port;
-            getFileSize(file,sockfd,(struct sockaddr*)&tempserv_addr,sizeof(tempserv_addr));
+            file_size = getFileSize(file,sockfd,(struct sockaddr*)&tempserv_addr,sizeof(tempserv_addr));
             break;
         }
     }
+    printf("file size: %i\n",file_size);
     SUP = up ;// serves up this cannot be modified
     pthread_t thread[up];
+    /*
     for(int i =0; i < num_servs;i++)
     {
         if(servers[i].id != -1)
@@ -63,8 +70,10 @@ int main(int argc,char** argv)
             pthread_create(&thread[i],NULL,(void *)initThread,(server*)&servers[i]); 
         }
     }
+    */
 
     int chuncks = atoi(argv[2]);
+  /*
     sockfd = socket(AF_INET,SOCK_DGRAM,0);
     bzero(&servaddr,sizeof(servaddr));
     servaddr.sin_family = AF_INET;
@@ -73,7 +82,7 @@ int main(int argc,char** argv)
     char file[BUFF_LEN];
     sprintf(file,"{1:%s}","main.c");
     //uint32_t file_size = getFileSize(file,sockfd,(struct sockaddr*)&servaddr,sizeof(servaddr));
-    printf("file size: %i\n",file_size);
+    printf("file size: %i\n",file_size);*/
     
     return 0;
 }
