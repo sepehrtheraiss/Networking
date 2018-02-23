@@ -75,7 +75,7 @@ int main()
             printf("recv: %s\n",buff);
             //fd = open(recv_line,O_RDONLY);
             stat(buff,&f_stat);
-            sprintf(send_line,"{1:%lli}",f_stat.st_size);
+            sprintf(send_line,"{1:%lli}$",f_stat.st_size);
             sendto(sockfd,send_line,BUFF_SIZE/4,0,(struct sockaddr*)&cliaddr,cli_len);
             printf("size file:%lli\n",f_stat.st_size);
 

@@ -29,4 +29,4 @@ requst from client:
 send to client:
     {2:file_size}   // same clients request
     {3:4200}        // port to listen on
-    {2:file_name:i,n},{0:string}  // sends the filename with its offset followed by the actual data to the client
+    {2:file_name:i,n:string}  // sends the filename with its offset followed by the actual data to the client

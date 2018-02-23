@@ -27,6 +27,7 @@ int main(int argc,char** argv)
     int num_servs = server_info(s_file,servers); // number of servers in the server-info
     fclose(s_file);
 
+
     for(int i =0;i < num_servs;i++)
     {
         servers[i].id = -1;
@@ -41,11 +42,16 @@ int main(int argc,char** argv)
             servers[i].id = up++;
         }
     }
-        printf("num up:%i\n", up);
+    printf("servs up:%i\n", up);
+    if(up == 0)
+    {
+        printf("no servers are up try again later\n");
+        exit(1);
+    }
     sockfd = socket(AF_INET,SOCK_DGRAM,0);
     struct sockaddr_in tempserv_addr;
     char file[BUFF_LEN];
-    sprintf(file,"{1:%s}",argv[3]);
+    sprintf(file,"{1:%s}$",argv[3]);
     for(int i=0; i < num_servs;i++)
     {
         if(servers[i].id != -1)
@@ -61,7 +67,18 @@ int main(int argc,char** argv)
     }
     printf("file size: %i\n",file_size);
     SUP = up ;// serves up this cannot be modified
-    pthread_t thread[up];
+    uint32_t chuncks = atoi(argv[2]);
+    pthread_t thread[chuncks];
+    uint8_t i =0;
+    while(chuncks != 0)
+    {
+        if(servers[i].id != -1)
+        {
+           // pthread_create(servers[i%num_servs]);
+            chuncks--;
+        }
+        i++;
+    }
     /*
     for(int i =0; i < num_servs;i++)
     {
@@ -71,8 +88,6 @@ int main(int argc,char** argv)
         }
     }
     */
-
-    int chuncks = atoi(argv[2]);
   /*
     sockfd = socket(AF_INET,SOCK_DGRAM,0);
     bzero(&servaddr,sizeof(servaddr));

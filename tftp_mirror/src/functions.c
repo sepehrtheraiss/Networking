@@ -49,6 +49,7 @@ int getFileSize(char* file,int sockfd,struct sockaddr* serv_addr,socklen_t servl
             fprintf(stderr,"timeout\n");
         }
     }
+    free(reply_addr);
     return atoi(recvline);
 
 }
@@ -102,7 +103,7 @@ int parse(char* str,int len)
             {
                 last_index = 0;
                 // find the last index of '}'
-                while(str[++last_index]!='}');
+                while(str[++last_index]!='}' && str[last_index+1] != '$' && last_index < BUFF_SIZE -1);
                 if(last_index > BUFF_SIZE - 1) // need the last one for \0
                 {
                     return st_code;
@@ -153,7 +154,7 @@ dg_cli(FILE* fp,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
     int exit = 0;
     int p_index = 0; // , index
     // get file size and port to listen on
-    strcpy(sendline,"{1:taxes.txt}");
+    strcpy(sendline,"{1:taxes.txt}$");
     while(exit != 1)
     {
         FD_SET(sockfd,&readfds);
@@ -190,7 +191,7 @@ void dg_echo(int sockfd, struct sockaddr* serv_addr,socklen_t clilen)
         len = clilen;
         n = recvfrom(sockfd,msg,BUFF_SIZE,0,serv_addr,&len);
         printf("msg: %s\n",msg);
-        strcpy(msg,"{2:42567},{3:6969}");
+        strcpy(msg,"{2:42567}$,{3:6969}$");
         sendto(sockfd,msg,BUFF_SIZE/4,0,serv_addr,len);
     }
 }
@@ -229,53 +230,7 @@ int server_info(FILE *file,struct server* s)
     }
     return n;
 }
-/*
-int getFileSize(server* servers,char* filename,int num_servs,int servs_req)
-{
-    int sockfd;
-    struct sockaddr_in serv_addr;
-    char buff[BUFF_SIZE];
-    int buff_read;
-    int sup =0 ;//number of servers up
-    
-    for(int i=0;i < num_servs && sup < servs_req ;i++)
-    {
-        sockfd = socket(AF_INET, SOCK_STREAM, 0);
-       
-        if (sockfd < 0) {
-          perror("ERROR opening socket");
-          exit(EXIT_FAILURE);
-        }
-        //make connection
-        bzero((char *) &serv_addr, sizeof(serv_addr));
-        serv_addr.sin_family = AF_INET;
-        serv_addr.sin_addr.s_addr = servers[i].IP;
-        serv_addr.sin_port = servers[i].port;
-       
-        if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
-            perror("ERROR connecting");
-        }
-        else
-        {
-            sup++;
-         sprintf(buff,"file_name %s",filename);
-    //     printf("%s\n",buff);
-         write(sockfd,buff,64);
-        // write(sockfd,"file_name bin/testStack",25);
-            buff_read = read(sockfd,buff,BUFF_SIZE);
-            //write(1,buff,buff_read);
-            buff[buff_read] = 0;
-            return atoi(buff);
-        }//end else made a connections
-        if(close(sockfd) != 0){
-            perror("ERROR on close sockfd");
-            exit(EXIT_FAILURE);
-        }//end close socket
 
-    }//end for loop
-    return 0;
-}
-*/
 void read_offset(FILE *file,int off, int bytes,char *buffer)
 {
    fseek(file,off,SEEK_SET);
@@ -399,6 +354,12 @@ void conn(int* sockfd,server* s)
         exit(1);
     }
 }
+
+void* initThread(server* s)
+{
+    printf("%s\n", "aes");
+    return NULL;
+}
 /*
 void* initThread(server* s)
 {
@@ -463,46 +424,3 @@ void* initThread(server* s)
         return NULL;
 }
 */
-// attemps to write a message and read the response if message recieved was correct
-// returns 1 on true the users message has ok else 0 and on waittime exeteeded
-int writeit(int fd,char* buffer,int size)
-{
-    if(write(fd,buffer,size) < 0)
-    {
-        perror("error on write");
-        exit(1);
-    }
-    if(read(fd,buffer,size) > 0)
-    {
-        return 1;
-    }
-    else
-    {
-        perror("error on read");
-        exit(1);
-    }
-    return 0;
-}
-
-// reads then sends ok
-// returns reads read
-int readit(int fd,char* buffer,int size)
-{
-    int n=0;
-    if((n=read(fd,buffer,size)) > 0)
-    {
- 
-        if(write(fd,buffer,size) < 0)
-        {
-            perror("error on write");
-            return 0;
-        }
-        
-    }
-    else
-    {
-        perror("error on read");
-        exit(1);
-    }
-    return n;
-}
