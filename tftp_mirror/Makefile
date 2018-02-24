@@ -10,10 +10,10 @@ MEMCHECK = valgrind --leak-check=full --track-origins=yes
 
 all: $(EXE)
 
-bin/server: obj/server.o  obj/functions.o
-	cc -o bin/server obj/server.o obj/functions.o $(FLAG) 
+bin/server: obj/server.o  obj/functions.o obj/queue.o
+	cc -o bin/server obj/server.o obj/functions.o obj/queue.o $(FLAG) 
 
-obj/server.o: src/server.c include/header.h
+obj/server.o: src/server.c include/header.h include/queue.h
 	cc -c src/server.c -o obj/server.o
 
 bin/client: obj/client.o obj/functions.o obj/queue.o

@@ -51,7 +51,8 @@ int main(int argc,char** argv)
     sockfd = socket(AF_INET,SOCK_DGRAM,0);
     struct sockaddr_in tempserv_addr;
     char file[BUFF_LEN];
-    sprintf(file,"{1:%s}$",argv[3]);
+    strcpy(filename,argv[3]); 
+    sprintf(file,"{0:%s}$",argv[3]); // get file size
     for(int i=0; i < num_servs;i++)
     {
         if(servers[i].id != -1)
@@ -62,23 +63,34 @@ int main(int argc,char** argv)
             tempserv_addr.sin_addr.s_addr = servers[i].IP;
             tempserv_addr.sin_port = servers[i].port;
             file_size = getFileSize(file,sockfd,(struct sockaddr*)&tempserv_addr,sizeof(tempserv_addr));
-            break;
+            break; // this is the first time im using break in a loop
         }
     }
     printf("file size: %i\n",file_size);
     SUP = up ;// serves up this cannot be modified
-    uint32_t chuncks = atoi(argv[2]);
-    pthread_t thread[chuncks];
-    uint8_t i =0;
-    while(chuncks != 0)
+    //uint32_t chuncks = atoi(argv[2]);
+    chunck = atoi(argv[2]);
+    pthread_t thread[chunck];
+    uint8_t i = 0;
+    uint8_t num_chuncks = chunck;
+    uint8_t download_failed = 0;
+    while(complete != 1 && download_failed != 10)
     {
-        if(servers[i].id != -1)
+        download_failed++;
+        while(num_chuncks != 0)
         {
-           // pthread_create(servers[i%num_servs]);
-            chuncks--;
+            if(servers[i].id != -1)
+            {
+                pthread_create(&thread[i],NULL,(void *)initThread,(server*)&servers[i%num_servs]); 
+                num_chuncks--;
+            }
+            i++;
         }
-        i++;
+        while(up != 0); // busy waiting
+        up = SUP;
+        num_chuncks = chunck;
     }
+   
     /*
     for(int i =0; i < num_servs;i++)
     {

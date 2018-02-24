@@ -63,10 +63,10 @@ int p_num(char* str,int len)
     }
     return i;
 }
-int p_offset(char* str,char* filename,int* offset,int* bytes)
+int p_offset(char* str,char* filename,uint32_t* offset,uint32_t* bytes)
 {
-    char off[16];
-    char byte[16];
+    char off[32];
+    char byte[32];
     int i =0;
     int j=0;//where left off
     while(str[++i] != ':');
@@ -98,9 +98,7 @@ int parse(char* str,int len)
         if(len <= BUFF_SIZE && str[0] == '{')
         {
             op = str[1];
-            last_index = len-1;
-            if(str[last_index] != '}')
-            {
+
                 last_index = 0;
                 // find the last index of '}'
                 while(str[++last_index]!='}' && str[last_index+1] != '$' && last_index < BUFF_SIZE -1);
@@ -109,7 +107,6 @@ int parse(char* str,int len)
                     return st_code;
                 }
 
-            }
             // actually dont need this, but just incase if I need to add something later
             switch(op)
             {
@@ -231,11 +228,12 @@ int server_info(FILE *file,struct server* s)
     return n;
 }
 
-void read_offset(FILE *file,int off, int bytes,char *buffer)
+uint32_t read_offset(FILE *file,int off, int bytes,char *buffer)
 {
    fseek(file,off,SEEK_SET);
-   fread(buffer,1,bytes,file);
-   buffer[bytes]=0;
+   int n = fread(buffer,1,bytes,file);
+   buffer[n]=0;
+   return n;
 }
 void sendOffsetRead(server* s,int off,int bytes,char* buffer,char* filename)
 {
@@ -337,28 +335,100 @@ int isUp(server* s)
     return up;
 
 }
-void conn(int* sockfd,server* s)
+
+// returns 1 if bytes read is equal to chunk size
+int getFileChunk(server* s,int* sockfd,fd_set* readfds,struct sockaddr_in* serv_addr,struct sockaddr* reply_addr,socklen_t* len)
 {
-    struct sockaddr_in serv_addr;
-    *sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-        perror("ERROR opening socket");
-        exit(EXIT_FAILURE);
+    char sendline[BUFF_SIZE];
+    char recvline[BUFF_SIZE];
+    char buff[BUFF_SIZE];
+    char t_buff[16];
+    uint32_t offset;
+    uint16_t bytes;
+    uint16_t FRAG_SIZE = ceil((double)file_size /chunck); 
+    uint16_t seek = s->id*FRAG_SIZE;
+    sprintf(buff,"{2:%s(%i,%i)}$",filename,seek,FRAG_SIZE);
+    strcpy(sendline,buff);
+    uint8_t exit = 0;
+    int n;
+    complete = 0;
+    sendto(*sockfd,sendline,strlen(sendline),0,(struct sockaddr *)serv_addr,sizeof(serv_addr));
+    while(exit != 1)
+    {
+        if(FD_ISSET(*sockfd,readfds))
+        {
+            n = recvfrom(*sockfd,recvline,BUFF_SIZE,0,reply_addr,len);
+            recvline[n] = 0;
+            printf("status code:%i",parse(recvline,n));
+            strcpy(t_buff,filename);
+            p_offset(recvline,t_buff,offset,bytes);
+            if(q_exist(q,filename,offset,bytes))
+            {
+                q_insert(s.q,recvline,offset,bytes);
+            }
+            printf("%s\n",recvline);
+            if(q_bytesRead(q) == FRAG_SIZE)
+            {
+                complete = 1;
+                return 1;
+            }
+        }   
+        else
+        {
+            printf("timeout\n");
+            exit = 1;
+            complete = 0;
+        }
     }
+    return 0;
+
+}
+void* initThread(server* s)
+{
+    int sockfd = socket(AF_INET,SOCK_DGRAM,0);
+    struct sockaddr_in serv_addr;
     bzero((char *) &serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = s->IP;
     serv_addr.sin_port = s->port;
-    if (connect(*sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
-        perror("ERROR connecting need to restart client");
-        exit(1);
-    }
-}
 
-void* initThread(server* s)
-{
-    printf("%s\n", "aes");
+    // unsigned int* port = 5000 + (50 * s[i].id)
+    // newPort(port,sockfd,serv_addr);
+
+    struct timeval timeout;
+    timeout.tv_sec  = 1;
+    timeout.tv_usec = 0;
+    fd_set readfds;
+    socklen_t len;
+    struct sockaddr* reply_addr = malloc(sizeof(serv_addr));
+    FD_ZERO(&readfds);
+    int exit = 0;
+    // get file size and port to listen on
+    FD_SET(sockfd,&readfds);
+    len = sizeof(serv_addr);
+    select(sockfd+1,&readfds,NULL,NULL,&timeout);
+    // create a function here for stuff below
+    int counter = 0;
+    while(exit != 1 && counter != 10) // try it 10 times first 
+    {
+        counter++:
+        exit = getFileChunk(s,&sockfd,&readfds,&serv_addr,reply_addr,&len);
+    }
+    
+    free(reply_addr);
+    close(sockfd);
+    up--;
     return NULL;
+}
+int intlen(int i)
+{
+    int j=0;
+    while(i != 0)
+    {
+        i %= 10;
+        j++; 
+    }
+    return j;
 }
 /*
 void* initThread(server* s)

@@ -1,3 +1,18 @@
+
+
+       status code                       client                                      server
+-------------------------|---------------------------------------------------|--------------------------------------------
+| 0:filename             | sends the file name                               | gets filename & sends file size           |
+| 1:filename:i,n         | sends offset & bytes                              | gets file from offset to num-bytes        |
+| 2:filename:i,n:string  | same as 1, but reads only the string up to n bytes| sends the string                          |
+--------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+ 
+
 1. create a simple queue, test on large files
 2. test for UDP, implement stop and wait
 3. impelent syn and ack 
