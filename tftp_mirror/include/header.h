@@ -46,7 +46,7 @@ int getFileSize(char* file,int sockfd,struct sockaddr* serv_addr,socklen_t servl
 // returns index of parses, for now just single index later multiple
 int p_num(char* str,int len);
 // used to parse file name and offset and bytes returns 1 on success
-int p_offset(char* str,char* filename,uint32_t* offset,int* bytes);
+int p_offset(char* str,char* filename,uint32_t* offset,uint32_t* bytes);
 // parses string, points str to the new buffer then returns the corresponding int operation
 // 0 filename
 // 1 filename:i,n 
@@ -70,9 +70,9 @@ int server_info(FILE* file,server* s);
 // seeks the file then reads n bytes to buffer
 // used by server
 // returns number of characters read
-uint32_t read_offset(FILE* file,uint32_t off, int bytes,char* buffer);
+uint32_t read_offset(FILE* file,uint32_t off, uint32_t bytes,char* buffer);
 // writes the offset request to the given server and reads n bytes 
-void sendOffsetRead(server* s,uint32_t off,int bytes,char* buffer,char* filename);
+void sendOffsetRead(server* s,uint32_t off,uint32_t bytes,char* buffer,char* filename);
 
 // returns 1 if server is up else 0
 int isUp(server* s);

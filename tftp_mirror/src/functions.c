@@ -98,6 +98,10 @@ int parse(char* str,int len)
         if(len <= BUFF_SIZE && str[0] == '{')
         {
             op = str[1];
+            if(op == '2')
+            {
+                return 2;
+            }
 
                 last_index = 0;
                 // find the last index of '}'
@@ -228,14 +232,14 @@ int server_info(FILE *file,struct server* s)
     return n;
 }
 
-uint32_t read_offset(FILE *file,int off, int bytes,char *buffer)
+uint32_t read_offset(FILE *file,uint32_t off, uint32_t bytes,char *buffer)
 {
    fseek(file,off,SEEK_SET);
    int n = fread(buffer,1,bytes,file);
    buffer[n]=0;
    return n;
 }
-void sendOffsetRead(server* s,int off,int bytes,char* buffer,char* filename)
+void sendOffsetRead(server* s,uint32_t off,uint32_t bytes,char* buffer,char* filename)
 {
     int sockfd;
     struct sockaddr_in serv_addr;
@@ -344,7 +348,7 @@ int getFileChunk(server* s,int* sockfd,fd_set* readfds,struct sockaddr_in* serv_
     char buff[BUFF_SIZE];
     char t_buff[16];
     uint32_t offset;
-    uint16_t bytes;
+    uint32_t bytes;
     uint16_t FRAG_SIZE = ceil((double)file_size /chunck); 
     uint16_t seek = s->id*FRAG_SIZE;
     sprintf(buff,"{2:%s(%i,%i)}$",filename,seek,FRAG_SIZE);
@@ -361,13 +365,13 @@ int getFileChunk(server* s,int* sockfd,fd_set* readfds,struct sockaddr_in* serv_
             recvline[n] = 0;
             printf("status code:%i",parse(recvline,n));
             strcpy(t_buff,filename);
-            p_offset(recvline,t_buff,offset,bytes);
-            if(q_exist(q,filename,offset,bytes))
+            p_offset(recvline,t_buff,&offset,&bytes);
+            if(q_exist(s->q,filename,offset,bytes))
             {
-                q_insert(s.q,recvline,offset,bytes);
+                q_insert(s->q,recvline,offset,bytes);
             }
             printf("%s\n",recvline);
-            if(q_bytesRead(q) == FRAG_SIZE)
+            if(q_bytesRead(s->q) == FRAG_SIZE)
             {
                 complete = 1;
                 return 1;
@@ -411,10 +415,9 @@ void* initThread(server* s)
     int counter = 0;
     while(exit != 1 && counter != 10) // try it 10 times first 
     {
-        counter++:
+        counter++;
         exit = getFileChunk(s,&sockfd,&readfds,&serv_addr,reply_addr,&len);
     }
-    
     free(reply_addr);
     close(sockfd);
     up--;

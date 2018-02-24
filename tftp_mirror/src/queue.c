@@ -6,7 +6,7 @@ queue* q_init(char* file_name)
     q->head = NULL;
     q->tail = NULL;
     q->size = 0;
-    q->bytes_read = 0
+    q->bytes_read = 0;
     strcpy(q->file_name,file_name);
     return q;
 }
@@ -30,7 +30,7 @@ int q_size(queue* q)
     return q->size;
 }
 // adds to the front of the queue
-void q_insert(queue* q,char* str,int offset,int bytes)
+void q_insert(queue* q,char* str,uint32_t offset,uint32_t bytes)
 {
     if(q->head == NULL)
     {
@@ -39,7 +39,7 @@ void q_insert(queue* q,char* str,int offset,int bytes)
         q->head->str = malloc(sizeof(char)*q->head->len+1);
         q->head->off_bytes[0] = offset;
         q->head->off_bytes[1] = bytes;
-        q->bytes_read += bytes
+        q->bytes_read += bytes;
         strcpy(q->head->str,str);
         q->tail = q->head;
         q->head->next = NULL;
@@ -52,7 +52,7 @@ void q_insert(queue* q,char* str,int offset,int bytes)
         q->tail->str = malloc(sizeof(char)*q->tail->len+1);
         q->tail->off_bytes[0] = offset;
         q->tail->off_bytes[1] = bytes;
-        q->bytes_read += bytes
+        q->bytes_read += bytes;
         strcpy(q->tail->str,str);
         q->tail->next = NULL;
     }
@@ -76,7 +76,7 @@ void q_remove(queue* q)
     }
 }
 
-int q_exist(qeue* q,char* str,uint32_t offset,uint32_t bytes)
+int q_exist(queue* q,char* str,uint32_t offset,uint32_t bytes)
 {
     node* ptr = q->head;
     while(ptr != NULL)

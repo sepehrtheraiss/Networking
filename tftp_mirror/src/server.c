@@ -95,15 +95,31 @@ int main()
                 file = fopen(buff,"r");
                 str = malloc(sizeof(char)*off_bytes[1]); // allocate array[bytes]
                 int bytes_read = read_offset(file,off_bytes[0],off_bytes[1],str);
+                int bytes_readCounter = bytes_read;
                 int of = intlen(off_bytes[0]);
-                int by = intlen(off_bytes[1]);
-                int left_over = BUFF_SIZE - bytes_read - of - by - 7; 
-                sprintf(send_line,"{2:%s:%i,%i:",file_name,off_bytes[0],off_bytes[1]);//,bytes_read);
-                while(bytes > of + by )
+                int limit = 5 + strlen(file_name) + intlen(off_bytes[0]) + 3; // max bytes to read is 3 bytes
+                int start = 0;
+                int to_read = limit;
+                if(bytes_read > limit)
                 {
-
+                    while(bytes_readCounter > limit)
+                    {
+                        bytes_readCounter -= limit;
+                        if(start + to_read > bytes_read)
+                        {
+                            to_read = bytes_read - (start + to_read);
+                        }
+                        memcpy(buff,str+start,to_read);
+                        buff[to_read] = 0;
+                        sprintf(send_line,"{2:%s:%i,%i:%s",file_name,off_bytes[0],to_read,buff);//,bytes_read);
+                        start = to_read -1;
+                    }   
                 }
-
+                else
+                {
+                    sprintf(send_line,"{2:%s:%i,%i:%s",file_name,off_bytes[0],to_read,str);//,bytes_read);
+                }
+                free(str);
 
             }
 

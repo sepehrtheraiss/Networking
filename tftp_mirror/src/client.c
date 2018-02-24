@@ -38,7 +38,7 @@ int main(int argc,char** argv)
     {
         if(isUp(&servers[i]) == 1)
         {
-            servers[i].q = q_init(); 
+            servers[i].q = q_init(filename); 
             servers[i].id = up++;
         }
     }
