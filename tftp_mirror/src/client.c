@@ -24,6 +24,7 @@ int main(int argc,char** argv)
     if(s_file == NULL){perror("error fopen on argv[1]");exit(1);}
     server servers[10];
     up = 0;
+    file_size = 0;
     int num_servs = server_info(s_file,servers); // number of servers in the server-info
     fclose(s_file);
 
@@ -53,7 +54,8 @@ int main(int argc,char** argv)
     char file[BUFF_LEN];
     strcpy(filename,argv[3]); 
     sprintf(file,"{0:%s}$",argv[3]); // get file size
-    for(int i=0; i < num_servs;i++)
+    int stop = 0;
+    for(int i=0; i < num_servs && stop != 1;i++)
     {
         if(servers[i].id != -1)
         {
@@ -63,8 +65,13 @@ int main(int argc,char** argv)
             tempserv_addr.sin_addr.s_addr = servers[i].IP;
             tempserv_addr.sin_port = servers[i].port;
             file_size = getFileSize(file,sockfd,(struct sockaddr*)&tempserv_addr,sizeof(tempserv_addr));
-            break; // this is the first time im using break in a loop
+            stop = 1;
         }
+    }
+    if(file_size == 0)
+    {
+        printf("no such file exist\nexiting now\n");
+        exit(1);
     }
     printf("file size: %i\n",file_size);
     SUP = up ;// serves up this cannot be modified
@@ -74,7 +81,7 @@ int main(int argc,char** argv)
     uint8_t i = 0;
     uint8_t num_chuncks = chunck;
     uint8_t download_failed = 0;
-    while(complete != 1 && download_failed != 10)
+    while(complete != 1 && download_failed != 2)
     {
         download_failed++;
         while(num_chuncks != 0)
@@ -89,27 +96,8 @@ int main(int argc,char** argv)
         while(up != 0); // busy waiting
         up = SUP;
         num_chuncks = chunck;
+        printf("re-try\n");
     }
    
-    /*
-    for(int i =0; i < num_servs;i++)
-    {
-        if(servers[i].id != -1)
-        {
-            pthread_create(&thread[i],NULL,(void *)initThread,(server*)&servers[i]); 
-        }
-    }
-    */
-  /*
-    sockfd = socket(AF_INET,SOCK_DGRAM,0);
-    bzero(&servaddr,sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(SERV_PORT);
-    inet_pton(AF_INET,argv[1],&servaddr.sin_addr);
-    char file[BUFF_LEN];
-    sprintf(file,"{1:%s}","main.c");
-    //uint32_t file_size = getFileSize(file,sockfd,(struct sockaddr*)&servaddr,sizeof(servaddr));
-    printf("file size: %i\n",file_size);*/
-    
     return 0;
 }

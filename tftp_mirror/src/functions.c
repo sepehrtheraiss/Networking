@@ -39,7 +39,7 @@ int getFileSize(char* file,int sockfd,struct sockaddr* serv_addr,socklen_t servl
         {
             n = recvfrom(sockfd,recvline,BUFF_SIZE,0,reply_addr,&len);
             recvline[n] = 0;
-            if(parse(recvline,n) == 1)
+            if(parse(recvline,n) == 0)
             {
                 exit = 1;
             }
@@ -47,6 +47,7 @@ int getFileSize(char* file,int sockfd,struct sockaddr* serv_addr,socklen_t servl
         else
         {
             fprintf(stderr,"timeout\n");
+            exit = 1;
         }
     }
     free(reply_addr);
@@ -303,6 +304,7 @@ int send_wait(char* msg,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
     {
         n = recvfrom(sockfd,recvline,BUFF_SIZE,0,reply_addr,&len);
         recvline[n] = 0;
+        printf("recv msg:%s\n",recvline);
         exit = 1;
     }
     else
@@ -312,6 +314,32 @@ int send_wait(char* msg,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
     
     free(reply_addr);
     return exit;
+}
+int sendMSG(server* s,char* msg)
+{
+    int sockfd;
+    struct sockaddr_in serv_addr;
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    int up = 0;
+       
+    if (sockfd < 0) {
+        perror("ERROR opening socket");
+        exit(EXIT_FAILURE);
+    }
+        //make connection
+        bzero((char *) &serv_addr, sizeof(serv_addr));
+        serv_addr.sin_family = AF_INET;
+        serv_addr.sin_addr.s_addr = s->IP;
+        serv_addr.sin_port = s->port;
+        //printf("ip:%i port:%i\n",s->IP,s->port);
+        /* Now connect to the server */
+                        // just to make the msg look nice
+        up = send_wait(msg,sockfd,(struct sockaddr*)&serv_addr,sizeof(serv_addr));
+        if(close(sockfd) != 0){
+            perror("ERROR on close sockfd");
+            exit(EXIT_FAILURE);
+        }
+    return up;
 }
 int isUp(server* s)
 {
@@ -331,7 +359,8 @@ int isUp(server* s)
         serv_addr.sin_port = s->port;
         //printf("ip:%i port:%i\n",s->IP,s->port);
         /* Now connect to the server */
-        up = send_wait("you up?",sockfd,(struct sockaddr*)&serv_addr,sizeof(serv_addr));
+                        // just to make the msg look nice
+        up = send_wait("{9:you up?}$",sockfd,(struct sockaddr*)&serv_addr,sizeof(serv_addr));
         if(close(sockfd) != 0){
             perror("ERROR on close sockfd");
             exit(EXIT_FAILURE);
@@ -341,7 +370,8 @@ int isUp(server* s)
 }
 
 // returns 1 if bytes read is equal to chunk size
-int getFileChunk(server* s,int* sockfd,fd_set* readfds,struct sockaddr_in* serv_addr,struct sockaddr* reply_addr,socklen_t* len)
+//int getFileChunk(server* s,int* sockfd,fd_set* readfds,struct sockaddr_in* serv_addr,struct sockaddr* reply_addr,socklen_t* len)
+int getFileChunk(server* s)
 {
     char sendline[BUFF_SIZE];
     char recvline[BUFF_SIZE];
@@ -350,15 +380,28 @@ int getFileChunk(server* s,int* sockfd,fd_set* readfds,struct sockaddr_in* serv_
     uint32_t offset;
     uint32_t bytes;
     uint16_t FRAG_SIZE = ceil((double)file_size /chunck); 
+    printf("s.id: %i\n",s->id);
     uint16_t seek = s->id*FRAG_SIZE;
-    sprintf(buff,"{2:%s(%i,%i)}$",filename,seek,FRAG_SIZE);
+    sprintf(buff,"{1:%s:%i,%i}$",filename,seek,FRAG_SIZE);
     strcpy(sendline,buff);
     uint8_t exit = 0;
     int n;
     complete = 0;
-    sendto(*sockfd,sendline,strlen(sendline),0,(struct sockaddr *)serv_addr,sizeof(serv_addr));
+    printf("sendline: %s\n",sendline);
+    if(sendMSG(s,sendline)==1) // good to go
+    {
+        printf("good to go\n");
+    }
+    /*
+    if(sendto(*sockfd,sendline,strlen(sendline),0,(struct sockaddr *)serv_addr,sizeof(serv_addr))<1)
+    {
+        perror("error on sendto");
+    }
+    
+
     while(exit != 1)
     {
+        
         if(FD_ISSET(*sockfd,readfds))
         {
             n = recvfrom(*sockfd,recvline,BUFF_SIZE,0,reply_addr,len);
@@ -383,117 +426,46 @@ int getFileChunk(server* s,int* sockfd,fd_set* readfds,struct sockaddr_in* serv_
             exit = 1;
             complete = 0;
         }
-    }
+
+    }*/
     return 0;
 
 }
 void* initThread(server* s)
 {
-    int sockfd = socket(AF_INET,SOCK_DGRAM,0);
-    struct sockaddr_in serv_addr;
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = s->IP;
-    serv_addr.sin_port = s->port;
+    // int sockfd = socket(AF_INET,SOCK_DGRAM,0);
+    // struct sockaddr_in serv_addr;
+    // bzero((char *) &serv_addr, sizeof(serv_addr));
+    // serv_addr.sin_family = AF_INET;
+    // serv_addr.sin_addr.s_addr = s->IP;
+    // serv_addr.sin_port = s->port;
 
     // unsigned int* port = 5000 + (50 * s[i].id)
     // newPort(port,sockfd,serv_addr);
 
-    struct timeval timeout;
-    timeout.tv_sec  = 1;
-    timeout.tv_usec = 0;
-    fd_set readfds;
-    socklen_t len;
-    struct sockaddr* reply_addr = malloc(sizeof(serv_addr));
-    FD_ZERO(&readfds);
+    // struct timeval timeout;
+    // timeout.tv_sec  = 1;
+    // timeout.tv_usec = 0;
+    // fd_set readfds;
+    // socklen_t len;
+    // struct sockaddr* reply_addr = malloc(sizeof(serv_addr));
+    // FD_ZERO(&readfds);
     int exit = 0;
     // get file size and port to listen on
-    FD_SET(sockfd,&readfds);
-    len = sizeof(serv_addr);
-    select(sockfd+1,&readfds,NULL,NULL,&timeout);
+    // FD_SET(sockfd,&readfds);
+    // len = sizeof(serv_addr);
+    // select(sockfd+1,&readfds,NULL,NULL,&timeout);
     // create a function here for stuff below
     int counter = 0;
-    while(exit != 1 && counter != 10) // try it 10 times first 
+    while(exit != 1 && counter != 2) // try it 10 times first 
     {
         counter++;
-        exit = getFileChunk(s,&sockfd,&readfds,&serv_addr,reply_addr,&len);
+        exit = getFileChunk(s);
     }
-    free(reply_addr);
-    close(sockfd);
+   // free(reply_addr);
+    //close(sockfd);
     up--;
     return NULL;
 }
-int intlen(int i)
-{
-    int j=0;
-    while(i != 0)
-    {
-        i %= 10;
-        j++; 
-    }
-    return j;
-}
-/*
-void* initThread(server* s)
-{
-    int sockfd;
-    int buff_read = 0;
-    char buffer[BUFF_SIZE]; 
-       
-        
-            // fragment size, need to take the ceiling if frag size has a floating number
-            //printf("ups in thread: %i\n",SUP);
-            unsigned int FRAG_SIZE = ceil((double)fileSize / SUP); 
-            int d_i =0 ; // number of times divided will tell us how many new allocations we neeed
 
-            while(FRAG_SIZE > BUFF_SIZE)
-            {
-                d_i++;
-                FRAG_SIZE /= 2;
-            }
-            if(d_i > 30)
-            {
-                perror("sorry I've only provided space for 1 GIB");
-                exit(1);
-            }
-            // always need the first index to be allocated
-            int counter =0;
-            do
-            {
-                s->str_arr[counter] = malloc(sizeof(char)*BUFF_SIZE);
-            }while(counter++ < d_i);
-            if(counter < 10)
-            {
-                s->str_arr[counter]=NULL;
-            }
-            //printf("%i %i %i\n",FRAG_SIZE,fileSize,sup);
-            counter = 0;
-            int seek = s->id*FRAG_SIZE;
-            do
-            {
-                conn(&sockfd,s);
-                sprintf(buffer,"offset %s(%i,%i)",filename,seek,FRAG_SIZE);
-                //printf("%s\n",buffer);
-                write(sockfd,buffer,BUFF_SIZE);
-                buff_read = read(sockfd,buffer,FRAG_SIZE+1);// need to do the whole while != \0 thing
-                buffer[buff_read] = 0;
-            //    write(1,buffer,buff_read);
-                buff_read = 0;
-                // get the actual size 
-                while(buffer[buff_read++]!= 0 && buff_read < FRAG_SIZE+1);
-                char t_buff[buff_read];
-                memcpy(t_buff,&buffer[0],buff_read);
-                //t_buff[buff_read] = 0;
-                s->str_arr[counter] = malloc(sizeof(char)*buff_read);
-                strcpy(s->str_arr[counter],t_buff);
-                //write(1,buffer,buff_read);
-                if(close(sockfd) != 0){
-                    perror("ERROR on close sockfd");
-                    exit(EXIT_FAILURE);
-                }//end close socket
-                seek += FRAG_SIZE ;
-            }while(counter++ < d_i);
-        --up;
-        return NULL;
-}
-*/
+

@@ -65,7 +65,7 @@ int main()
         //printf("msg: %s\n",recv_line);
        // printf("port: %i\n",servaddr.sin_port);
         stat_code = parse(recv_line,n);
-        printf("striped msg:%s\n",recv_line);
+        printf("code: %i striped msg: %s\n",stat_code,recv_line);
         // send file size
         if(stat_code == 0) // if client gets a timeout fork will execute again
         {
@@ -85,6 +85,9 @@ int main()
         {
             if(fork()==0)
             {
+                sprintf(send_line,"{9:got your file request}");
+                //printf("%s\n",send_line);
+                sendto(sockfd,send_line,BUFF_SIZE/4,0,(struct sockaddr*)&cliaddr,cli_len);
                 FILE* file;
                 char file_name[32];
                 p_offset(recv_line,file_name,&off_bytes[0],&off_bytes[1]);
@@ -96,8 +99,8 @@ int main()
                 str = malloc(sizeof(char)*off_bytes[1]); // allocate array[bytes]
                 int bytes_read = read_offset(file,off_bytes[0],off_bytes[1],str);
                 int bytes_readCounter = bytes_read;
-                int of = intlen(off_bytes[0]);
-                int limit = 5 + strlen(file_name) + intlen(off_bytes[0]) + 3; // max bytes to read is 3 bytes
+                int nDigits = floor(log10(off_bytes[0])) + 1;
+                int limit = 5 + strlen(file_name) + nDigits + 3; // max bytes to read is 3 bytes
                 int start = 0;
                 int to_read = limit;
                 if(bytes_read > limit)
