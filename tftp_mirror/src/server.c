@@ -28,12 +28,12 @@ int main()
     socklen_t cli_len,ser_len;
     cli_len = sizeof(cliaddr);
     ser_len = sizeof(servaddr);
-    char recv_line[BUFF_SIZE];
+    char recv_line[BUFF_SIZE+1];
     char send_line[BUFF_SIZE];
-    char buff[BUFF_SIZE];
+    char buff[BUFF_SIZE+1];
+    uint32_t ports = 5000;
     char* str = NULL;
     int buff_read;
-    unsigned int d_port = 5000; // data port will increment on each call
     char PATH[BUFF_SIZE];
     int fd;
     struct stat f_stat;
@@ -57,10 +57,11 @@ int main()
         PATH[buff_read+1] = 0;
     }
     int stat_code = 0;
+    //cliaddr;
     for(;;)
     {
-
         n = recvfrom(sockfd,recv_line,BUFF_SIZE,0,(struct sockaddr*)&cliaddr,&cli_len);
+        recv_line[n]=0;
         // request for file size
         //printf("msg: %s\n",recv_line);
        // printf("port: %i\n",servaddr.sin_port);
@@ -79,15 +80,30 @@ int main()
             sprintf(send_line,"{0:%lli}$",f_stat.st_size);
             sendto(sockfd,send_line,BUFF_SIZE/4,0,(struct sockaddr*)&cliaddr,cli_len);
             printf("size file:%lli\n",f_stat.st_size);
+            f_stat.st_size = 0;
 
         }
         else if(stat_code == 1)
         {
+            //sprintf(send_line,"{9:got your file(%s) request}",recv_line);
+            //sendto(sockfd,send_line,BUFF_SIZE/4,0,(struct sockaddr*)&cliaddr,cli_len);
+            printf("IP:%i PORT:%i\n",cliaddr.sin_addr.s_addr,cliaddr.sin_port );
             if(fork()==0)
             {
-                sprintf(send_line,"{9:got your file request}");
-                //printf("%s\n",send_line);
-                sendto(sockfd,send_line,BUFF_SIZE/4,0,(struct sockaddr*)&cliaddr,cli_len);
+                sleep(1);
+                int sockfd_new;
+                struct sockaddr_in servaddr_new;
+                sockfd_new = socket(AF_INET,SOCK_DGRAM,0);
+                bzero(&servaddr_new,sizeof(servaddr_new));
+                servaddr_new.sin_family = AF_INET;
+                servaddr_new.sin_addr.s_addr = htonl(INADDR_ANY);
+                servaddr_new.sin_port = 0;//htons(ports++);
+
+                if(bind(sockfd_new,(struct sockaddr*)&servaddr_new,sizeof(servaddr_new)) < 0)
+                {
+                    perror("error on binding new sock");
+                }
+                //send_wait(char* msg,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
                 FILE* file;
                 char file_name[32];
                 p_offset(recv_line,file_name,&off_bytes[0],&off_bytes[1]);
@@ -99,29 +115,45 @@ int main()
                 str = malloc(sizeof(char)*off_bytes[1]); // allocate array[bytes]
                 int bytes_read = read_offset(file,off_bytes[0],off_bytes[1],str);
                 int bytes_readCounter = bytes_read;
-                int nDigits = floor(log10(off_bytes[0])) + 1;
-                int limit = 5 + strlen(file_name) + nDigits + 3; // max bytes to read is 3 bytes
-                int start = 0;
-                int to_read = limit;
-                if(bytes_read > limit)
+                int nDigits = 0;
+                if(off_bytes[0] == 0)
                 {
-                    while(bytes_readCounter > limit)
-                    {
-                        bytes_readCounter -= limit;
-                        if(start + to_read > bytes_read)
-                        {
-                            to_read = bytes_read - (start + to_read);
-                        }
-                        memcpy(buff,str+start,to_read);
-                        buff[to_read] = 0;
-                        sprintf(send_line,"{2:%s:%i,%i:%s",file_name,off_bytes[0],to_read,buff);//,bytes_read);
-                        start = to_read -1;
-                    }   
+                    nDigits = 1;
                 }
                 else
                 {
-                    sprintf(send_line,"{2:%s:%i,%i:%s",file_name,off_bytes[0],to_read,str);//,bytes_read);
+                    nDigits = floor(log10(off_bytes[0])) + 1;
                 }
+                int used_space = 5 + strlen(file_name) + nDigits + 3; // max bytes to read is 3 bytes
+                int start = 0;
+                int string_space = BUFF_SIZE - used_space;
+                //printf("%i %i\n",used_space,string_space );
+                printf("IP:%i PORT:%i\n",cliaddr.sin_addr.s_addr,cliaddr.sin_port );
+                while(bytes_read > string_space)
+                {
+                    
+                    memcpy(buff,str+start,string_space);
+                    
+                    buff[string_space] = 0;
+                    //printf("%s %i %i %lu\n",file_name,off_bytes[0],string_space,strlen(buff));
+                    snprintf(send_line,sizeof(send_line),"{2:%s:%i,%i:%s",file_name,off_bytes[0],string_space,buff);
+                    //write(1,send_line,string_space);
+                    if(sendto(sockfd_new,send_line,BUFF_SIZE,0,(struct sockaddr*)&cliaddr,cli_len)<1)
+                    {
+                        perror("error on sendto filechunk");
+                        exit(1);
+                    }
+                    //printf("here2\n");
+                    start += string_space;
+                    bytes_read -= string_space;
+                }
+               // printf("here3\n");
+                memcpy(buff,str+start,bytes_read);
+                buff[bytes_read] = 0;
+                snprintf(send_line,sizeof(send_line),"{2:%s:%i,%i:%s",file_name,start,bytes_read,buff);//,bytes_read);
+               // write(1,send_line,bytes_read);
+                sendto(sockfd_new,send_line,BUFF_SIZE,0,(struct sockaddr*)&cliaddr,cli_len);
+                //printf("here4\n");
                 free(str);
 
             }

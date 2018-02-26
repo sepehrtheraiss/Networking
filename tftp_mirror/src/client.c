@@ -86,7 +86,7 @@ int main(int argc,char** argv)
     pthread_t thread[chunck];
     uint8_t i = 0;
     uint32_t offset = 0;
-    uint8_t place_holder = 0 ;
+    uint8_t nextQ = 0 ;
     uint8_t num_chuncks = chunck;
     uint8_t download_failed = 0;
     uint16_t FRAG_SIZE = ceil((double)file_size /chunck);
@@ -97,21 +97,26 @@ int main(int argc,char** argv)
         {
             if(servers[i%num_servs].id != -1)
             {
-                place_holder = servers[i%num_servs].nextQ++;
-                if(place_holder > 16)
+                nextQ = servers[i%num_servs].nextQ++;
+                if(nextQ > 16)
                 {
                     fprintf(stderr, "counter over flow\n");
                     exit(1);
                 }
-                printf("nextQ:%i\n",place_holder);
-                servers[i%num_servs].q[place_holder] = q_init(filename,offset,FRAG_SIZE); 
+                printf("nextQ:%i\n",nextQ);
+                servers[i%num_servs].q[nextQ] = q_init(filename,offset,FRAG_SIZE); 
+                //initThread(&servers[i%num_servs]);
                 pthread_create(&thread[num_chuncks-1],NULL,(void *)initThread,(server*)&servers[i%num_servs]);
                 offset += FRAG_SIZE; 
                 num_chuncks--;
             }
             i++;
         }
-        while(up != 0); // busy waiting
+        for(int j =0;j<chunck;j++)
+        {
+            pthread_join(thread[j],NULL);
+        }
+        //while(up != 0); // busy waiting
         up = SUP;
         num_chuncks = chunck;
         printf("re-try\n");

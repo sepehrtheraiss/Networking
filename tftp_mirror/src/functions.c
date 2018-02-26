@@ -50,6 +50,7 @@ int getFileSize(char* file,int sockfd,struct sockaddr* serv_addr,socklen_t servl
             exit = 1;
         }
     }
+    FD_CLR(sockfd,&readfds);
     free(reply_addr);
     return atoi(recvline);
 
@@ -81,12 +82,12 @@ int p_offset(char* str,char* filename,uint32_t* offset,uint32_t* bytes)
     *offset = atoi(off);
     //printf("%i\n",*offset);
     j = i +1;
-    while(str[++i]!=0);
+    while(str[++i]!=':');
     memcpy(byte,str+j,i-j);
     byte[i-j] = 0;
     *bytes = atoi(byte);
     //printf("%i\n",*bytes);
-    return 1;
+    return i; // returns the index of : after bytes {2:filename:i,n:string
 }
 int parse(char* str,int len)
 {
@@ -138,66 +139,6 @@ int parse(char* str,int len)
     return st_code;
 }
 
-void 
-dg_cli(FILE* fp,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
-{
-    struct timeval timeout;
-    timeout.tv_sec  = 1;
-    timeout.tv_usec = 0;
-    fd_set readfds;
-
-    int n;
-    char sendline[BUFF_SIZE];
-    char recvline[BUFF_SIZE];
-    char buff[BUFF_SIZE];
-    socklen_t len;
-    struct sockaddr* reply_addr = malloc(servlen);
-    FD_ZERO(&readfds);
-    int exit = 0;
-    int p_index = 0; // , index
-    // get file size and port to listen on
-    strcpy(sendline,"{1:taxes.txt}$");
-    while(exit != 1)
-    {
-        FD_SET(sockfd,&readfds);
-        sendto(sockfd,sendline,strlen(sendline),0,serv_addr,servlen);
-        len = servlen;
-        select(sockfd+1,&readfds,NULL,NULL,&timeout);
-        if(FD_ISSET(sockfd,&readfds))
-        {
-            n = recvfrom(sockfd,recvline,BUFF_SIZE,0,reply_addr,&len);
-            recvline[n] = 0;
-            p_index = p_num(recvline,n); 
-            memcpy(buff,recvline,p_index);
-            printf("msg: %s\n",buff);
-            memcpy(buff,recvline+p_index+1,n);
-            printf("msg: %s\n",buff);
-            exit = 1;
-        }
-        else
-        {
-            printf("timeout\n");
-        }
-    }
-    free(reply_addr);
-}
-// server
-void dg_echo(int sockfd, struct sockaddr* serv_addr,socklen_t clilen)
-{
-    int n;
-    socklen_t len;
-    char msg[BUFF_SIZE];
-
-    for(;;)
-    {
-        len = clilen;
-        n = recvfrom(sockfd,msg,BUFF_SIZE,0,serv_addr,&len);
-        printf("msg: %s\n",msg);
-        strcpy(msg,"{2:42567}$,{3:6969}$");
-        sendto(sockfd,msg,BUFF_SIZE/4,0,serv_addr,len);
-    }
-}
-
 // takes in a file descriptor
 // converts string to unit32_t and int 
 // writes to IP[] and port[]
@@ -240,80 +181,38 @@ uint32_t read_offset(FILE *file,uint32_t off, uint32_t bytes,char *buffer)
    buffer[n]=0;
    return n;
 }
-void sendOffsetRead(server* s,uint32_t off,uint32_t bytes,char* buffer,char* filename)
-{
-    int sockfd;
-    struct sockaddr_in serv_addr;
-    int buff_read;
-    
-           /* Create a socket point */
-        sockfd = socket(AF_INET, SOCK_STREAM, 0);
-       
-        if (sockfd < 0) {
-          perror("ERROR opening socket");
-          exit(EXIT_FAILURE);
-        }
-        //make connection
-        bzero((char *) &serv_addr, sizeof(serv_addr));
-        serv_addr.sin_family = AF_INET;
-        serv_addr.sin_addr.s_addr = s->IP;
-        serv_addr.sin_port = s->port;
-       
-        /* Now connect to the server */
-        if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
-            perror("ERROR connecting");
-        }
-        else
-        {
-            sprintf(buffer,"offset %s(%i,%i)",filename,off,bytes);
-            printf("%s\n",buffer);
-            write(sockfd,buffer,BUFF_SIZE);
-            buff_read = read(sockfd,buffer,bytes);
-            buffer[buff_read] = 0;
-            write(1,buffer,buff_read);
-        }//end else made a connections
-        if(close(sockfd) != 0){
-            perror("ERROR on close sockfd");
-            exit(EXIT_FAILURE);
-        }//end close socket
-
-
-}
-int send_wait(char* msg,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
+int revc_wait(int sockfd)
 {
     struct timeval timeout;
     timeout.tv_sec  = 1;
     timeout.tv_usec = 0;
     fd_set readfds;
-
+    int exit_code = 0;
     int n;
-    char sendline[BUFF_SIZE];
     char recvline[BUFF_SIZE];
-    char buff[BUFF_SIZE];
-    socklen_t len;
-    struct sockaddr* reply_addr = malloc(servlen);
-    FD_ZERO(&readfds);
-    int exit = 0;
-    // get file size and port to listen on
-    strcpy(sendline,msg);
     FD_SET(sockfd,&readfds);
-    sendto(sockfd,sendline,strlen(sendline),0,serv_addr,servlen);
-    len = servlen;
     select(sockfd+1,&readfds,NULL,NULL,&timeout);
     if(FD_ISSET(sockfd,&readfds))
     {
-        n = recvfrom(sockfd,recvline,BUFF_SIZE,0,reply_addr,&len);
+        n = recvfrom(sockfd,recvline,BUFF_SIZE,0,NULL,NULL);//reply_addr,&len);
         recvline[n] = 0;
         printf("recv msg:%s\n",recvline);
-        exit = 1;
+        exit_code = 1;
     }
     else
     {
         printf("timeout\n");
     }
-    
-    free(reply_addr);
-    return exit;
+    FD_CLR(sockfd,&readfds);
+    return exit_code;
+}
+int send_wait(char* msg,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
+{
+    char sendline[BUFF_SIZE];
+    char buff[BUFF_SIZE];
+    strcpy(sendline,msg);
+    sendto(sockfd,sendline,strlen(sendline),0,serv_addr,servlen);
+    return revc_wait(sockfd);
 }
 int sendMSG(server* s,char* msg)
 {
@@ -368,7 +267,97 @@ int isUp(server* s)
     return up;
 
 }
+int recv_inChunks(server* s,uint8_t index)
+{
 
+    int sockfd;
+    struct sockaddr_in serv_addr;
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    int up = 0;
+       
+    if (sockfd < 0) {
+        perror("ERROR opening socket");
+        exit(EXIT_FAILURE);
+    }
+/*
+    struct timeval timeout;
+    timeout.tv_sec  = 1;
+    timeout.tv_usec = 0;
+    fd_set readfds;
+*/
+    int n;
+    uint32_t offset,bytes;
+    char sendline[BUFF_SIZE];
+    char recvline[BUFF_SIZE+1];
+    char buff[BUFF_SIZE+1];
+    socklen_t len;
+    //struct sockaddr* reply_addr = malloc(sizeof(serv_addr));
+  //  FD_ZERO(&readfds);
+    int stop = 0;
+  
+  /*  //FD_SET(sockfd,&readfds);
+    printf("fdread: %p\n",&readfds);
+    if(select(sockfd+1,&readfds,NULL,NULL,&timeout)<0)
+    {
+        perror("error on select");
+        exit(1);
+    }*/
+    int re_try = 0;
+    while(re_try < 3 && stop != 1)
+    {
+        if((stop=revc_wait(sockfd) == 1)){
+            printf("recv on file chunk good\n");
+        }
+        else
+        {
+            printf("recv on file chunk failed\n");   
+        }
+        re_try++;
+    }
+   
+    int string_index = 0;
+    /*
+    while(stop != 1)
+    {
+            if(FD_ISSET(sockfd,&readfds))
+            {
+                n = recvfrom(sockfd,recvline,BUFF_SIZE,0,(struct sockaddr*)&serv_addr,&len);
+                recvline[n] = 0;
+                printf("status code:%i",parse(recvline,n));
+                strcpy(buff,filename);
+                string_index = p_offset(recvline,buff,&offset,&bytes) + 1;
+                memcpy(buff,recvline+string_index,bytes);
+                buff[bytes] = 0;
+                printf("%s",buff);
+                if(q_exist(s->q[index],filename,offset,bytes))
+                {
+                    q_insert(s->q[index],recvline,offset,bytes);
+                }
+                if(q_bytesRead(s->q[index]) == s->q[index]->off_bytes[1])
+                {
+                    complete = 1;
+                    return 1;
+                }
+                stop = 1;
+            }   
+            else
+            {
+                printf("timeout in recv_inChunks\n");
+                stop = 1;
+                complete = 0;
+            }
+
+    }//end while
+      //  free(reply_addr);
+        FD_CLR(sockfd,&readfds);
+        */
+        if(close(sockfd) != 0){
+            perror("ERROR on close sockfd");
+            exit(EXIT_FAILURE);
+        }//end close socket
+        printf("end of recv_inChunks functions\n");
+        return 0;
+}
 // returns 1 if bytes read is equal to chunk size
 //int getFileChunk(server* s,int* sockfd,fd_set* readfds,struct sockaddr_in* serv_addr,struct sockaddr* reply_addr,socklen_t* len)
 int getFileChunk(server* s,uint8_t index)
@@ -379,11 +368,8 @@ int getFileChunk(server* s,uint8_t index)
     char t_buff[16];
     uint32_t offset;
     uint32_t bytes;
-    //uint16_t FRAG_SIZE = ceil((double)file_size /chunck); 
-    //printf("s.id: %i\n",s->id);
-    //uint16_t seek = s->id*FRAG_SIZE;
-    printf("index:%i\n",index);
-    sprintf(buff,"{1:%s:%i,%i}$",filename,s->q[index]->off_bytes[0],s->q[index]->off_bytes[1]);
+    //printf("index:%i\n",index);
+    sprintf(buff,"{1:%s:%i,%i:}$",filename,s->q[index]->off_bytes[0],s->q[index]->off_bytes[1]);
     strcpy(sendline,buff);
     uint8_t exit = 0;
     int n;
@@ -393,44 +379,7 @@ int getFileChunk(server* s,uint8_t index)
     {
         printf("good to go\n");
     }
-    /*
-    if(sendto(*sockfd,sendline,strlen(sendline),0,(struct sockaddr *)serv_addr,sizeof(serv_addr))<1)
-    {
-        perror("error on sendto");
-    }
-    
-
-    while(exit != 1)
-    {
-        
-        if(FD_ISSET(*sockfd,readfds))
-        {
-            n = recvfrom(*sockfd,recvline,BUFF_SIZE,0,reply_addr,len);
-            recvline[n] = 0;
-            printf("status code:%i",parse(recvline,n));
-            strcpy(t_buff,filename);
-            p_offset(recvline,t_buff,&offset,&bytes);
-            if(q_exist(s->q,filename,offset,bytes))
-            {
-                q_insert(s->q,recvline,offset,bytes);
-            }
-            printf("%s\n",recvline);
-            if(q_bytesRead(s->q) == FRAG_SIZE)
-            {
-                complete = 1;
-                return 1;
-            }
-        }   
-        else
-        {
-            printf("timeout\n");
-            exit = 1;
-            complete = 0;
-        }
-
-    }*/
-    return 0;
-
+    return recv_inChunks(s,index);
 }
 void* initThread(server* s)
 {
@@ -443,6 +392,7 @@ void* initThread(server* s)
         exit = getFileChunk(s,s->counter++);
     }
     up--;
+    printf("end initThread\n");
     return NULL;
 }
 
