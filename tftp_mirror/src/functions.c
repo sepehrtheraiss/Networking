@@ -65,7 +65,7 @@ int p_num(char* str,int len)
     }
     return i;
 }
-int p_offset(char* str,char* filename,uint32_t* offset,uint32_t* bytes)
+int p_offset(char* str,char* filename,int* offset,int* bytes)
 {
     char off[32];
     char byte[32];
@@ -175,7 +175,7 @@ int server_info(FILE *file,struct server* s)
     return n;
 }
 
-uint32_t read_offset(FILE *file,uint32_t off, uint32_t bytes,char *buffer)
+int read_offset(FILE *file,int off, int bytes,char *buffer)
 {
    fseek(file,off,SEEK_SET);
    int n = fread(buffer,1,bytes,file);
@@ -274,7 +274,7 @@ int isUp(server* s)
     return up;
 
 }
-int recv_inChunks(server* s,uint8_t index)
+int recv_inChunks(server* s,int index)
 {
 
     int sockfd;
@@ -293,7 +293,7 @@ int recv_inChunks(server* s,uint8_t index)
     fd_set readfds;
 */
     int n;
-    uint32_t offset,bytes;
+    int offset,bytes;
     char sendline[BUFF_SIZE];
     char recvline[BUFF_SIZE+1];
     char buff[BUFF_SIZE+1];
@@ -368,19 +368,19 @@ int recv_inChunks(server* s,uint8_t index)
 }
 // returns 1 if bytes read is equal to chunk size
 //int getFileChunk(server* s,int* sockfd,fd_set* readfds,struct sockaddr_in* serv_addr,struct sockaddr* reply_addr,socklen_t* len)
-int getFileChunk(server* s,uint8_t index)
+int getFileChunk(server* s,int index)
 {
     char sendline[BUFF_SIZE];
     char recvline[BUFF_SIZE];
     char buff[BUFF_SIZE+1]; //=malloc(sizeof(char)*BUFF_SIZE+1);
     char str[BUFF_SIZE+1];
     char t_buff[16];
-    uint32_t offset;
-    uint32_t bytes;
+    int offset;
+    int bytes;
     //printf("index:%i\n",index);
     sprintf(buff,"{1:%s:%i,%i:}$",filename,s->q[index]->off_bytes[0],s->q[index]->off_bytes[1]);
     strcpy(sendline,buff);
-    uint8_t exit = 0;
+    int exit = 0;
     int n;
     complete = 0;
     printf("sendline: %s\n",sendline);

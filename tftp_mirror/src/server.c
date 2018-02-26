@@ -31,13 +31,13 @@ int main()
     char recv_line[BUFF_SIZE+1];
     char send_line[BUFF_SIZE];
     char buff[BUFF_SIZE+1];
-    uint32_t ports = 5000;
+    int ports = 5000;
     char* str = NULL;
     int buff_read;
     char PATH[BUFF_SIZE];
     int fd;
     struct stat f_stat;
-    uint32_t off_bytes[2];
+    int off_bytes[2];
     FILE* pwd = popen("pwd","r");
     buff_read = fread(PATH,1,BUFF_SIZE,pwd);
     pclose(pwd);

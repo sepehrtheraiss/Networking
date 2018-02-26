@@ -81,15 +81,15 @@ int main(int argc,char** argv)
     }
     printf("file size: %i\n",file_size);
     SUP = up ;// serves up this cannot be modified
-    //uint32_t chuncks = atoi(argv[2]);
+    //int chuncks = atoi(argv[2]);
     chunck = atoi(argv[2]);
     pthread_t thread[chunck];
-    uint8_t i = 0;
-    uint32_t offset = 0;
-    uint8_t nextQ = 0 ;
-    uint8_t num_chuncks = chunck;
-    uint8_t download_failed = 0;
-    uint16_t FRAG_SIZE = ceil((double)file_size /chunck);
+    int i = 0;
+    int offset = 0;
+    int nextQ = 0 ;
+    int num_chuncks = chunck;
+    int download_failed = 0;
+    int FRAG_SIZE = ceil((double)file_size /chunck);
     while(complete != 1 && download_failed != 1)
     {
         download_failed++;

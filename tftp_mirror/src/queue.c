@@ -1,6 +1,6 @@
 #include "../include/queue.h"
 
-queue* q_init(char* file_name,uint32_t offset,uint32_t bytes)
+queue* q_init(char* file_name,int offset,int bytes)
 {
     queue* q = malloc(sizeof(queue));
     q->head = NULL;
@@ -32,7 +32,7 @@ int q_size(queue* q)
     return q->size;
 }
 // adds to the front of the queue
-void q_insert(queue* q,char* str,uint32_t offset,uint32_t bytes)
+void q_insert(queue* q,char* str,int offset,int bytes)
 {
     if(q->head == NULL)
     {
@@ -78,7 +78,7 @@ void q_remove(queue* q)
     }
 }
 
-int q_exist(queue* q,char* str,uint32_t offset,uint32_t bytes)
+int q_exist(queue* q,char* str,int offset,int bytes)
 {
     node* ptr = q->head;
     while(ptr != NULL)
@@ -92,7 +92,7 @@ int q_exist(queue* q,char* str,uint32_t offset,uint32_t bytes)
     return 0;
 }
 
-uint32_t q_bytesRead(queue* q)
+int q_bytesRead(queue* q)
 {
     return q->bytes_read;
 }
