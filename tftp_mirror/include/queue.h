@@ -13,14 +13,15 @@ typedef struct node
 typedef struct queue
 {
     int size;
-    char file_name[16];
+    char file_name[32];
+    uint32_t off_bytes[2]; // stores offset and bytes read
     uint32_t bytes_read;
     node* head;
     node* tail;
 }queue;
 
 // init queue
-queue* q_init(char* file_name);
+queue* q_init(char* file_name,uint32_t offset,uint32_t bytes);
 // deinit queue calls clear
 void q_deinit(queue* q);
 // if stack != 0 clear the nodes

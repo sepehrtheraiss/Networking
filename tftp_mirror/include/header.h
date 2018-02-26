@@ -26,10 +26,12 @@
 #define PORT_SIZE 4
 #define BUFF_SIZE 512
 typedef struct server{
-    int id;
+    uint32_t id;
     uint32_t IP;
-    int port;
-    queue* q;
+    uint32_t port;
+    queue* q[16]; // each queue is responsible for an (offset,bytes)
+    uint8_t nextQ; // counter for queue array 
+    uint8_t counter;
 }server;
 
 // global variables
@@ -80,7 +82,5 @@ int isUp(server* s);
 // each thread will first check for connectivity and for each connection it increments the sup
 // then will read file from the given server
 void* initThread(server* s);
-// returns len of the integer
-int intlen(int i);
 
 #endif

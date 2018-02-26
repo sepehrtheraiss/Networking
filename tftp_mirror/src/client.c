@@ -39,7 +39,13 @@ int main(int argc,char** argv)
     {
         if(isUp(&servers[i]) == 1)
         {
-            servers[i].q = q_init(filename); 
+            //servers[i].q[0] = q_init(filename);
+            for(int j=0;j<16;j++)
+            {
+                servers[i].q[j] = NULL; 
+            } 
+            servers[i].counter = 0;
+            servers[i].nextQ = 0;
             servers[i].id = up++;
         }
     }
@@ -79,16 +85,28 @@ int main(int argc,char** argv)
     chunck = atoi(argv[2]);
     pthread_t thread[chunck];
     uint8_t i = 0;
+    uint32_t offset = 0;
+    uint8_t place_holder = 0 ;
     uint8_t num_chuncks = chunck;
     uint8_t download_failed = 0;
-    while(complete != 1 && download_failed != 2)
+    uint16_t FRAG_SIZE = ceil((double)file_size /chunck);
+    while(complete != 1 && download_failed != 1)
     {
         download_failed++;
         while(num_chuncks != 0)
         {
-            if(servers[i].id != -1)
+            if(servers[i%num_servs].id != -1)
             {
-                pthread_create(&thread[i],NULL,(void *)initThread,(server*)&servers[i%num_servs]); 
+                place_holder = servers[i%num_servs].nextQ++;
+                if(place_holder > 16)
+                {
+                    fprintf(stderr, "counter over flow\n");
+                    exit(1);
+                }
+                printf("nextQ:%i\n",place_holder);
+                servers[i%num_servs].q[place_holder] = q_init(filename,offset,FRAG_SIZE); 
+                pthread_create(&thread[num_chuncks-1],NULL,(void *)initThread,(server*)&servers[i%num_servs]);
+                offset += FRAG_SIZE; 
                 num_chuncks--;
             }
             i++;

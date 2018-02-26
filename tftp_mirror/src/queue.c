@@ -1,6 +1,6 @@
 #include "../include/queue.h"
 
-queue* q_init(char* file_name)
+queue* q_init(char* file_name,uint32_t offset,uint32_t bytes)
 {
     queue* q = malloc(sizeof(queue));
     q->head = NULL;
@@ -8,6 +8,8 @@ queue* q_init(char* file_name)
     q->size = 0;
     q->bytes_read = 0;
     strcpy(q->file_name,file_name);
+    q->off_bytes[0] = offset;
+    q->off_bytes[1] = bytes;
     return q;
 }
 void q_deinit(queue* q)

@@ -371,7 +371,7 @@ int isUp(server* s)
 
 // returns 1 if bytes read is equal to chunk size
 //int getFileChunk(server* s,int* sockfd,fd_set* readfds,struct sockaddr_in* serv_addr,struct sockaddr* reply_addr,socklen_t* len)
-int getFileChunk(server* s)
+int getFileChunk(server* s,uint8_t index)
 {
     char sendline[BUFF_SIZE];
     char recvline[BUFF_SIZE];
@@ -379,10 +379,11 @@ int getFileChunk(server* s)
     char t_buff[16];
     uint32_t offset;
     uint32_t bytes;
-    uint16_t FRAG_SIZE = ceil((double)file_size /chunck); 
-    printf("s.id: %i\n",s->id);
-    uint16_t seek = s->id*FRAG_SIZE;
-    sprintf(buff,"{1:%s:%i,%i}$",filename,seek,FRAG_SIZE);
+    //uint16_t FRAG_SIZE = ceil((double)file_size /chunck); 
+    //printf("s.id: %i\n",s->id);
+    //uint16_t seek = s->id*FRAG_SIZE;
+    printf("index:%i\n",index);
+    sprintf(buff,"{1:%s:%i,%i}$",filename,s->q[index]->off_bytes[0],s->q[index]->off_bytes[1]);
     strcpy(sendline,buff);
     uint8_t exit = 0;
     int n;
@@ -433,37 +434,14 @@ int getFileChunk(server* s)
 }
 void* initThread(server* s)
 {
-    // int sockfd = socket(AF_INET,SOCK_DGRAM,0);
-    // struct sockaddr_in serv_addr;
-    // bzero((char *) &serv_addr, sizeof(serv_addr));
-    // serv_addr.sin_family = AF_INET;
-    // serv_addr.sin_addr.s_addr = s->IP;
-    // serv_addr.sin_port = s->port;
 
-    // unsigned int* port = 5000 + (50 * s[i].id)
-    // newPort(port,sockfd,serv_addr);
-
-    // struct timeval timeout;
-    // timeout.tv_sec  = 1;
-    // timeout.tv_usec = 0;
-    // fd_set readfds;
-    // socklen_t len;
-    // struct sockaddr* reply_addr = malloc(sizeof(serv_addr));
-    // FD_ZERO(&readfds);
     int exit = 0;
-    // get file size and port to listen on
-    // FD_SET(sockfd,&readfds);
-    // len = sizeof(serv_addr);
-    // select(sockfd+1,&readfds,NULL,NULL,&timeout);
-    // create a function here for stuff below
-    int counter = 0;
-    while(exit != 1 && counter != 2) // try it 10 times first 
+    int retry = 0;
+    while(exit != 1 && retry != 1) // try it x times before exiting 
     {
-        counter++;
-        exit = getFileChunk(s);
+        retry++;
+        exit = getFileChunk(s,s->counter++);
     }
-   // free(reply_addr);
-    //close(sockfd);
     up--;
     return NULL;
 }
