@@ -87,6 +87,7 @@ int p_offset(char* str,char* filename,uint32_t* offset,uint32_t* bytes)
     byte[i-j] = 0;
     *bytes = atoi(byte);
     //printf("%i\n",*bytes);
+    //printf("buff [%c %c %c]\n",str[i-1],str[i],str[i+1]);
     return i; // returns the index of : after bytes {2:filename:i,n:string
 }
 int parse(char* str,int len)
@@ -181,7 +182,7 @@ uint32_t read_offset(FILE *file,uint32_t off, uint32_t bytes,char *buffer)
    buffer[n]=0;
    return n;
 }
-int revc_wait(int sockfd)
+int revc_wait(int sockfd,char* msg,char* buff)
 {
     struct timeval timeout;
     timeout.tv_sec  = 1;
@@ -196,7 +197,14 @@ int revc_wait(int sockfd)
     {
         n = recvfrom(sockfd,recvline,BUFF_SIZE,0,NULL,NULL);//reply_addr,&len);
         recvline[n] = 0;
-        printf("recv msg:%s\n",recvline);
+        //printf("%s",recvline);
+        if(buff != NULL)
+        {
+            strcpy(buff,recvline);
+            write(1,buff,n);
+           // printf("%s",buff);
+        }
+      //  printf("recv msg:%s\n",recvline);
         exit_code = 1;
     }
     else
@@ -206,15 +214,14 @@ int revc_wait(int sockfd)
     FD_CLR(sockfd,&readfds);
     return exit_code;
 }
-int send_wait(char* msg,int sockfd,struct sockaddr* serv_addr,socklen_t servlen)
+int send_wait(char* msg,int sockfd,struct sockaddr* serv_addr,socklen_t servlen,char* buff)
 {
     char sendline[BUFF_SIZE];
-    char buff[BUFF_SIZE];
     strcpy(sendline,msg);
     sendto(sockfd,sendline,strlen(sendline),0,serv_addr,servlen);
-    return revc_wait(sockfd);
+    return revc_wait(sockfd,msg,buff);
 }
-int sendMSG(server* s,char* msg)
+int sendMSG(server* s,char* msg,char* buff)
 {
     int sockfd;
     struct sockaddr_in serv_addr;
@@ -233,7 +240,7 @@ int sendMSG(server* s,char* msg)
         //printf("ip:%i port:%i\n",s->IP,s->port);
         /* Now connect to the server */
                         // just to make the msg look nice
-        up = send_wait(msg,sockfd,(struct sockaddr*)&serv_addr,sizeof(serv_addr));
+        up = send_wait(msg,sockfd,(struct sockaddr*)&serv_addr,sizeof(serv_addr),buff);
         if(close(sockfd) != 0){
             perror("ERROR on close sockfd");
             exit(EXIT_FAILURE);
@@ -259,7 +266,7 @@ int isUp(server* s)
         //printf("ip:%i port:%i\n",s->IP,s->port);
         /* Now connect to the server */
                         // just to make the msg look nice
-        up = send_wait("{9:you up?}$",sockfd,(struct sockaddr*)&serv_addr,sizeof(serv_addr));
+        up = send_wait("{9:you up?}$",sockfd,(struct sockaddr*)&serv_addr,sizeof(serv_addr),NULL);
         if(close(sockfd) != 0){
             perror("ERROR on close sockfd");
             exit(EXIT_FAILURE);
@@ -301,7 +308,8 @@ int recv_inChunks(server* s,uint8_t index)
     {
         perror("error on select");
         exit(1);
-    }*/
+    }
+
     int re_try = 0;
     while(re_try < 3 && stop != 1)
     {
@@ -315,7 +323,7 @@ int recv_inChunks(server* s,uint8_t index)
         re_try++;
     }
    
-    int string_index = 0;
+    int string_index = 0;*/
     /*
     while(stop != 1)
     {
@@ -364,7 +372,8 @@ int getFileChunk(server* s,uint8_t index)
 {
     char sendline[BUFF_SIZE];
     char recvline[BUFF_SIZE];
-    char buff[BUFF_SIZE];
+    char buff[BUFF_SIZE+1]; //=malloc(sizeof(char)*BUFF_SIZE+1);
+    char str[BUFF_SIZE+1];
     char t_buff[16];
     uint32_t offset;
     uint32_t bytes;
@@ -375,10 +384,17 @@ int getFileChunk(server* s,uint8_t index)
     int n;
     complete = 0;
     printf("sendline: %s\n",sendline);
-    if(sendMSG(s,sendline)==1) // good to go
+    if(sendMSG(s,sendline,buff)==1) // good to go
     {
         printf("good to go\n");
     }
+    int s_i = p_offset(buff,t_buff,&offset,&bytes);
+    //write(1,buff,bytes);
+    memcpy(str,buff+s_i+1,bytes);
+    //printf("%s\n",buff+s_i);
+    str[bytes]= 0;
+    //printf("buff: %i",s_i);
+    q_insert(s->q[index],str,offset,bytes);
     return recv_inChunks(s,index);
 }
 void* initThread(server* s)
