@@ -1,2 +1,25 @@
-:%s/eth0/br0/g
-replace eht0 with br0
+Sepehr Raissian
+CMPE-156
+ex3
+
+top level files:
+    README
+    Makefile
+    server-info.txt
+
+Folders        files
+----------|-----------------------------------------
+bin       | client server and 6 files for testing   |
+----------|-----------------------------------------
+docs      | desgin                                  |
+----------|-----------------------------------------
+include   | queue.h header.h                        |
+----------|-----------------------------------------
+obj       | object files                            |
+----------|-----------------------------------------
+src       | queue.c function.c client.c server.c    |
+----------|-----------------------------------------
+test      | client.c  main.c  queue_test.c  server.c|
+----------|------------------------------------------
+tmp       | client.c  server.c, general temp files  |
+----------|------------------------------------------
