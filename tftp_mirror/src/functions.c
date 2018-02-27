@@ -201,7 +201,11 @@ int revc_wait(int sockfd,char* msg,char* buff)
         if(buff != NULL)
         {
             strcpy(buff,recvline);
-            write(1,buff,n);
+            char beef[BUFF_SIZE];
+            int off,bytes;
+            int i = p_offset(buff,beef,&off,&bytes);
+            printf("filename: %s off:%i bytes:%i\n",beef,off,bytes);
+            //write(1,buff,n)
            // printf("%s",buff);
         }
       //  printf("recv msg:%s\n",recvline);
