@@ -67,6 +67,7 @@ int p_num(char* str,int len)
 }
 int p_offset(char* str,char* filename,int* offset,int* bytes)
 {
+    write(1,str,BUFF_SIZE);
     char off[32];
     char byte[32];
     int i =0;
