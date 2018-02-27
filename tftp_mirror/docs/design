@@ -1,47 +1,25 @@
-
+protocol:
 
        status code                       client                                      server
 -------------------------|---------------------------------------------------|--------------------------------------------
 | 0:filename             | sends the file name                               | gets filename & sends file size           |
-| 1:filename:i,n         | sends offset & bytes                              | gets file from offset to num-bytes        |
+| 1:filename:i,n:        | sends offset & bytes                              | gets file from offset to num-bytes        |
 | 2:filename:i,n:string  | same as 1, but reads only the string up to n bytes| sends the string                          |
 --------------------------------------------------------------------------------------------------------------------------
 
-
+overview:
+0. client looks thru the server-info.txt and pings each one to see whos up.
+1. client requests a 0:filename
+2. server sends filename file size(0:filesize). if file doesn't exist it sends 0:0 for filesize of zero.
+3. client divides filesize by the number of chunks it wants
+4. each chunk is responsible for a offset and bytes to read.
+5. for each chunk a new thread is created.
+6. for each server up a thread will be assigned to one in a circular queue fashion.
+7. each thread sends a request in such 1:filename:offset,bytes:
+8. server respondes back with the 2:filename:offset,bytes_to_read:string
+9. each thread will add the string to a queue with the offset specification, so later on it can be sorted
+10. once the queue is sorted it will write it to a file.
 
 
 
  
-
-1. create a simple queue, test on large files
-2. test for UDP, implement stop and wait
-3. impelent syn and ack 
-
-udp on default will listen on port 4200
-when client sends a request for the packet size, the server sends {1:file_size},{3:port_number}
-protocol:
-    both client and server first send each other the size of the given data
-        syntax: {0:data}    
-    client requests file size 
-        syntax: {1:file_name}   // returns file size
-    requesting offset
-        syntax: {2:file_name:i,n} // filename with offset
-requst from client:
-    if msg[0] is '{':
-        switch msg[1]
-            case 0:
-                from msg[2] unitl reached '}' get data
-            case 1:
-                from msg[2] until eached '}' get data, inc counter
-                if counter != 0:data_size: perror()
-            case 2:
-                from msg[2] until ':' get file_name
-                    if(file_name != exist): perror()
-                from ':' to ',' get offset
-                from ',' to '}' get bytes to read
-                if counter != data_size: perror()
-
-send to client:
-    {2:file_size}   // same clients request
-    {3:4200}        // port to listen on
-    {2:file_name:i,n:string}  // sends the filename with its offset followed by the actual data to the client

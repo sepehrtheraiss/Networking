@@ -90,7 +90,7 @@ int main()
             //printf("IP:%i PORT:%i\n",cliaddr.sin_addr.s_addr,cliaddr.sin_port );
             if(fork()==0)
             {
-                sleep(1);
+//                sleep(1);
                 int sockfd_new;
                 struct sockaddr_in servaddr_new;
                 sockfd_new = socket(AF_INET,SOCK_DGRAM,0);
@@ -137,7 +137,7 @@ int main()
                     buff[string_space] = 0;
                     //printf("%s %i %i %lu\n",file_name,off_bytes[0],string_space,strlen(buff));
                     snprintf(send_line,sizeof(send_line),"{2:%s:%i,%i:%s",file_name,off_bytes[0],string_space,buff);
-                    //write(1,send_line,string_space);
+                    write(1,send_line,string_space);
                     if(sendto(sockfd_new,send_line,BUFF_SIZE,0,(struct sockaddr*)&cliaddr,cli_len)<1)
                     {
                         perror("error on sendto filechunk");
@@ -151,7 +151,7 @@ int main()
                 memcpy(buff,str+start,bytes_read);
                 buff[bytes_read] = 0;
                 snprintf(send_line,sizeof(send_line),"{2:%s:%i,%i:%s",file_name,start,bytes_read,buff);//,bytes_read);
-                //write(1,send_line,bytes_read);
+                write(1,send_line,bytes_read);
                 sendto(sockfd_new,send_line,BUFF_SIZE,0,(struct sockaddr*)&cliaddr,cli_len);
                 //printf("here4\n");
                 free(str);
