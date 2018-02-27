@@ -96,3 +96,12 @@ int q_bytesRead(queue* q)
 {
     return q->bytes_read;
 }
+void printQ(queue* q,FILE* file)
+{
+    node* ptr = q->head;
+    while(ptr != NULL)
+    {
+        fprintf(file, "%s", ptr->str);
+        ptr = ptr->next;
+    }
+}

@@ -39,5 +39,7 @@ void q_remove(queue* q);
 int q_exist(queue* q,char* str,int offset,int bytes);
 // returns total of bytes read
 int q_bytesRead(queue* q);
+// prints queue
+void printQ(queue* q,FILE* file);
 
 #endif

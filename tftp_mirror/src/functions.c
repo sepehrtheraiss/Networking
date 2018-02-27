@@ -198,15 +198,16 @@ int revc_wait(int sockfd,char* msg,char* buff)
     {
         n = recvfrom(sockfd,recvline,BUFF_SIZE,0,NULL,NULL);//reply_addr,&len);
         recvline[n] = 0;
-        //printf("%s",recvline);
+        //write(1,recvline,n);
         if(buff != NULL)
         {
             //strcpy(buff,recvline);
             memcpy(buff,&recvline[3],n);
+            //write(1,buff,n);
             char beef[BUFF_SIZE];
             int off,bytes;
             int i = p_offset(buff,beef,&off,&bytes);
-            printf("filename: %s off:%i bytes:%i\n",beef,off,bytes);
+            //printf("filename: %s off:%i bytes:%i\n",beef,off,bytes);
             //write(1,buff,n)
            // printf("%s",buff);
         }
@@ -395,13 +396,18 @@ int getFileChunk(server* s,int index)
         printf("good to go\n");
     }
     int s_i = p_offset(buff,t_buff,&offset,&bytes);
+    //write(1,&buff[s_i+1],bytes);
     //write(1,buff,bytes);
-    memcpy(str,buff+s_i+1,bytes);
+    memcpy(str,&buff[s_i+1],bytes);
     //printf("%s\n",buff+s_i);
+    //write(1,str,bytes);
     str[bytes]= 0;
     //printf("buff: %i",s_i);
-    q_insert(s->q[index],str,offset,bytes);
-    return recv_inChunks(s,index);
+    if(q_exist(s->q[index],str,offset,bytes) != 1)
+    {
+        q_insert(s->q[index],str,offset,bytes);
+    }
+    return 1;//recv_inChunks(s,index);
 }
 void* initThread(server* s)
 {

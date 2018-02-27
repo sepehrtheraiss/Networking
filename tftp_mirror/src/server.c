@@ -9,8 +9,12 @@
 #include "../include/header.h"
 #define BUFF_LEN 512
 #define SERV_PORT 4200
-int main()
+int main(int argc,char** argv)
 {
+ if (argc < 2) {
+        fprintf(stderr,"usage %s port\n", argv[0]);
+        exit(EXIT_FAILURE);
+     }
     int sockfd;
     struct sockaddr_in servaddr,cliaddr;
 
@@ -19,7 +23,7 @@ int main()
     bzero(&servaddr,sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servaddr.sin_port = htons(SERV_PORT);
+    servaddr.sin_port = htons(atoi(argv[1]));
 
     bind(sockfd,(struct sockaddr*)&servaddr,sizeof(servaddr));
     
@@ -136,8 +140,8 @@ int main()
                     
                     buff[string_space] = 0;
                     //printf("%s %i %i %lu\n",file_name,off_bytes[0],string_space,strlen(buff));
-                    snprintf(send_line,sizeof(send_line),"{2:%s:%i,%i:%s",file_name,off_bytes[0],string_space,buff);
-                    write(1,send_line,string_space);
+                    snprintf(send_line,sizeof(send_line),"{2:%s:%i,%i:%s",file_name,start,string_space,buff);
+                    //write(1,send_line,string_space);
                     if(sendto(sockfd_new,send_line,BUFF_SIZE,0,(struct sockaddr*)&cliaddr,cli_len)<1)
                     {
                         perror("error on sendto filechunk");
@@ -151,7 +155,7 @@ int main()
                 memcpy(buff,str+start,bytes_read);
                 buff[bytes_read] = 0;
                 snprintf(send_line,sizeof(send_line),"{2:%s:%i,%i:%s",file_name,start,bytes_read,buff);//,bytes_read);
-                write(1,send_line,bytes_read);
+               // write(1,send_line,bytes_read);
                 sendto(sockfd_new,send_line,BUFF_SIZE,0,(struct sockaddr*)&cliaddr,cli_len);
                 //printf("here4\n");
                 free(str);

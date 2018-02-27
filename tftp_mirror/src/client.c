@@ -121,6 +121,47 @@ int main(int argc,char** argv)
         num_chuncks = chunck;
         printf("re-try\n");
     }
-   
+    // arrage the queues from min offset to max
+    queue** q_arr[chunck];//q_init(NULL,0,0);
+    int q_index = 0;
+    int next_bytes = 0;
+    while(next_bytes < file_size)
+    {
+        for(int j =0;j < chunck;j++)
+        {
+            if(servers[j].id != -1)
+            {
+                for(int v = 0; v <servers[j].nextQ;v++)
+                {
+                    if(servers[j].q[v]->off_bytes[0] == next_bytes)
+                    {
+                        q_arr[q_index++] = &servers[j].q[v];
+                        next_bytes += servers[j].q[v]->off_bytes[1];
+                        //printf("next_bytes: %i\n", next_bytes);
+                    }
+                }
+            }
+        }
+    }
+    creat(filename, S_IRUSR+S_IWUSR);
+    FILE* nf = fopen(filename,"a");
+    for(int v = 0; v <chunck;v++)
+    {
+        printQ(*q_arr[v],nf);
+        q_deinit(*q_arr[v]);
+    }
+    fclose(nf);
+    /*
+    for(int j =0;j < chunck;j++)
+    {
+        if(servers[j%num_servs].id != -1)
+        {
+            for(int v = 0; v <servers[j%num_servs].nextQ;v++)
+            {
+                printQ(servers[j%num_servs].q[v],stdout);
+            }
+        }
+    }
+    */
     return 0;
 }
