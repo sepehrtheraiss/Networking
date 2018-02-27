@@ -143,8 +143,32 @@ int main(int argc,char** argv)
             }
         }
     }
-    creat(filename, S_IRUSR+S_IWUSR);
-    FILE* nf = fopen(filename,"a");
+
+    char PATH[BUFF_SIZE];
+    FILE* pwd = popen("pwd","r");
+    int buff_read = fread(PATH,1,BUFF_SIZE,pwd);
+    pclose(pwd);
+    if(buff_read+1 > BUFF_SIZE){ // +1 for null
+        perror("buff read > buff size");
+        exit(1);
+    }
+    // appending / to the path
+    if((int)PATH[buff_read-1] == 10) // new line feed
+    {
+        PATH[buff_read-1] = '/';
+        PATH[buff_read] = 0;
+    }
+    else
+    {
+        PATH[buff_read] = '/';
+        PATH[buff_read+1] = 0;
+    }
+    char f_file[BUFF_LEN];
+    strcpy(f_file,PATH);
+    strcat(f_file,"bin/");
+    strcat(f_file,filename);
+    creat(f_file, S_IRUSR+S_IWUSR);
+    FILE* nf = fopen(f_file,"a");
     for(int v = 0; v <chunck;v++)
     {
         printQ(*q_arr[v],nf);

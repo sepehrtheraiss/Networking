@@ -35,7 +35,6 @@ int main(int argc,char** argv)
     char recv_line[BUFF_SIZE+1];
     char send_line[BUFF_SIZE];
     char buff[BUFF_SIZE+1];
-    int ports = 5000;
     char* str = NULL;
     int buff_read;
     char PATH[BUFF_SIZE];
@@ -159,7 +158,7 @@ int main(int argc,char** argv)
                 sendto(sockfd_new,send_line,BUFF_SIZE,0,(struct sockaddr*)&cliaddr,cli_len);
                 //printf("here4\n");
                 free(str);
-
+                exit(1);
             }
 
         }
