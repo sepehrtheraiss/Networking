@@ -1,6 +1,25 @@
 #define _GNU_SOURCE
 #include "../include/header.h"
- 
+int newSock(int* sockfd,struct sockaddr_in* servaddr,int port,int i) // if i == 1 it binds it else not
+{
+    if(*sockfd != 0)
+    {
+        *sockfd = socket(AF_INET,SOCK_DGRAM,0);
+    }
+    bzero(&servaddr,sizeof(servaddr));
+    servaddr->sin_family = AF_INET;
+    servaddr->sin_addr.s_addr = htonl(INADDR_ANY);//INADDR_LOOPBACK
+    servaddr->sin_port = htons(port);
+    if(i == 1)
+    {
+        if(bind(*sockfd,(struct sockaddr*)&servaddr,sizeof(servaddr))<0)
+        {
+            perror("error on binding");
+            return 0;
+        }
+    }
+    return 1;
+}
 void newPort(unsigned int* port,int sockfd,struct sockaddr_in* servaddr)
 {
     bzero(servaddr,sizeof(*servaddr));
@@ -206,7 +225,7 @@ int revc_wait(int sockfd,char* msg,char* buff)
             char beef[BUFF_SIZE];
             int off,bytes;
             int i = p_offset(buff,beef,&off,&bytes);
-            printf("filename: %s off:%i bytes:%i\n",beef,off,bytes);
+            printf("ffilename: %s off:%i bytes:%i\n",beef,off,bytes);
             //write(1,buff,n)
            // printf("%s",buff);
         }
@@ -379,6 +398,7 @@ int getFileChunk(server* s,int index)
     char sendline[BUFF_SIZE];
     char recvline[BUFF_SIZE];
     char buff[BUFF_SIZE+1]; //=malloc(sizeof(char)*BUFF_SIZE+1);
+    char beef[BUFF_SIZE+1];
     char str[BUFF_SIZE+1];
     char t_buff[16];
     int offset;
@@ -390,13 +410,18 @@ int getFileChunk(server* s,int index)
     int n;
     complete = 0;
     printf("sendline: %s\n",sendline);
-    if(sendMSG(s,sendline,buff)==1) // good to go
+    if(sendMSG(s,sendline,beef)==1) // good to go
     {
         printf("good to go\n");
     }
-    int s_i = p_offset(buff,t_buff,&offset,&bytes);
+    
+    int s_i = p_offset(&beef[3],t_buff,&offset,&bytes);
+    printf("filename %s off: %i bytes:%i\n",t_buff,offset,bytes);
+    printf("here2\n");
+    printf("%s",beef );
     //write(1,buff,bytes);
-    memcpy(str,buff+s_i+1,bytes);
+    memcpy(str,&beef[s_i+1],bytes);
+    printf("here3\n");
     //printf("%s\n",buff+s_i);
     str[bytes]= 0;
     //printf("buff: %i",s_i);
@@ -413,7 +438,6 @@ void* initThread(server* s)
         retry++;
         exit = getFileChunk(s,s->counter++);
     }
-    up--;
     printf("end initThread\n");
     return NULL;
 }

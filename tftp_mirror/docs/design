@@ -20,6 +20,10 @@ overview:
 9. each thread will add the string to a queue with the offset specification, so later on it can be sorted
 10. once the queue is sorted it will write it to a file.
 
+each queue has an offset,bytes and filename property. Along with it the nodes have the same property and its because if the data is too big it will be broken down apart further and will be used to determine the order based on the offsets.
 
+if it happens that one server is up and we need n chunks then 5 threads will be created with the same ip and port.
+to avoid data curruption each time the same server comes to run as a thread a new queue will be assigned for the offset and bytes to read.
+one offset and bytes to read might be too be big, thats why I'm using a queue for each offset and bytes to read.
 
- 
+to avoid duplicate data, I will check in the queue which is responsible for the offset,bytes to see if there is a node which that specifications already in it.

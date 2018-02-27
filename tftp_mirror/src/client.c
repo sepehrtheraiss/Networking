@@ -80,8 +80,6 @@ int main(int argc,char** argv)
         exit(1);
     }
     printf("file size: %i\n",file_size);
-    SUP = up ;// serves up this cannot be modified
-    //int chuncks = atoi(argv[2]);
     chunck = atoi(argv[2]);
     pthread_t thread[chunck];
     int i = 0;
@@ -116,8 +114,6 @@ int main(int argc,char** argv)
         {
             pthread_join(thread[j],NULL);
         }
-        //while(up != 0); // busy waiting
-        up = SUP;
         num_chuncks = chunck;
         printf("re-try\n");
     }

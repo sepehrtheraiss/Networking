@@ -41,6 +41,10 @@ unsigned int up; // servers up
 unsigned int SUP;
 uint16_t chunck; 
 uint8_t complete; 
+
+// returns new sockfd with the port 
+// if i == 1 it binds it else not
+int newSock(int* sockfd,struct sockaddr_in* servaddr,int port,int i);
 // tries to bind the given port if no good then incs it
 void newPort(unsigned int* port,int sockfd,struct sockaddr_in* servaddr);
 // returns the port to request the file, the sets file to file_size
