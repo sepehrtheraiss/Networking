@@ -67,6 +67,7 @@ int p_num(char* str,int len)
 }
 int p_offset(char* str,char* filename,int* offset,int* bytes)
 {
+    write(1,str,BUFF_SIZE);
     char off[32];
     char byte[32];
     int i =0;
@@ -201,7 +202,11 @@ int revc_wait(int sockfd,char* msg,char* buff)
         if(buff != NULL)
         {
             strcpy(buff,recvline);
-            write(1,buff,n);
+            char beef[BUFF_SIZE];
+            int off,bytes;
+            int i = p_offset(buff,beef,&off,&bytes);
+            printf("filename: %s off:%i bytes:%i\n",beef,off,bytes);
+            //write(1,buff,n)
            // printf("%s",buff);
         }
       //  printf("recv msg:%s\n",recvline);
