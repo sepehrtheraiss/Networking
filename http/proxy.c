@@ -23,17 +23,14 @@ int fetch_response() {
         fprintf(stderr,"ERROR, no such host\n");
         exit(0);
     }
-    printf("host:%u\n",(in_addr_t)server->h_addr);
-    printf("host:%s\n",server->h_addr);
     bzero((char *) &serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     bcopy((char *)server->h_addr, 
          (char *)&serv_addr.sin_addr.s_addr,
          server->h_length);
-    printf("%u\n",serv_addr.sin_addr.s_addr);
     serv_addr.sin_port = htons(portno);
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) perror("ERROR connecting");
-    const char * request = "HEAD / HTTP/1.0\r\nHost: example.com\r\nConnection: close\r\n\r\n";
+    const char * request = "GET / HTTP/1.0\r\nHost: example.com\r\nConnection: close\r\n\r\n";
     n = write(sockfd,request,strlen(request));
     if (n < 0) perror("ERROR writing to socket");
     bzero(buffer,4096);

@@ -55,7 +55,7 @@ int main( int argc, char** argv) {
    /*INADDR_LOOPBACK (127.0.0.1) always refers to the local host via the loopback device*/
    /* INADDR_ANY (0.0.0.0) means any address for binding*/
    serv_addr.sin_family = AF_INET;
-   serv_addr.sin_addr.s_addr=htonl(INADDR_LOOPBACK);//.s_addr = INADDR_ANY; 
+   serv_addr.sin_addr.s_addr=htonl(INADDR_ANY);//.s_addr = INADDR_ANY; 
    serv_addr.sin_port = htons(portno);
 
    
