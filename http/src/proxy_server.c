@@ -310,7 +310,7 @@ int main(int argc,char** argv)
             char path[BUFF_SIZE];
 
             getHostPath(host,path);
-            sprintf(lines[headers[0]],"%s %s %s\r\n",req,path,prot);
+            sprintf(lines[headers[0]],"%s %s %s",req,path,prot);
             // continue
             if(headers[1] == -1)
             {
