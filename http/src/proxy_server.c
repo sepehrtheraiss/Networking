@@ -40,7 +40,8 @@ int fetch_response(char** lines,char* host,int lines_len) {
         return -1;
     }
     char request[BUFF_SIZE];
-    char format[512];
+    char format[BUFF_SIZE];
+    bzero(request,BUFF_SIZE);
     int i = 0;
     // sprintf(format,"%s\r\n","GET / HTTP/1.0");
     // strcat(request,format);
@@ -68,6 +69,7 @@ int fetch_response(char** lines,char* host,int lines_len) {
     if (n < 0) perror("ERROR writing to socket");
     n = read(sockfd,buffer,4095);
     if (n < 0) perror("ERROR reading from socket");
+    buffer[n]=0;
     printf("%s\n",buffer);
     close(sockfd);
     return 1;
@@ -317,7 +319,7 @@ int main(int argc,char** argv)
                 fprintf(stderr, "no host given\n");
             }
             //printf("%s%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
-            fetch_response(lines,host,lines_len);
+            fetch_response(lines+headers[0],host,lines_len);
             free(host);
         }
         else
