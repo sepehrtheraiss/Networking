@@ -46,8 +46,7 @@ int fetch_response(char** lines,char* host,int lines_len) {
     // strcat(request,format);
     // sprintf(format,"%s\r\n","Host: www.example.com");
     // strcat(request,format);
-
-    while(i < lines_len-3)
+    while(i < lines_len-2)
     {
         // mac only
         if(i == 1){
@@ -68,7 +67,6 @@ int fetch_response(char** lines,char* host,int lines_len) {
     n = write(sockfd,request,strlen(request));
     if (n < 0) perror("ERROR writing to socket");
     n = read(sockfd,buffer,4095);
-    printf("here\n");
     if (n < 0) perror("ERROR reading from socket");
     printf("%s\n",buffer);
     close(sockfd);
@@ -288,6 +286,7 @@ int main(int argc,char** argv)
         char* lines[lines_len];
         splitString("\n",buffer,lines); // split each line
         stripR(lines,lines_len); // stirps \r
+        lines_len--; // last index is \0 so its useless
         /* 
          *  [0]: GET or HEAD 
          *  [1]: Host:
