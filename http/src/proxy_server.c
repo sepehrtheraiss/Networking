@@ -271,42 +271,38 @@ int main(int argc,char** argv)
          */
         int headers[]={-1,-1,-1};
         wrapReq(lines,lines_len,headers);
+        printf("%s\n%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
         printf("%i %i %i\n",headers[0],headers[1],headers[2]);
         if(headers[0] != -1 && headers[2] != -1)
         {
-            int arr_len = cinStr(' ',lines[0],strlen(lines[0])); // number of spaces in one line
+            /* Reformating GET blah blah */
+            int arr_len = cinStr(' ',lines[headers[0]],strlen(lines[headers[0]])); // number of spaces in one line
             char* str_arr[arr_len];
             splitString(" ",lines[headers[0]],str_arr); // split line by space
+            char* req = strdup(str_arr[0]);
             char* host = strdup(str_arr[1]);
+            char* prot = strdup(str_arr[2]);
             char path[BUFF_SIZE];
             getHostPath(host,path);
-            puts(host);
-            puts(path);
+           // puts(host);
+            //puts(path);
+            sprintf(lines[headers[0]],"%s %s %s\n",req,path,prot);
             // continue
             if(headers[1] == -1)
             {
                 // get host from headers[0]
+                // format then others
+                fprintf(stderr, "no host given\n");
             }
-            free(host);
+            printf("%s\n%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
+            //free(host);
+            //puts(lines[headers[1]]);
         }
-        // if host is -1 see if [0] has it
-        // 
-                /*
-        int line_index = 0;
-        char path[BUFF_SIZE];
+        else
+        {
+            fprintf(stderr, "no request or connection given\n");
+        }
 
-        int arr_len = cinStr(' ',lines[0],strlen(lines[0])); // number of spaces in one line
-
-            char* str_arr[arr_len];
-            splitString(" ",lines[0],str_arr); // split line by space
-            if(typeReq(str_arr[0]) != 0) // valid request HEAD and GET
-            {
-                char* host = strdup(str_arr[1]);
-                getHostPath(host,path);
-                puts(host);
-                puts(path);
-            }
-*/
     }// end main while loop
 
 
