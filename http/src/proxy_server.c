@@ -42,12 +42,27 @@ int fetch_response(char** lines,char* host,int lines_len) {
     char request[BUFF_SIZE];
     char format[512];
     int i = 0;
-    while(i < lines_len-1)
+    // sprintf(format,"%s\r\n","GET / HTTP/1.0");
+    // strcat(request,format);
+    // sprintf(format,"%s\r\n","Host: www.example.com");
+    // strcat(request,format);
+
+    while(i < lines_len-3)
     {
-        sprintf(format,"%s\r\n",lines[i]);
-        strcat(request,format);
+        // mac only
+        if(i == 1){
+            sprintf(format,"Host: %s\r\n",host);
+            strcat(request,format);
+        }
+        else
+        {
+            sprintf(format,"%s\r\n",lines[i]);
+            strcat(request,format);
+        }
         i++;
     }
+    sprintf(format,"%s\r\n\r\n",lines[i]);
+    strcat(request,format);
     bzero(buffer,4096);
     puts(request);
     n = write(sockfd,request,strlen(request));
