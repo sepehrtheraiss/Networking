@@ -298,22 +298,22 @@ int main(int argc,char** argv)
             int arr_len = cinStr(' ',lines[headers[0]],strlen(lines[headers[0]])); // number of spaces in one line
             char* str_arr[arr_len];
             splitString(" ",lines[headers[0]],str_arr,1); // split line by space
-        write(1,lines[headers[0]],strlen(lines[headers[0]]));
-        printf("\n");
-        write(1,lines[headers[1]],strlen(lines[headers[1]]));
-        printf("\n");
-        write(1,lines[headers[2]],strlen(lines[headers[2]]));
-        printf("\n");
-            /*
+        // write(1,lines[headers[0]],strlen(lines[headers[0]]));
+        // printf("\n");
+        // write(1,lines[headers[1]],strlen(lines[headers[1]]));
+        // printf("\n");
+        // write(1,lines[headers[2]],strlen(lines[headers[2]]));
+        // printf("\n");
+            
             splitString(" ",lines[headers[0]],str_arr); // split line by space
             puts(lines[headers[0]]);
             char* req = strdup(str_arr[0]);
             char* host = strdup(str_arr[1]);
             char* prot = strdup(str_arr[2]);
             char path[BUFF_SIZE];
-*/
-            //getHostPath(host,path);
-            //sprintf(lines[headers[0]],"%s %s %s\r\n",req,path,prot);
+
+            getHostPath(host,path);
+            sprintf(lines[headers[0]],"%s %s %s\r\n",req,path,prot);
             // continue
             if(headers[1] == -1)
             {
@@ -321,7 +321,7 @@ int main(int argc,char** argv)
                 // format then others
                 fprintf(stderr, "no host given\n");
             }
-            //printf("%s\n%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
+            printf("%s%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
             //free(host);
             //puts(lines[headers[1]]);
         }
