@@ -42,17 +42,18 @@ int fetch_response(char** lines,char* host,int lines_len) {
     char request[BUFF_SIZE];
     char format[512];
     int i = 0;
-    while(i < lines_len)
+    while(i < lines_len-1)
     {
         sprintf(format,"%s\r\n",lines[i]);
         strcat(request,format);
         i++;
     }
+    bzero(buffer,4096);
     puts(request);
     n = write(sockfd,request,strlen(request));
     if (n < 0) perror("ERROR writing to socket");
-    bzero(buffer,4096);
     n = read(sockfd,buffer,4095);
+    printf("here\n");
     if (n < 0) perror("ERROR reading from socket");
     printf("%s\n",buffer);
     close(sockfd);
