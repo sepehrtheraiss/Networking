@@ -45,15 +45,15 @@ int getContentLength(char* str)
     {
         *r = 0;
     }
-    char *token, *string, *tofree;
+    char *string, *tofree;
     tofree = string = strdup(buff);
     assert(string != NULL);
-
-    while ((token = strsep(&string, " ")) != NULL);
-    printf("test:%s\n",token );
-    if(token != NULL)
+    char* token[3];
+    i = 0;
+    while ((token[i++] = strsep(&string, " ")) != NULL);
+    if(token[1] != NULL)
     {
-        int length = atoi(token);
+        int length = atoi(token[1]);
         free(tofree);
         return length;
     }
