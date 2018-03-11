@@ -48,6 +48,7 @@ int fetch_response(char** lines,char* host,int lines_len) {
         strcat(request,format);
         i++;
     }
+    puts(request);
     n = write(sockfd,request,strlen(request));
     if (n < 0) perror("ERROR writing to socket");
     bzero(buffer,4096);
