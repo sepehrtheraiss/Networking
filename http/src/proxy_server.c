@@ -10,18 +10,15 @@
 #include <assert.h>
 #define LISTEN 5
 #define BUFF_SIZE 2048
-#define FASLE 0
-#define TRUE 1
+#define HTTP_PORT 80
 
-int fetch_response() {
-   int sockfd, portno, n;
+// establish connection with the given 3 args, head,host,connection
+int fetch_response(char** lines,char* host,int lines_len) {
+    int sockfd, portno, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
-
     char buffer[4096];
-    char *host = "example.com";
 
-    portno = 80;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
         perror("ERROR opening socket");
@@ -35,18 +32,30 @@ int fetch_response() {
     bcopy((char *)server->h_addr, 
          (char *)&serv_addr.sin_addr.s_addr,
          server->h_length);
-    serv_addr.sin_port = htons(portno);
+    serv_addr.sin_port = htons(HTTP_PORT);
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) perror("ERROR connecting");
-    const char * request = "GET / HTTP/1.0\r\nHost: example.com\r\nConnection: close\r\n\r\n";
+    if(lines_len > BUFF_SIZE)
+    {
+        fprintf(stderr, "request size bigger than 2Kb\n");
+        return -1;
+    }
+    char request[BUFF_SIZE];
+    char format[512];
+    int i = 0;
+    while(i < lines_len)
+    {
+        sprintf(format,"%s\r\n",lines[i]);
+        strcat(request,format);
+        i++;
+    }
     n = write(sockfd,request,strlen(request));
     if (n < 0) perror("ERROR writing to socket");
     bzero(buffer,4096);
     n = read(sockfd,buffer,4095);
     if (n < 0) perror("ERROR reading from socket");
-    printf("%d\n", (int)strlen(buffer));
     printf("%s\n",buffer);
     close(sockfd);
-    return 0;
+    return 1;
 }
 // 0 for invalid, 1 for HEAD and 2 for GET
 int typeReq(char* str)
@@ -286,15 +295,14 @@ int main(int argc,char** argv)
          */
         int headers[]={-1,-1,-1};
         wrapReq(lines,lines_len,headers);
-        printf("%i %i %i\n",headers[0],headers[1],headers[2]);
-        printf("%s\n%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
+        //printf("%i %i %i\n",headers[0],headers[1],headers[2]);
+        //printf("%s\n%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
         if(headers[0] != -1 && headers[2] != -1)
         {
-            /* Reformating GET blah blah */
+            /* Reformating GET http://www.webscantest.com/ HTTP/1.1 to GET / HTTP/1.1*/
             int arr_len = cinStr(' ',lines[headers[0]],strlen(lines[headers[0]])); // number of spaces in one line
             char* str_arr[arr_len];
             splitString(" ",lines[headers[0]],str_arr); // split line by space
-            puts(lines[headers[0]]);
             char* req = strdup(str_arr[0]);
             char* host = strdup(str_arr[1]);
             char* prot = strdup(str_arr[2]);
@@ -309,7 +317,8 @@ int main(int argc,char** argv)
                 // format then others
                 fprintf(stderr, "no host given\n");
             }
-            printf("%s%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
+            //printf("%s%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
+            fetch_response(lines,host,lines_len);
             free(host);
         }
         else
