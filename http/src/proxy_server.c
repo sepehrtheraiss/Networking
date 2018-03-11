@@ -12,12 +12,59 @@
 #define BUFF_SIZE 2048
 #define HTTP_PORT 80
 
+int isStr(char* str,char* c)
+{
+    return (strstr(str,c) != NULL);
+}
+
+char* findStr(char* str,char* c)
+{
+    return strstr(str,c);
+}
+int getContentLength(char* str)
+{
+    char* p = findStr(str,"Content-Length:");
+    if(p == NULL)
+    {
+        return 0;
+    }
+    int i =0;
+    for(;p[i] != '\n';i++)
+    {
+        i++;
+    }
+    char buff[BUFF_SIZE];
+    memcpy(buff,p,i);
+    char* r = strchr(buff,'\n');
+    if(r != NULL)
+    {
+        *r = 0;
+    }
+    r = strchr(buff,'\r');
+    if(r != NULL)
+    {
+        *r = 0;
+    }
+    char *token, *string, *tofree;
+    tofree = string = strdup(buff);
+    assert(string != NULL);
+
+    while ((token = strsep(&string, " ")) != NULL);
+    printf("test:%s\n",token );
+    if(token != NULL)
+    {
+        int length = atoi(token);
+        free(tofree);
+        return length;
+    }
+    return 0;
+}
 // establish connection with the given 3 args, head,host,connection
 int fetch_response(char** lines,char* host,int lines_len) {
     int sockfd, portno, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
-    char buffer[4096];
+    char buffer[BUFF_SIZE];
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
@@ -47,14 +94,14 @@ int fetch_response(char** lines,char* host,int lines_len) {
     // strcat(request,format);
     // sprintf(format,"%s\r\n","Host: www.example.com");
     // strcat(request,format);
-    while(i < lines_len-2)
+    while(i < lines_len-1)
     {
         // mac only
-        if(i == 1){
+        if(i == 1 && lines[1] == NULL){
             sprintf(format,"Host: %s\r\n",host);
             strcat(request,format);
         }
-        else
+        else if(isStr(lines[i],"Accept-Encoding:") != 1)
         {
             sprintf(format,"%s\r\n",lines[i]);
             strcat(request,format);
@@ -63,14 +110,15 @@ int fetch_response(char** lines,char* host,int lines_len) {
     }
     sprintf(format,"%s\r\n\r\n",lines[i]);
     strcat(request,format);
-    bzero(buffer,4096);
+    bzero(buffer,BUFF_SIZE);
     puts(request);
     n = write(sockfd,request,strlen(request));
     if (n < 0) perror("ERROR writing to socket");
-    n = read(sockfd,buffer,4095);
+    n = read(sockfd,buffer,BUFF_SIZE-1);
     if (n < 0) perror("ERROR reading from socket");
     buffer[n]=0;
     printf("%s\n",buffer);
+    printf("Content-Length: %i\n",getContentLength(buffer));
     close(sockfd);
     return 1;
 }
@@ -319,6 +367,7 @@ int main(int argc,char** argv)
                 fprintf(stderr, "no host given\n");
             }
             //printf("%s%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
+            // start from where first actual header
             fetch_response(lines+headers[0],host,lines_len);
             free(host);
         }
