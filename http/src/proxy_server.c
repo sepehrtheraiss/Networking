@@ -42,7 +42,6 @@ int fetch_response(char** lines,char* host,int lines_len) {
     char request[BUFF_SIZE];
     char format[512];
     int i = 0;
-    puts(lines[0]);
     while(i < lines_len)
     {
         sprintf(format,"%s\r\n",lines[i]);
@@ -101,23 +100,6 @@ int getHostPath(char* host,char* path){
     else 
         return 0;
     return 1;        
-}
-void test(){
-    char* msg ="GET /blackGirls HTTP/1.1";
-    char* string = strdup(msg);
-    char* req[4];
-    int i =0;
-    while((req[i]=strsep(&string," ")) != NULL){
-        puts(req[i]);
-        i++;
-    }
-    free(string);
-    printf("%i\n",typeReq(req[0]));
-    char* host = strdup(req[1]);
-    char path[strlen(host)];
-    getHostPath(host,path);
-    puts(host);
-    puts(path);
 }
 // returns the number of times character c has occured in string
 int cinStr(char c,char* str,int len)
