@@ -42,6 +42,7 @@ int fetch_response(char** lines,char* host,int lines_len) {
     char request[BUFF_SIZE];
     char format[512];
     int i = 0;
+    puts(lines[0]);
     while(i < lines_len)
     {
         sprintf(format,"%s\r\n",lines[i]);
