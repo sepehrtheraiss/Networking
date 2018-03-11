@@ -42,6 +42,7 @@ int fetch_response(char** lines,char* host,int lines_len) {
     char request[BUFF_SIZE];
     char format[512];
     int i = 0;
+    puts(lines[0]);
     while(i < lines_len)
     {
         sprintf(format,"%s\r\n",lines[i]);
@@ -310,7 +311,7 @@ int main(int argc,char** argv)
             char path[BUFF_SIZE];
 
             getHostPath(host,path);
-            sprintf(lines[headers[0]],"%s %s %s\r\n",req,path,prot);
+            sprintf(lines[headers[0]],"%s %s %s",req,path,prot);
             // continue
             if(headers[1] == -1)
             {
