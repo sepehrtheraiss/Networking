@@ -125,14 +125,18 @@ int cinStr(char c,char* str,int len)
 }
 // splits the string using c 
 // returns 1 on success 0 on false
-int splitString(char* c,char* str,char** buffer)
+int splitString(char* c,char* str,char** buffer,int bug)
 {
+    //puts(str);
     if(str != NULL && buffer != NULL)
     {
         char* string = strdup(str);
         int i =0;
         while((buffer[i]=strsep(&string,c)) != NULL){
-            //puts(buffer[i]);
+            if(bug == 1)
+            {
+                puts(str);
+            }
             i++;
         }
         free(string);
@@ -163,7 +167,7 @@ void wrapReq(char** lines,int lines_len,int* indices)
         if(arr_len == 2 && s_rq == -1) // i.e. GET http://www.webscantest.com/ HTTP/1.1
         {
             char* str_arr[arr_len];
-            splitString(" ",lines[line_index],str_arr); // split line by space
+            splitString(" ",lines[line_index],str_arr,0); // split line by space
             if(typeReq(str_arr[0]) != 0) // valid request HEAD and GET
             {
                 s_rq = line_index;
@@ -181,7 +185,7 @@ void wrapReq(char** lines,int lines_len,int* indices)
         else if(arr_len == 1 && e_rq == -1) // i.e. Connection: keep-alive
         {
             char* str_arr[arr_len];
-            splitString(" ",lines[line_index],str_arr); // split line by space
+            splitString(" ",lines[line_index],str_arr,0); // split line by space
             if(strcmp(str_arr[0],"Host:")==0)
             {
                 if(str_arr[1] != NULL || strcmp(str_arr[1]," ") != 0)
@@ -219,7 +223,21 @@ void wrapReq(char** lines,int lines_len,int* indices)
         line_index++;
     }// end while loop
 }
+void stripR(char** lines,int len)
+{
+    int i=0;
+    char* p;
+    while(i<len)
+    {
+        p = strchr(lines[i],'\r');
+        if(p != NULL)
+        {
+            *p = 0;
+        }
+        i++;
+    }
 
+}
 int main(int argc,char** argv)
 {
     if(argc < 2)
@@ -239,7 +257,6 @@ int main(int argc,char** argv)
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr=htonl(INADDR_ANY);
     serv_addr.sin_port = htons(myport);
-
     if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
       perror("ERROR on binding");
       exit(EXIT_FAILURE);
@@ -261,9 +278,11 @@ int main(int argc,char** argv)
 
         // we want to find the line with 3 spaces for request header
         read(clisockfd,buffer,BUFF_SIZE); // read clients request
+        puts(buffer);
         int lines_len = cinStr('\n',buffer,BUFF_SIZE);  // number of lines 
         char* lines[lines_len];
-        splitString("\n",buffer,lines); // split each line
+        splitString("\n",buffer,lines,0); // split each line
+        stripR(lines,lines_len); // stirps \r
         /* 
          *  [0]: GET or HEAD 
          *  [1]: Host:
@@ -271,22 +290,30 @@ int main(int argc,char** argv)
          */
         int headers[]={-1,-1,-1};
         wrapReq(lines,lines_len,headers);
-        printf("%s\n%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
         printf("%i %i %i\n",headers[0],headers[1],headers[2]);
+        printf("%s\n%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
         if(headers[0] != -1 && headers[2] != -1)
         {
             /* Reformating GET blah blah */
             int arr_len = cinStr(' ',lines[headers[0]],strlen(lines[headers[0]])); // number of spaces in one line
             char* str_arr[arr_len];
+            splitString(" ",lines[headers[0]],str_arr,1); // split line by space
+        write(1,lines[headers[0]],strlen(lines[headers[0]]));
+        printf("\n");
+        write(1,lines[headers[1]],strlen(lines[headers[1]]));
+        printf("\n");
+        write(1,lines[headers[2]],strlen(lines[headers[2]]));
+        printf("\n");
+            /*
             splitString(" ",lines[headers[0]],str_arr); // split line by space
+            puts(lines[headers[0]]);
             char* req = strdup(str_arr[0]);
             char* host = strdup(str_arr[1]);
             char* prot = strdup(str_arr[2]);
             char path[BUFF_SIZE];
-            getHostPath(host,path);
-           // puts(host);
-            //puts(path);
-            sprintf(lines[headers[0]],"%s %s %s\n",req,path,prot);
+*/
+            //getHostPath(host,path);
+            //sprintf(lines[headers[0]],"%s %s %s\r\n",req,path,prot);
             // continue
             if(headers[1] == -1)
             {
@@ -294,7 +321,7 @@ int main(int argc,char** argv)
                 // format then others
                 fprintf(stderr, "no host given\n");
             }
-            printf("%s\n%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
+            //printf("%s\n%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
             //free(host);
             //puts(lines[headers[1]]);
         }
@@ -304,15 +331,6 @@ int main(int argc,char** argv)
         }
 
     }// end main while loop
-
-
-
-
-
-
-
-
-
 
 
 
