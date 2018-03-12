@@ -12,11 +12,24 @@
 #define LISTEN 5
 #define BUFF_SIZE 4096
 #define HTTP_PORT 80
+/*
+HTTP/1.0 503 Service Unavailable
+Cache-Control: no-cache
+Connection: close
+Content-Type: text/html
+
+<html><body><h1>503 Service Unavailable</h1>
+No server is available to handle this request.
+</body></html>
+*/
 char HOST[256];
 char FULL_RQ[1024];
 char* f_sites[30];
 int f_size;
 char forward_header[256];
+char date[512];
+char response[512];
+int package_size;
 int isStr(char* str,char* c)
 {
     return (strstr(str,c) != NULL);
@@ -26,10 +39,45 @@ char* findStr(char* str,char* c)
 {
     return strstr(str,c);
 }
+char* findStrStrip(char* str,char* c)
+{
+    char* p =strstr(str,c);
+    if(p == NULL)
+    {
+        return NULL;
+    }
+    int i =0;
+    for(;p[i] != '\n';i++);
 
+    char buff[BUFF_SIZE];
+    memcpy(buff,p,i);
+    char* r = strchr(buff,'\n');
+    if(r != NULL)
+    {
+        *r = 0;
+    }
+    r = strchr(buff,'\r');
+    if(r != NULL)
+    {
+        *r = 0;
+    }
+    char *string, *tofree;
+    tofree = string = strdup(buff);
+    assert(string != NULL);
+    char* token[3];
+    i = 0;
+    while ((token[i++] = strsep(&string, " ")) != NULL);
+    if(token[1] != NULL)
+    {
+        
+        free(tofree);
+        return token[1];
+    }
+    return NULL;
+}
 void Error405(int fd)
 {
-    char msg[] = "HTTP/1.1 405 Method not allowed\r\n"
+    char* msg = "HTTP/1.1 405 Method not allowed\r\n"
     "Connection: close\r\nContent-Type: text/html; charset=iso=8859-1\r\n\r\n"
     "<!DOCTYPE HTML PUBLIC>\r\n<html><head><title>405 Method not allowed</title>\r\n"
     "</head><body><h1>Method not allowed</h1></body></html>\r\n\r\n";
@@ -139,7 +187,7 @@ int getHeaderSize(char* str)
 // establish connection with the given 3 args, head,host,connection
 // if connection is to close returns 0 else keep it alive returns 1
 int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockfd) {
-    int bytes_read;
+    int bytes_read,n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
     char buffer[BUFF_SIZE+1];
@@ -211,13 +259,30 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
     if (bytes_read < 0) perror("ERROR reading from socket");
     buffer[bytes_read]=0;
     write(clisockfd,buffer,bytes_read);
+    n = bytes_read;
     printf("Servers response:\n%s",buffer);
+    i = 0;
+    /*
+    while(buffer[i] != '\r' && buffer[i] != '\n' && buffer[i]!=0){i++;};
+    memcpy(response,buffer,i);
+    response[i]=0;
+    printf("serv response:%s\n",response);
+    char* date_p = strstr(buffer,"Date:");
+    if(date_p != NULL)
+    {
+        i = 0;
+        while(date_p[i] != '\r' && date_p[i] != '\n' && date_p[i]!=0){i++;};
+        memcpy(date,date_p,i);
+        printf("date:%s\n",date);
+    }
+    */
     keep_connection = getConnection(buffer);
     while((bytes_read = read(sockfd,buffer,BUFF_SIZE))!=0)
     {
         if (bytes_read < 0) perror("ERROR reading from socket");
         buffer[bytes_read]=0;
         write(clisockfd,buffer,bytes_read);
+        n += bytes_read;
        // printf("%s",buffer);
     }
     /* some fucking headers dont have content-length wtf! 
