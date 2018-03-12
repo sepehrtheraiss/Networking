@@ -125,15 +125,13 @@ int getHeaderSize(char* str)
 }
 // establish connection with the given 3 args, head,host,connection
 // if connection is to close returns 0 else keep it alive returns 1
-int fetch_response(char** lines,char* host,int lines_len,int clisockfd) {
-    int sockfd, portno, n,bytes_read;
+int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockfd) {
+    int portno, n,bytes_read;
     struct sockaddr_in serv_addr;
     struct hostent *server;
     char buffer[BUFF_SIZE+1];
+    int keep_connection = 0;
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) 
-        perror("ERROR opening socket");
     server = gethostbyname(host);
     printf("HOST: %s\n",host);
     if (server == NULL) {
@@ -194,6 +192,7 @@ int fetch_response(char** lines,char* host,int lines_len,int clisockfd) {
     buffer[bytes_read]=0;
     write(clisockfd,buffer,bytes_read);
     printf("%s",buffer);
+    keep_connection = getConnection(buffer);
     int headerSize = getHeaderSize(buffer);
     bytes_read = bytes_read - headerSize;
     int content_size = getContentLength(buffer);
@@ -222,10 +221,9 @@ int fetch_response(char** lines,char* host,int lines_len,int clisockfd) {
         
         printf("%s",body);
     }
-    printf("\nContent_Length: %i\n",getContentLength(buffer));
-    printf("missing bytes: %i\n",n);
-    close(sockfd);
-    return 1;
+    //printf("\nContent_Length: %i\n",getContentLength(buffer));
+    printf("\nmissing bytes: %i\n",n);
+    return keep_connection;
 }
 // 0 for invalid, 1 for HEAD and 2 for GET
 int typeReq(char* str)
@@ -435,57 +433,66 @@ int main(int argc,char** argv)
         }
         if(fork()==0)
         {
-        // we want to find the line with 3 spaces for request header
-        read(clisockfd,buffer,BUFF_SIZE); // read clients request
-        puts(buffer); // raw input
-        int lines_len = cinStr('\n',buffer,BUFF_SIZE);  // number of lines 
-        char* lines[lines_len];
-        splitString("\n",buffer,lines); // split each line
-        stripR(lines,lines_len); // stirps \r
-        lines_len--; // last index is \0 so its useless
-        /* 
-         *  [0]: GET or HEAD 
-         *  [1]: Host:
-         *  [2]: Connection:
-         */
-        int headers[]={-1,-1,-1};
-        wrapReq(lines,lines_len,headers);
-        //printf("%i %i %i\n",headers[0],headers[1],headers[2]);
-        //printf("%s\n%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
-        if(headers[0] != -1 && headers[2] != -1)
-        {
-            /* Reformating GET http://www.webscantest.com/ HTTP/1.1 to GET / HTTP/1.1*/
-            int arr_len = cinStr(' ',lines[headers[0]],strlen(lines[headers[0]])); // number of spaces in one line
-            char* str_arr[arr_len];
-            splitString(" ",lines[headers[0]],str_arr); // split line by space
-            char* req = strdup(str_arr[0]);
-            char* host = strdup(str_arr[1]);
-            char* prot = strdup(str_arr[2]);
-            char path[BUFF_SIZE];
-
-            getHostPath(host,path);
-            sprintf(lines[headers[0]],"%s %s %s",req,path,prot);
-            // continue
-            if(headers[1] == -1)
+            int s_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+            if (s_sockfd < 0) perror("ERROR opening socket");
+            // we want to find the line with 3 spaces for request header
+            read(clisockfd,buffer,BUFF_SIZE); // read clients request
+            puts(buffer); // raw input
+            int lines_len = cinStr('\n',buffer,BUFF_SIZE);  // number of lines 
+            char* lines[lines_len];
+            splitString("\n",buffer,lines); // split each line
+            stripR(lines,lines_len); // stirps \r
+            lines_len--; // last index is \0 so its useless
+            /* 
+             *  [0]: GET or HEAD 
+             *  [1]: Host:
+             *  [2]: Connection:
+             */
+            int headers[]={-1,-1,-1};
+            wrapReq(lines,lines_len,headers);
+            //printf("%i %i %i\n",headers[0],headers[1],headers[2]);
+            //printf("%s\n%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
+            if(headers[0] != -1 && headers[2] != -1)
             {
-                // get host from headers[0]
-                // format then others
-                fprintf(stderr, "no host given\n");
+                /* Reformating GET http://www.webscantest.com/ HTTP/1.1 to GET / HTTP/1.1*/
+                int arr_len = cinStr(' ',lines[headers[0]],strlen(lines[headers[0]])); // number of spaces in one line
+                char* str_arr[arr_len];
+                splitString(" ",lines[headers[0]],str_arr); // split line by space
+                char* req = strdup(str_arr[0]);
+                char* host = strdup(str_arr[1]);
+                char* prot = strdup(str_arr[2]);
+                char path[BUFF_SIZE];
+
+                getHostPath(host,path);
+                sprintf(lines[headers[0]],"%s %s %s",req,path,prot);
+                // continue
+                if(headers[1] == -1)
+                {
+                    // get host from headers[0]
+                    // format then others
+                    fprintf(stderr, "no host given\n");
+                }
+                //printf("%s%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
+                // start from where first actual header
+                int keep = fetch_response(s_sockfd,lines+headers[0],host,lines_len,clisockfd);
+
+                free(host);
+                if(keep == 1){
+                }
+                if(close(s_sockfd) != 0){
+                    perror("ERROR close clisockfd");
+                    exit(EXIT_FAILURE);
+                }
+                if(close(clisockfd) != 0){
+                    perror("ERROR close clisockfd");
+                    exit(EXIT_FAILURE);
+                }
             }
-            //printf("%s%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
-            // start from where first actual header
-            fetch_response(lines+headers[0],host,lines_len,clisockfd);
-            free(host);
-            if(close(clisockfd) != 0){
-                perror("ERROR close clisockfd");
-                exit(EXIT_FAILURE);
+            else
+            {
+                fprintf(stderr, "no request or connection given\n");
             }
-        }
-        else
-        {
-            fprintf(stderr, "no request or connection given\n");
-        }
-        exit(1);
+            exit(1);
         }//end fork
 
     }// end main while loop
