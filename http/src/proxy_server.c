@@ -22,15 +22,27 @@ Content-Type: text/html
 <html><body><h1>503 Service Unavailable</h1>
 No server is available to handle this request.
 </body></html>
+
+
+HTTP/1.0 400 Bad request
+Cache-Control: no-cache
+Connection: close
+Content-Type: text/html
+
+<html><body><h1>400 Bad request</h1>
+Your browser sent an invalid request.
+</body></html>
 */
 char HOST[256];
 char FULL_RQ[1024];
 char* f_sites[30];
 int f_size;
 char forward_header[256];
+/*
 char date[512];
 char response[512];
 int package_size;
+*/
 int isStr(char* str,char* c)
 {
     return (strstr(str,c) != NULL);
@@ -40,6 +52,7 @@ char* findStr(char* str,char* c)
 {
     return strstr(str,c);
 }
+/*
 char* findStrStrip(char* str,char* c)
 {
     char* p =strstr(str,c);
@@ -76,6 +89,7 @@ char* findStrStrip(char* str,char* c)
     }
     return NULL;
 }
+*/
 void Error405(int fd)
 {
     char* msg = "HTTP/1.1 405 Method not allowed\r\n"
@@ -197,7 +211,7 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
     strcpy(host,HOST);
     server = gethostbyname(host);
     puts("proxy_server:");
-    printf("HOST: %s\n",HOST);
+    //printf("HOST: %s\n",HOST);
     if (server == NULL) {
         fprintf(stderr,"ERROR, no such host\n");
         return 0;
@@ -363,7 +377,9 @@ int getHostPath(char* host,char* path){
     if(p != NULL)// && p[strlen(p)] == 0)
     {
         //printf("path:%s\n",p);
+        //printf("path length:%lu\n",strlen(p));
         memcpy(path,p,strlen(p)+1);
+        path[strlen(p)+1]=0;
         if(c != NULL)
             *c = 0;
     }
@@ -549,8 +565,11 @@ int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct socka
         char* str_arr[arr_len];
         splitString(" ",lines[headers[0]],str_arr); // split line by space
         char* req = strdup(str_arr[0]);
+        int r_size = strlen(req);
         char* host = strdup(str_arr[1]);
         char* prot = strdup(str_arr[2]);
+        printf("prot:%s\n",prot);
+        int pr_size = strlen(prot);
         char path[BUFF_SIZE];
         //bzero(path,BUFF_SIZE);
         if(getHostPath(host,path) != 1)
@@ -559,6 +578,7 @@ int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct socka
             Error405(clisockfd);
             exit(1);
         }
+        int pa_size = strlen(path);
         strcpy(HOST,host);
         sprintf(lines[headers[0]],"%s %s %s",req,path,prot);
         struct sockaddr_in* pV4Addr = (struct sockaddr_in*)&cli_addr;
