@@ -8,11 +8,15 @@
 #include <unistd.h>
 #include <math.h>
 #include <assert.h>
+#include <arpa/inet.h>
 #define LISTEN 5
 #define BUFF_SIZE 4096
 #define HTTP_PORT 80
 char HOST[256];
 char FULL_RQ[1024];
+char* f_sites[30];
+int f_size;
+char forward_header[256];
 int isStr(char* str,char* c)
 {
     return (strstr(str,c) != NULL);
@@ -22,6 +26,15 @@ char* findStr(char* str,char* c)
 {
     return strstr(str,c);
 }
+
+void Error405(int fd)
+{
+    char msg[] = "HTTP/1.1 405 Method not allowed\r\n"
+    "Connection: close\r\nContent-Type: text/html; charset=iso=8859-1\r\n\r\n"
+    "<!DOCTYPE HTML PUBLIC>\r\n<html><head><title>405 Method not allowed</title>\r\n"
+    "</head><body><h1>Method not allowed</h1></body></html>\r\n\r\n";
+    write(fd,msg,strlen(msg));
+}
 int getContentLength(char* str)
 {
     char* p = findStr(str,"Content-Length:");
@@ -30,10 +43,8 @@ int getContentLength(char* str)
         return 0;
     }
     int i =0;
-    for(;p[i] != '\n';i++)
-    {
-        i++;
-    }
+    for(;p[i] != '\n';i++);
+
     char buff[BUFF_SIZE];
     memcpy(buff,p,i);
     char* r = strchr(buff,'\n');
@@ -67,13 +78,12 @@ int getConnection(char* str)
     char* p = findStr(str,"Connection:");
     if(p == NULL)
     {
-        return -1;
+        p = findStr(str,"connection:");
+        if(p == NULL)
+            return -1;
     }
     int i =0;
-    for(;p[i] != '\n';i++)
-    {
-        i++;
-    }
+    for(;p[i] != '\n';i++);
     char buff[BUFF_SIZE];
     memcpy(buff,p,i);
     char* r = strchr(buff,'\n');
@@ -129,7 +139,7 @@ int getHeaderSize(char* str)
 // establish connection with the given 3 args, head,host,connection
 // if connection is to close returns 0 else keep it alive returns 1
 int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockfd) {
-    int portno, n,bytes_read;
+    int bytes_read;
     struct sockaddr_in serv_addr;
     struct hostent *server;
     char buffer[BUFF_SIZE+1];
@@ -152,12 +162,12 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) perror("ERROR connecting");
     if(lines_len > BUFF_SIZE)
     {
-        fprintf(stderr, "request size bigger than 2Kb\n");
+        fprintf(stderr, "request size bigger than 4Kb\n");
         return -1;
     }
-    char request[BUFF_SIZE];
+    char request[BUFF_SIZE+256];
     char format[BUFF_SIZE];
-    bzero(request,BUFF_SIZE);
+    bzero(request,BUFF_SIZE+256);
     int i = 0;
     // sprintf(format,"%s\r\n","GET / HTTP/1.0");
     // strcat(request,format);
@@ -169,6 +179,10 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
         if(i == 1 && lines[1] == NULL){
             sprintf(format,"Host: %s\r\n",host);
             strcat(request,format);
+        }
+        else if(i == 2)
+        {
+            strcat(request,forward_header);
         }
         else
         {
@@ -322,6 +336,23 @@ int splitString(char* c,char* str,char** buffer)
         return 0;
     }
 }
+int isFobidden(char* str)
+{
+    int i =0;
+    char* buffer[4];
+    while(f_sites[i] != NULL)
+    {
+        if(splitString(".",f_sites[i],buffer) == 0) exit(1);
+        //printf("buff 2: %s\n",buffer[1]);
+        if(strstr(str,buffer[1])!=NULL)
+        {
+            printf("isFobidden: %s\n",str );
+            return 1;
+        }
+        i++;
+    }
+    return 0;
+}
 // takes in a lines and tries to find the first occurance of HEAD or GET 
 // finds first occurace of Host: after HAED or GET
 // find the first occurance of Connection after Host: then overwrites lines from first header request to connection
@@ -333,7 +364,7 @@ void wrapReq(char** lines,int lines_len,int* indices)
     int s_rq = -1;
     int h_rq = -1;
     int e_rq = -1;
-    char path[BUFF_SIZE];
+    //char path[BUFF_SIZE];
     int arr_len = 0;
     while(line_index < lines_len)
     {
@@ -412,7 +443,7 @@ void stripR(char** lines,int len)
     }
 
 }
-int exectute(int s_sockfd,int clisockfd)
+int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct sockaddr_in serv_addr)
 {
     char buffer[BUFF_SIZE];
     bzero(buffer,BUFF_SIZE);
@@ -420,6 +451,12 @@ int exectute(int s_sockfd,int clisockfd)
     read(clisockfd,buffer,BUFF_SIZE); // read clients request
     puts("clients request:");
     puts(buffer); // raw input
+    if(isFobidden(buffer))
+    {
+        fprintf(stderr, "WebSite is forbidden\n");
+        Error405(clisockfd);
+        exit(1);
+    }
     int lines_len = cinStr('\n',buffer,BUFF_SIZE);  // number of lines 
     char* lines[lines_len];
     splitString("\n",buffer,lines); // split each line
@@ -445,15 +482,33 @@ int exectute(int s_sockfd,int clisockfd)
         char* prot = strdup(str_arr[2]);
         char path[BUFF_SIZE];
         //bzero(path,BUFF_SIZE);
-        getHostPath(host,path);
+        if(getHostPath(host,path) != 1)
+        {
+            fprintf(stderr, "request not supported\n");
+            Error405(clisockfd);
+            exit(1);
+        }
         strcpy(HOST,host);
         sprintf(lines[headers[0]],"%s %s %s",req,path,prot);
+        struct sockaddr_in* pV4Addr = (struct sockaddr_in*)&cli_addr;
+        struct in_addr ipAddr = pV4Addr->sin_addr;
+        char str[INET_ADDRSTRLEN];
+        inet_ntop( AF_INET, &ipAddr, str, INET_ADDRSTRLEN );
+
+        struct sockaddr_in* mypV4Addr = (struct sockaddr_in*)&serv_addr;
+        struct in_addr myipAddr = mypV4Addr->sin_addr;
+        char sstr[INET_ADDRSTRLEN];
+        inet_ntop( AF_INET, &myipAddr, sstr, INET_ADDRSTRLEN );
+
+        sprintf(forward_header,"Forwarded: for=%s;prot=%s;by=%s\r\n",str,prot,sstr);
+        //printf("forwarded: %s\n",forward_header );
         // continue
         if(headers[1] == -1)
         {
             // get host from headers[0]
             // format then others
             fprintf(stderr, "no host given\nrefresh page\n");
+            Error405(clisockfd);
             exit(1);
         }
         //printf("%s%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
@@ -469,17 +524,34 @@ int exectute(int s_sockfd,int clisockfd)
     else
     {
         fprintf(stderr, "no request or connection given\n");
+        Error405(clisockfd);
+        return -1;
     }
     exit(1);
 }
 int main(int argc,char** argv)
 {
-    if(argc < 2)
+    if(argc < 3)
     {
-        fprintf(stderr, "usage: proxy_server portnumber\n");
+        fprintf(stderr, "usage: proxy_server portnumber forbidden_sites\n");
         exit(EXIT_FAILURE);
     }
-
+    FILE* file = fopen(argv[2],"r");
+    if(file==NULL)
+    {
+        fprintf(stderr, "No such file\n");
+        exit(EXIT_FAILURE);
+    }
+    //char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
+    int f_i = 0;
+    while ((read = getline(&f_sites[f_i], &len, file)) != -1) {
+        //printf("Retrieved line of length %zu :\n", read);
+        printf("%s", f_sites[f_i]);
+        f_i++;
+    }
+    f_sites[f_i] = NULL;
     const int myport = atoi(argv[1]);
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
@@ -502,10 +574,8 @@ int main(int argc,char** argv)
     socklen_t clilen;
     while(stop != 1)
     {
-            //printf("***32123123*entering*****\n");
 
         clisockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
-           // printf("****entering*****\n");
 
         if (clisockfd < 0) { 
          perror("ERROR on accept");
@@ -515,9 +585,8 @@ int main(int argc,char** argv)
         {
             int s_sockfd = socket(AF_INET, SOCK_STREAM, 0);
             if (s_sockfd < 0) perror("ERROR opening socket");
-            while(exectute(s_sockfd,clisockfd) > 0); // keep it alive
-            //exectute(s_sockfd,clisockfd);
-            //printf("****returned*****\n");
+            while(exectute(s_sockfd,clisockfd,cli_addr,serv_addr) > 0); // keep it alive
+
             if(close(s_sockfd) != 0){
                 perror("ERROR close clisockfd");
                 exit(EXIT_FAILURE);
