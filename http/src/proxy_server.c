@@ -104,11 +104,29 @@ int getConnection(char* str)
     }
     return -1;
 }
+int getHeaderSize(char* str)
+{
+    int i = 0;
+    int stop = 0;
+    while(stop != 1)
+    {
+        if(str[i] == '\r' && str[i+1] == '\n' && str[i+2] == '\r' && str[i+3] == '\n')
+        {
+            stop = 1;
+        }
+        if(str[i] == 0)
+        {
+            stop = 1;
+        }
+        i++;
+    }
+    return i;
+
+}
 // establish connection with the given 3 args, head,host,connection
 // if connection is to close returns 0 else keep it alive returns 1
 int fetch_response(char** lines,char* host,int lines_len,int clisockfd) {
-    int sockfd, portno, n,bytes_read,header_size;
-    header_size = 0;
+    int sockfd, portno, n,bytes_read;
     struct sockaddr_in serv_addr;
     struct hostent *server;
     char buffer[BUFF_SIZE+1];
@@ -117,6 +135,7 @@ int fetch_response(char** lines,char* host,int lines_len,int clisockfd) {
     if (sockfd < 0) 
         perror("ERROR opening socket");
     server = gethostbyname(host);
+    printf("HOST: %s\n",host);
     if (server == NULL) {
         fprintf(stderr,"ERROR, no such host\n");
         exit(0);
@@ -148,62 +167,63 @@ int fetch_response(char** lines,char* host,int lines_len,int clisockfd) {
             sprintf(format,"Host: %s\r\n",host);
             strcat(request,format);
         }
+        else
+        {
+            sprintf(format,"%s\r\n",lines[i]);
+            strcat(request,format);
+        }
+        /*
         else if(isStr(lines[i],"Accept-Encoding:") != 1)
         {
             sprintf(format,"%s\r\n",lines[i]);
             strcat(request,format);
         }
+        */
         i++;
     }
     sprintf(format,"%s\r\n\r\n",lines[i]);
     strcat(request,format);
     bzero(buffer,BUFF_SIZE+1);
-    puts(request);
+    puts(request); // formated output
+
+    /* initiate the first request which returns the header and some body  */
     bytes_read = write(sockfd,request,strlen(request));
     if (bytes_read < 0) perror("ERROR writing to socket");
     bytes_read = read(sockfd,buffer,BUFF_SIZE);
-    printf("connection: %i\n",getConnection(buffer));
     if (bytes_read < 0) perror("ERROR reading from socket");
     buffer[bytes_read]=0;
     write(clisockfd,buffer,bytes_read);
     printf("%s",buffer);
+    int headerSize = getHeaderSize(buffer);
+    bytes_read = bytes_read - headerSize;
     int content_size = getContentLength(buffer);
-    if(content_size == 0)
+    if(content_size == 0 && headerSize != 0)
     {
         return 0;
     }
-    int left_over= 0;
-
+    int left_over;
     if(content_size > bytes_read)
     {
-        header_size = content_size - bytes_read;
+        left_over = content_size - bytes_read;
     }
     else
     {
-        header_size = bytes_read - content_size;
+        left_over = bytes_read - content_size;
     }
-    // size of content which was read with header
-    n = bytes_read - header_size;
-    if(content_size > n)
-    {
-        left_over = content_size - n;
-    }
-    else
-    {
-        left_over = n - content_size;
-    }
-    char buffer2[left_over+1];
+    char body[left_over+1];
+    n = left_over;
     // let n be the total read
-    while((bytes_read = read(sockfd,buffer2,left_over))!=0)
+    while((bytes_read = read(sockfd,body,n))!=0)
     {
-        if (n < 0) perror("ERROR reading from socket");
-        buffer2[bytes_read]=0;
-        write(clisockfd,buffer2,bytes_read);
-        n += bytes_read;
-        printf("%s",buffer2);
+        if (bytes_read < 0) perror("ERROR reading from socket");
+        body[bytes_read]=0;
+        write(clisockfd,body,bytes_read);
+        n -= bytes_read;
+        
+        printf("%s",body);
     }
     printf("\nContent_Length: %i\n",getContentLength(buffer));
-    printf("total bytes read: %i\n",n);
+    printf("missing bytes: %i\n",n);
     close(sockfd);
     return 1;
 }
@@ -413,10 +433,11 @@ int main(int argc,char** argv)
          perror("ERROR on accept");
          exit(EXIT_FAILURE);
         }
-
+        if(fork()==0)
+        {
         // we want to find the line with 3 spaces for request header
         read(clisockfd,buffer,BUFF_SIZE); // read clients request
-        puts(buffer);
+        puts(buffer); // raw input
         int lines_len = cinStr('\n',buffer,BUFF_SIZE);  // number of lines 
         char* lines[lines_len];
         splitString("\n",buffer,lines); // split each line
@@ -464,9 +485,10 @@ int main(int argc,char** argv)
         {
             fprintf(stderr, "no request or connection given\n");
         }
+        exit(1);
+        }//end fork
 
     }// end main while loop
-
 
 
     return 0;
