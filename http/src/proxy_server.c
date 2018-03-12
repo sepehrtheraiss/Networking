@@ -59,12 +59,59 @@ int getContentLength(char* str)
     }
     return 0;
 }
+// returns 0 on connection close and 1 on keep it alive
+// returns -1 on error
+int getConnection(char* str)
+{
+    char* p = findStr(str,"Connection:");
+    if(p == NULL)
+    {
+        return -1;
+    }
+    int i =0;
+    for(;p[i] != '\n';i++)
+    {
+        i++;
+    }
+    char buff[BUFF_SIZE];
+    memcpy(buff,p,i);
+    char* r = strchr(buff,'\n');
+    if(r != NULL)
+    {
+        *r = 0;
+    }
+    r = strchr(buff,'\r');
+    if(r != NULL)
+    {
+        *r = 0;
+    }
+    char *string, *tofree;
+    tofree = string = strdup(buff);
+    assert(string != NULL);
+    char* token[3];
+    i = 0;
+    while ((token[i++] = strsep(&string, " ")) != NULL);
+    if(token[1] != NULL)
+    {
+        if(strcmp(token[1],"keep-alive")==0)
+        {
+            return 1;
+        }
+        else if(strcmp(token[1],"close")==0)
+        {
+            return 0;
+        }
+    }
+    return -1;
+}
 // establish connection with the given 3 args, head,host,connection
-int fetch_response(char** lines,char* host,int lines_len) {
-    int sockfd, portno, n;
+// if connection is to close returns 0 else keep it alive returns 1
+int fetch_response(char** lines,char* host,int lines_len,int clisockfd) {
+    int sockfd, portno, n,bytes_read,header_size;
+    header_size = 0;
     struct sockaddr_in serv_addr;
     struct hostent *server;
-    char buffer[BUFF_SIZE];
+    char buffer[BUFF_SIZE+1];
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
@@ -110,15 +157,53 @@ int fetch_response(char** lines,char* host,int lines_len) {
     }
     sprintf(format,"%s\r\n\r\n",lines[i]);
     strcat(request,format);
-    bzero(buffer,BUFF_SIZE);
+    bzero(buffer,BUFF_SIZE+1);
     puts(request);
-    n = write(sockfd,request,strlen(request));
-    if (n < 0) perror("ERROR writing to socket");
-    n = read(sockfd,buffer,BUFF_SIZE-1);
-    if (n < 0) perror("ERROR reading from socket");
-    buffer[n]=0;
-    printf("%s\n",buffer);
-    printf("Content-Length: %i\n",getContentLength(buffer));
+    bytes_read = write(sockfd,request,strlen(request));
+    if (bytes_read < 0) perror("ERROR writing to socket");
+    bytes_read = read(sockfd,buffer,BUFF_SIZE);
+    printf("connection: %i\n",getConnection(buffer));
+    if (bytes_read < 0) perror("ERROR reading from socket");
+    buffer[bytes_read]=0;
+    write(clisockfd,buffer,bytes_read);
+    printf("%s",buffer);
+    int content_size = getContentLength(buffer);
+    if(content_size == 0)
+    {
+        return 0;
+    }
+    int left_over= 0;
+
+    if(content_size > bytes_read)
+    {
+        header_size = content_size - bytes_read;
+    }
+    else
+    {
+        header_size = bytes_read - content_size;
+    }
+    // size of content which was read with header
+    n = bytes_read - header_size;
+    if(content_size > n)
+    {
+        left_over = content_size - n;
+    }
+    else
+    {
+        left_over = n - content_size;
+    }
+    char buffer2[left_over+1];
+    // let n be the total read
+    while((bytes_read = read(sockfd,buffer2,left_over))!=0)
+    {
+        if (n < 0) perror("ERROR reading from socket");
+        buffer2[bytes_read]=0;
+        write(clisockfd,buffer2,bytes_read);
+        n += bytes_read;
+        printf("%s",buffer2);
+    }
+    printf("\nContent_Length: %i\n",getContentLength(buffer));
+    printf("total bytes read: %i\n",n);
     close(sockfd);
     return 1;
 }
@@ -368,8 +453,12 @@ int main(int argc,char** argv)
             }
             //printf("%s%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
             // start from where first actual header
-            fetch_response(lines+headers[0],host,lines_len);
+            fetch_response(lines+headers[0],host,lines_len,clisockfd);
             free(host);
+            if(close(clisockfd) != 0){
+                perror("ERROR close clisockfd");
+                exit(EXIT_FAILURE);
+            }
         }
         else
         {
