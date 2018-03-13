@@ -293,7 +293,7 @@ void Error405(int fd)
 	"Your browser sent an invalid request.\n"
 	"</body></html>\n";
 	*/
-	char* msg = ""
+	char* msg = "405 Method not allowed\n";
     write(fd,msg,strlen(msg));
 }
 
