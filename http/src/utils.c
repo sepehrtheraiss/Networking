@@ -187,6 +187,7 @@ int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct socka
         sendError(clisockfd,"Forbidden URL",403);
         client_log.status = 403;
         client_log.bytes = 0;
+        logInfo();
         exit(1);
     }
     int lines_len = cinStr('\n',buffer,BUFF_SIZE);  // number of lines 
@@ -223,6 +224,7 @@ int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct socka
             strcpy(client_log.request,lines[headers[0]]);
             client_log.status = 400;
             client_log.bytes = 0;
+            logInfo();
             exit(1);
         }
 
