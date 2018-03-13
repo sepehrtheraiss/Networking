@@ -18,7 +18,7 @@
 #include <math.h>
 #include <assert.h>
 #include <arpa/inet.h>
-#define _GNU_SOURCE
+#define SIX_C_SOURCE >= 200809L
 #define LISTEN 5
 #define BUFF_SIZE 4096
 #define HTTP_PORT 80
