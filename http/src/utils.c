@@ -26,7 +26,7 @@ int splitString(char* c,char* str,char** buffer)
         char* token;
         int i =0;
         while((token=strsep(&string,c)) != NULL){
-        	buffer[i] = malloc(sizeof(char)*(strlen(token)));
+        	buffer[i] = malloc(sizeof(char)*(strlen(*token)));
         	strcpy(buffer[i],token);
             i++;
         }
@@ -281,6 +281,7 @@ int isFobidden(char* str)
 }
 void Error405(int fd)
 {
+	/*
     char* msg = "HTTP/1.0 405 Method not allowed\n"
 	"Cache-Control: no-cache\n"
 	"Connection: close\n"
@@ -288,6 +289,8 @@ void Error405(int fd)
 	"<html><body><h1>405 Method not allowedt</h1>\n"
 	"Your browser sent an invalid request.\n"
 	"</body></html>\n";
+	*/
+	char* msg = ""
     write(fd,msg,strlen(msg));
 }
 
