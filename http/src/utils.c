@@ -197,11 +197,11 @@ int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct socka
         char* str_arr[arr_len];
         splitString(" ",lines[headers[0]],str_arr); // split line by space
         char* req = (char*)strdup(str_arr[0]);
-        int r_size = (char*)strlen(req);
+        //int r_size = strlen(req);
         char* host = (char*)strdup(str_arr[1]);
         char* prot = (char*)strdup(str_arr[2]);
         printf("prot:%s\n",prot);
-        int pr_size = strlen(prot);
+        //int pr_size = strlen(prot);
         char path[BUFF_SIZE];
         //bzero(path,BUFF_SIZE);
         if(getHostPath(host,path) != 1)
@@ -210,7 +210,7 @@ int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct socka
             Error405(clisockfd);
             exit(1);
         }
-        int pa_size = strlen(path);
+        //int pa_size = strlen(path);
         strcpy(HOST,host);
         sprintf(lines[headers[0]],"%s %s %s",req,path,prot);
         struct sockaddr_in* pV4Addr = (struct sockaddr_in*)&cli_addr;
@@ -361,11 +361,10 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
     struct hostent *server;
     char buffer[BUFF_SIZE+1];
     int keep_connection = 0;
-
+    printf("HOST: %s\n",host);
     strcpy(host,HOST);
     server = gethostbyname(host);
     puts("proxy_server:");
-    //printf("HOST: %s\n",HOST);
     if (server == NULL) {
         fprintf(stderr,"ERROR, no such host\n");
         return 0;

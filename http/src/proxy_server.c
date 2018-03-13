@@ -77,7 +77,7 @@ int main(int argc,char** argv)
             int s_sockfd = socket(AF_INET, SOCK_STREAM, 0);
             if (s_sockfd < 0) perror("ERROR opening socket");
             while(exectute(s_sockfd,clisockfd,cli_addr,serv_addr) > 0); // keep it alive
-
+            //exectute(s_sockfd,clisockfd,cli_addr,serv_addr); // keep it alive
             if(close(s_sockfd) != 0){
                 perror("ERROR close clisockfd");
                 exit(EXIT_FAILURE);
