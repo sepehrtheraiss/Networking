@@ -30,7 +30,6 @@ struct logInfo{
 };
 char* f_sites[30];
 char forward_header[512];
-char HOST[256];
 // returns the number of times character c has occured in string
 int cinStr(char c,char* str,int len);
 

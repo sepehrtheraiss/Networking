@@ -26,8 +26,11 @@ int splitString(char* c,char* str,char** buffer)
         char* token;
         int i =0;
         while((token=strsep(&string,c)) != NULL){
-        	buffer[i] = malloc(sizeof(char)*(strlen(*token)));
-        	strcpy(buffer[i],token);
+            if(token != NULL)
+            {
+    	    	buffer[i] = malloc(sizeof(char)*strlen(token));
+    	    	strcpy(buffer[i],token);
+            }
             i++;
         }
         free(string);
@@ -211,7 +214,7 @@ int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct socka
             exit(1);
         }
         //int pa_size = strlen(path);
-        strcpy(HOST,host);
+        //strcpy(HOST,host);
         sprintf(lines[headers[0]],"%s %s %s",req,path,prot);
         struct sockaddr_in* pV4Addr = (struct sockaddr_in*)&cli_addr;
         struct in_addr ipAddr = pV4Addr->sin_addr;
@@ -368,7 +371,7 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
     char buffer[BUFF_SIZE+1];
     int keep_connection = 0;
     printf("HOST: %s\n",host);
-    strcpy(host,HOST);
+    //strcpy(host,HOST);
     server = gethostbyname(host);
     puts("proxy_server:");
     if (server == NULL) {
