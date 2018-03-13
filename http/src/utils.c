@@ -362,7 +362,7 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
     char buffer[BUFF_SIZE+1];
     int keep_connection = 0;
 
-    strcpy(host,HOST);
+    //strcpy(host,HOST);
     server = gethostbyname(host);
     puts("proxy_server:");
     //printf("HOST: %s\n",HOST);
