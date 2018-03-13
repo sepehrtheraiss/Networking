@@ -26,8 +26,11 @@ int splitString(char* c,char* str,char** buffer)
         char* token;
         int i =0;
         while((token=strsep(&string,c)) != NULL){
-        	buffer[i] = malloc(sizeof(char)*(strlen(token)));
-        	strcpy(buffer[i],token);
+                if(token != NULL)
+                {
+        	    buffer[i] = malloc(sizeof(char)*strlen(token));
+        	    strcpy(buffer[i],token);
+                }
             i++;
         }
         free(string);
