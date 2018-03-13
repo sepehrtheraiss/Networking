@@ -214,18 +214,20 @@ int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct socka
         char* prot = strdup(str_arr[2]);
         char path[BUFF_SIZE];
 
-        sprintf(lines[headers[0]],"%s %s %s",req,path,prot);
-        strcpy(client_log.request,lines[headers[0]]);
 
         if(getHostPath(host,path) != 1)
         {
             fprintf(stderr, "request not supported\n");
             sendError(clisockfd,"Bad Request",400);
+            sprintf(lines[headers[0]],"%s %s %s",req,path,prot);
+            strcpy(client_log.request,lines[headers[0]]);
             client_log.status = 400;
             client_log.bytes = 0;
             exit(1);
         }
 
+        sprintf(lines[headers[0]],"%s %s %s",req,path,prot);
+        strcpy(client_log.request,lines[headers[0]]);
 
         struct sockaddr_in* mypV4Addr = (struct sockaddr_in*)&serv_addr;
         struct in_addr myipAddr = mypV4Addr->sin_addr;
@@ -445,6 +447,14 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
     if (bytes_read < 0) perror("ERROR reading from socket");
     buffer[bytes_read]=0;
     write(clisockfd,buffer,bytes_read);
+    // get line until \n
+    int j=0;
+    for(;buffer[j] != '\n';j++);
+    char* superBuff[4];
+    char tString[j];
+    memcpy(tString,buffer,j);
+    splitString(" ",tString,superBuff);
+    printf("*****status: %s*******\n",superBuff[1]);
     n = bytes_read;
     printf("Servers response:\n%s",buffer);
     keep_connection = getConnection(buffer);
