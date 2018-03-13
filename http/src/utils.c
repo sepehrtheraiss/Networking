@@ -389,6 +389,9 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
     puts("proxy_server:");
     if (server == NULL) {
         fprintf(stderr,"ERROR, no such host\n");
+        sendError(clisockfd,"Bad Request",400);
+        client_log.status = 400;
+        client_log.bytes = 0;
         return 0;
     }
     bzero((char *) &serv_addr, sizeof(serv_addr));

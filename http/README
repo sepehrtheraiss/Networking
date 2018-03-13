@@ -1,0 +1,28 @@
+Sepehr Raissian
+CMPE-156
+ex4
+
+Usage: 
+    1. make
+    2. ./bin/proxy_server port-number forbidden_sites
+top level files:
+    README
+    Makefile
+    forbidden_sites
+    access.log
+    run.sh       a self created test script for client.c
+
+Folders        files
+----------|-------------------------------------------------------------------------------------------
+bin       | proxy_server(redirects clients request to the host destination(GET & HEAD methods only)) |
+----------|-------------------------------------------------------------------------------------------
+docs      | desgin                                                                                   |
+----------|-------------------------------------------------------------------------------------------
+include   | header.h(conatins utils.c function prototypes & few global variables)                    |
+----------|-------------------------------------------------------------------------------------------
+obj       | utils.o proxy_server.o                                                                   |
+----------|-------------------------------------------------------------------------------------------
+src       | client.c(basic testing) proxy_server.c(main program)  utils.c(network utility functions) |
+----------|-------------------------------------------------------------------------------------------
+
+

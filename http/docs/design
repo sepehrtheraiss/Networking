@@ -1,0 +1,15 @@
+1. Split clients request by new line into an array of n new lines
+2. Find the index where the first request header i.e GET or HEAD has been found
+3. Once found further parse the rest of the requests
+4. Split first line into req(GET or HEAD) path and protocol
+5. path will take the full host portion in the request header and substring everything after \
+6. find Host and get the host
+7. find where the connection is and get the string i.e close or Keep-Alive
+6. save an index reference to first request header, host and connection
+7. if any of these aren't given abort request and send error message(bad request) to client
+8. if a website is forbidden also abort and send an error message(forbidden url) to client
+9. if request method is any other than HEAD or GET abort then send error message (Method not allowed)
+10. The main function execute will return 0 for connection close and 1 for connection open after the transaction has been completed
+11. on each requested event a log will be loged into access.log with such format <date-format> <client-ip> <request-first-line> <http-status-code> <object-size-in-byte>
+12. on each accept the proxy_server will fork to be concurrent and pron to crash
+
