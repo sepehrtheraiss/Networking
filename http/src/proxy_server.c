@@ -1,26 +1,4 @@
 #include "../include/header.h"
-/*
-HTTP/1.0 503 Service Unavailable
-Cache-Control: no-cache
-Connection: close
-Content-Type: text/html
-
-<html><body><h1>503 Service Unavailable</h1>
-No server is available to handle this request.
-</body></html>
-
-
-HTTP/1.0 400 Bad request
-Cache-Control: no-cache
-Connection: close
-Content-Type: text/html
-
-<html><body><h1>400 Bad request</h1>
-Your browser sent an invalid request.
-</body></html>
-*/
-
-
 int main(int argc,char** argv)
 {
     if(argc < 3)
@@ -76,7 +54,12 @@ int main(int argc,char** argv)
         {
             int s_sockfd = socket(AF_INET, SOCK_STREAM, 0);
             if (s_sockfd < 0) perror("ERROR opening socket");
-            while(exectute(s_sockfd,clisockfd,cli_addr,serv_addr) > 0); // keep it alive
+            int redo = 1;
+            while( redo > 0) // keep it alive
+            {
+                redo = exectute(s_sockfd,clisockfd,cli_addr,serv_addr);
+                logInfo();
+            }
             if(close(s_sockfd) != 0){
                 perror("ERROR close clisockfd");
                 exit(EXIT_FAILURE);
