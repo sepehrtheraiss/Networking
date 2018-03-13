@@ -180,7 +180,7 @@ int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct socka
     strcpy(client_log.c_ip,str);
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
-    sprintf(client_log.date,"%d-%d-%d %d:%d:%d\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+    sprintf(client_log.date,"%d-%d-%d %d:%d:%d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
     if(isFobidden(buffer))
     {
         fprintf(stderr, "WebSite is forbidden\n");
@@ -458,6 +458,7 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
         n += bytes_read;
        // printf("%s",buffer);
     }
+    client_log.status = 200;
     client_log.bytes = n;
     return keep_connection;
 }
