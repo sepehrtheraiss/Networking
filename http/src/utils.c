@@ -454,7 +454,8 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
     char tString[j];
     memcpy(tString,buffer,j);
     splitString(" ",tString,superBuff);
-    printf("*****status: %s*******\n",superBuff[1]);
+    //printf("*****status: %s*******\n",superBuff[1]);
+    client_log.status = atoi(superBuff[1]);
     n = bytes_read;
     printf("Servers response:\n%s",buffer);
     keep_connection = getConnection(buffer);
@@ -466,7 +467,6 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
         n += bytes_read;
        // printf("%s",buffer);
     }
-    client_log.status = 200;
     client_log.bytes = n;
     return keep_connection;
 }
