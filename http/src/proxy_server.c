@@ -66,7 +66,6 @@ int main(int argc,char** argv)
     socklen_t clilen;
     while(stop != 1)
     {
-
         clisockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
 
         if (clisockfd < 0) { 

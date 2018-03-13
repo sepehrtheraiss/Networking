@@ -29,6 +29,8 @@ struct logInfo{
 	int size; // total size of the package
 };
 char* f_sites[30];
+char forward_header[512];
+char HOST[256];
 // returns the number of times character c has occured in string
 int cinStr(char c,char* str,int len);
 
@@ -36,7 +38,7 @@ int cinStr(char c,char* str,int len);
 // returns 1 on succes and 0 on fail
 int splitString(char* c,char* str,char** buffer);
 // removes this char from string
-void chrRemove(char** lines,int len,char c);
+void stripR(char** lines,int len);
 
  // 0 on invalid
 // 1 on success
@@ -53,4 +55,16 @@ void wrapReq(char** lines,int lines_len,int* indices);
 int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct sockaddr_in serv_addr);
 // returns 1 on site is forbbiden else 0
 int isFobidden(char* str);
+void Error405(int fd);
+int typeReq(char* str);
+// establish connection with the given 3 args, head,host,connection
+// if connection is to close returns 0 else keep it alive returns 1
+// actual exchange function
+int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockfd);
+int getHeaderSize(char* str);
+// returns 0 on connection close and 1 on keep it alive
+// returns -1 on error
+int getConnection(char* str);
+int isStr(char* str,char* c);
+char* findStr(char* str,char* c);
 #endif
