@@ -167,16 +167,26 @@ void wrapReq(char** lines,int lines_len,int* indices)
 
 int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct sockaddr_in serv_addr)
 {
-       char buffer[BUFF_SIZE];
+    char buffer[BUFF_SIZE];
     bzero(buffer,BUFF_SIZE);
     // we want to find the line with 3 spaces for request header
     read(clisockfd,buffer,BUFF_SIZE); // read clients request
     puts("clients request:");
     puts(buffer); // raw input
+    struct sockaddr_in* pV4Addr = (struct sockaddr_in*)&cli_addr;
+    struct in_addr ipAddr = pV4Addr->sin_addr;
+    char str[INET_ADDRSTRLEN];
+    inet_ntop( AF_INET, &ipAddr, str, INET_ADDRSTRLEN );
+    strcpy(client_log.c_ip,str);
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    sprintf(client_log.date,"%d-%d-%d %d:%d:%d\n", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
     if(isFobidden(buffer))
     {
         fprintf(stderr, "WebSite is forbidden\n");
-        Error405(clisockfd);
+        sendError(clisockfd,"Forbidden URL",403);
+        client_log.status = 403;
+        client_log.bytes = 0;
         exit(1);
     }
     int lines_len = cinStr('\n',buffer,BUFF_SIZE);  // number of lines 
@@ -199,32 +209,28 @@ int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct socka
         int arr_len = cinStr(' ',lines[headers[0]],strlen(lines[headers[0]])); // number of spaces in one line
         char* str_arr[arr_len];
         splitString(" ",lines[headers[0]],str_arr); // split line by space
-        char* req = (char*)strdup(str_arr[0]);
-        //int r_size = strlen(req);
-        char* host = (char*)strdup(str_arr[1]);
-        char* prot = (char*)strdup(str_arr[2]);
-        printf("prot:%s\n",prot);
-        //int pr_size = strlen(prot);
+        char* req = strdup(str_arr[0]);
+        char* host = strdup(str_arr[1]);
+        char* prot = strdup(str_arr[2]);
         char path[BUFF_SIZE];
-        //bzero(path,BUFF_SIZE);
+
+        sprintf(lines[headers[0]],"%s %s %s",req,path,prot);
+        strcpy(client_log.request,lines[headers[0]]);
+
         if(getHostPath(host,path) != 1)
         {
             fprintf(stderr, "request not supported\n");
-            Error405(clisockfd);
+            sendError(clisockfd,"Bad Request",400);
+            client_log.status = 400;
+            client_log.bytes = 0;
             exit(1);
         }
-        //int pa_size = strlen(path);
-        //strcpy(HOST,host);
-        sprintf(lines[headers[0]],"%s %s %s",req,path,prot);
-        struct sockaddr_in* pV4Addr = (struct sockaddr_in*)&cli_addr;
-        struct in_addr ipAddr = pV4Addr->sin_addr;
-        char str[INET_ADDRSTRLEN];
-        inet_ntop( AF_INET, &ipAddr, str, INET_ADDRSTRLEN );
+
 
         struct sockaddr_in* mypV4Addr = (struct sockaddr_in*)&serv_addr;
         struct in_addr myipAddr = mypV4Addr->sin_addr;
         char sstr[INET_ADDRSTRLEN];
-        inet_ntop( AF_INET, &myipAddr, sstr, INET_ADDRSTRLEN );
+        inet_ntop(AF_INET, &myipAddr, sstr, INET_ADDRSTRLEN );
 
         sprintf(forward_header,"Forwarded: for=%s;prot=%s;by=%s\r\n",str,prot,sstr);
         //printf("forwarded: %s\n",forward_header );
@@ -234,7 +240,6 @@ int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct socka
             // get host from headers[0]
             // format then others
             fprintf(stderr, "no host given\nrefresh page\n");
-            Error405(clisockfd);
             exit(1);
         }
         //printf("%s%s\n%s\n",lines[headers[0]],lines[headers[1]],lines[headers[2]]);
@@ -253,6 +258,7 @@ int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct socka
         	if(str_arr[i]!=NULL)
         		free(str_arr[i]);
         }
+        
         printf("\nkeeping connection:%i\n",keep);
         return keep;
 
@@ -260,7 +266,9 @@ int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct socka
     else
     {
         fprintf(stderr, "no request or connection given\n");
-        Error405(clisockfd);
+        sendError(clisockfd,"Method not allowed",405);
+        client_log.status = 405;
+        client_log.bytes = 0;
         return -1;
     }
     exit(1);
@@ -276,24 +284,25 @@ int isFobidden(char* str)
         if(strstr(str,buffer[1])!=NULL)
         {
             printf("isFobidden: %s\n",str );
+            strcpy(client_log.request,str);
             return 1;
         }
         i++;
     }
     return 0;
 }
-void Error405(int fd)
+void sendError(int fd,char* str,int status)
 {
-	/*
-    char* msg = "HTTP/1.0 405 Method not allowed\n"
-	"Cache-Control: no-cache\n"
-	"Connection: close\n"
-	"Content-Type: text/html\n\n"
-	"<html><body><h1>405 Method not allowedt</h1>\n"
-	"Your browser sent an invalid request.\n"
-	"</body></html>\n";
-	*/
-	char* msg = "405 Method not allowed\n";
+    char msg[128];
+    sprintf(msg,
+    "HTTP/1.0 %i %s\r\n"
+	"Cache-Control: no-cache\r\n"
+	"Connection: close\r\n"
+	"Content-Type: text/html\r\n\r\n"
+	"<html><body><h1>%i Method not allowedt</h1>\r\n"
+	"Your browser sent an invalid request.\r\n"
+	"</body></html>\r\n\r\n"
+    ,status,str,status);
     write(fd,msg,strlen(msg));
 }
 
@@ -370,7 +379,7 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
     struct hostent *server;
     char buffer[BUFF_SIZE+1];
     int keep_connection = 0;
-    printf("HOST: %s\n",host);
+    //printf("HOST: %s\n",host);
     //strcpy(host,HOST);
     server = gethostbyname(host);
     puts("proxy_server:");
@@ -389,6 +398,9 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
     if(lines_len > BUFF_SIZE)
     {
         fprintf(stderr, "request size bigger than 4Kb\n");
+        sendError(clisockfd,"Bad Request",400);
+        client_log.status = 400;
+        client_log.bytes = 0;
         return -1;
     }
     char request[BUFF_SIZE+256];
@@ -444,6 +456,7 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
         n += bytes_read;
        // printf("%s",buffer);
     }
+    client_log.bytes = n;
     return keep_connection;
 }
 // 0 for invalid, 1 for HEAD and 2 for GET
@@ -469,4 +482,10 @@ int isStr(char* str,char* c)
 char* findStr(char* str,char* c)
 {
     return strstr(str,c);
+}
+void logInfo()
+{
+    FILE* file = fopen("access.log","a+w");
+    fprintf(file, "%s %s %s %i %i\n",client_log.date,client_log.c_ip,client_log.request,client_log.status,client_log.bytes);
+    fclose(file);
 }

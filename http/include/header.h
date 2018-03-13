@@ -18,18 +18,21 @@
 #include <math.h>
 #include <assert.h>
 #include <arpa/inet.h>
-#define SIX_C_SOURCE >= 200809L
+#include <time.h>
 #define LISTEN 5
 #define BUFF_SIZE 4096
 #define HTTP_PORT 80
 struct logInfo{
 	char date[512];
 	char c_ip[32];
-	char request[1024]; // includes status code
-	int size; // total size of the package
+	char request[1024]; 
+	int status;
+	int bytes; // total size of the package
 };
 char* f_sites[30];
 char forward_header[512];
+struct logInfo client_log;
+
 // returns the number of times character c has occured in string
 int cinStr(char c,char* str,int len);
 
@@ -54,7 +57,7 @@ void wrapReq(char** lines,int lines_len,int* indices);
 int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct sockaddr_in serv_addr);
 // returns 1 on site is forbbiden else 0
 int isFobidden(char* str);
-void Error405(int fd);
+void sendError(int fd,char* str,int status);
 int typeReq(char* str);
 // establish connection with the given 3 args, head,host,connection
 // if connection is to close returns 0 else keep it alive returns 1
@@ -66,4 +69,6 @@ int getHeaderSize(char* str);
 int getConnection(char* str);
 int isStr(char* str,char* c);
 char* findStr(char* str,char* c);
+// opens or creates access.log then logs it
+void logInfo();
 #endif
