@@ -22,7 +22,7 @@ int splitString(char* c,char* str,char** buffer)
     //puts(str);
     if(str != NULL && buffer != NULL)
     {
-        char* string = strdup(str);
+        char* string =(char*)strdup(str);
         char* token;
         int i =0;
         while((token=strsep(&string,c)) != NULL){
@@ -196,10 +196,10 @@ int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct socka
         int arr_len = cinStr(' ',lines[headers[0]],strlen(lines[headers[0]])); // number of spaces in one line
         char* str_arr[arr_len];
         splitString(" ",lines[headers[0]],str_arr); // split line by space
-        char* req = strdup(str_arr[0]);
-        int r_size = strlen(req);
-        char* host = strdup(str_arr[1]);
-        char* prot = strdup(str_arr[2]);
+        char* req = (char*)strdup(str_arr[0]);
+        int r_size = (char*)strlen(req);
+        char* host = (char*)strdup(str_arr[1]);
+        char* prot = (char*)strdup(str_arr[2]);
         printf("prot:%s\n",prot);
         int pr_size = strlen(prot);
         char path[BUFF_SIZE];
@@ -314,7 +314,7 @@ int getConnection(char* str)
         *r = 0;
     }
     char *string, *tofree;
-    tofree = string = strdup(buff);
+    tofree = string = (char*)strdup(buff);
     assert(string != NULL);
     char* token[3];
     i = 0;
