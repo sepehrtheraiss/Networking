@@ -293,7 +293,6 @@ int isFobidden(char* str)
 }
 void sendError(int fd,char* str,int status)
 {
-	
     char msg[128];
     sprintf(msg,
     "HTTP/1.0 %i %s\r\n"
@@ -304,7 +303,6 @@ void sendError(int fd,char* str,int status)
 	"Your browser sent an invalid request.\r\n"
 	"</body></html>\r\n\r\n"
     ,status,str,status);
-	
     write(fd,msg,strlen(msg));
 }
 
