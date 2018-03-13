@@ -28,6 +28,7 @@ struct logInfo{
 	char request[1024]; // includes status code
 	int size; // total size of the package
 };
+char* f_sites[30];
 // returns the number of times character c has occured in string
 int cinStr(char c,char* str,int len);
 
@@ -36,4 +37,20 @@ int cinStr(char c,char* str,int len);
 int splitString(char* c,char* str,char** buffer);
 // removes this char from string
 void chrRemove(char** lines,int len,char c);
+
+ // 0 on invalid
+// 1 on success
+int getHostPath(char* host,char* path);
+
+// takes in a lines and tries to find the first occurance of HEAD or GET 
+// finds first occurace of Host: after HAED or GET
+// find the first occurance of Connection after Host: then overwrites lines from first header request to connection
+// if finding was success index of req host and connection are stored
+// else -1 is returned
+void wrapReq(char** lines,int lines_len,int* indices);
+
+// main function for exchanging packets between server and client 
+int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct sockaddr_in serv_addr);
+// returns 1 on site is forbbiden else 0
+int isFobidden(char* str);
 #endif

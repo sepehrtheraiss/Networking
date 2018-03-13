@@ -19,38 +19,8 @@ Content-Type: text/html
 Your browser sent an invalid request.
 </body></html>
 */
-char* f_sites[30];
-int exectute(int s_sockfd,int clisockfd,struct sockaddr_in cli_addr,struct sockaddr_in serv_addr)
-{
-    char buffer[BUFF_SIZE+1];
-    bzero(buffer,BUFF_SIZE+1);
-    // we want to find the line with 3 spaces for request header
-    int n = read(clisockfd,buffer,BUFF_SIZE); // read clients request
-    puts("clients request:");
-    buffer[n]=0;
-    puts(buffer); // raw input
-    /*
-    if(isFobidden(buffer))
-    {
-        fprintf(stderr, "WebSite is forbidden\n");
-        Error405(clisockfd);
-        exit(1);
-    }
-    */
-    int lines_len = cinStr('\n',buffer,BUFF_SIZE);  // number of lines 
-    char* lines[lines_len+1];
-    splitString("\n",buffer,lines); // split each line
-    printf("TESTING\n");
-    //chrRemove(lines,lines_len,'\n');
-    //chrRemove(lines,lines_len,'\r');
-    for(int j =0;j<lines_len;j++)
-    {
-        printf("%s\n",lines[j]);
-    }
-        printf("here\n");
-  
-    exit(1);
-}
+
+
 int main(int argc,char** argv)
 {
     if(argc < 3)
