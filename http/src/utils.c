@@ -281,10 +281,13 @@ int isFobidden(char* str)
 }
 void Error405(int fd)
 {
-    char* msg = "HTTP/1.1 405 Method not allowed\r\n"
-    "Connection: close\r\nContent-Type: text/html; charset=iso=8859-1\r\n\r\n"
-    "<!DOCTYPE HTML PUBLIC>\r\n<html><head><title>405 Method not allowed</title>\r\n"
-    "</head><body><h1>Method not allowed</h1></body></html>\r\n\r\n";
+    char* msg = "HTTP/1.0 405 Method not allowed\n"
+	"Cache-Control: no-cache\n"
+	"Connection: close\n"
+	"Content-Type: text/html\n\n"
+	"<html><body><h1>405 Method not allowedt</h1>\n"
+	"Your browser sent an invalid request.\n"
+	"</body></html>\n";
     write(fd,msg,strlen(msg));
 }
 
@@ -374,11 +377,7 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
     bcopy((char*)server->h_addr_list[0],
                  (char *)&serv_addr.sin_addr.s_addr,
          server->h_length);
-/*
-    bcopy((char *)server->h_addr, 
-         (char *)&serv_addr.sin_addr.s_addr,
-         server->h_length);
-         */
+
     serv_addr.sin_port = htons(HTTP_PORT);
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) perror("ERROR connecting");
     if(lines_len > BUFF_SIZE)
@@ -390,10 +389,6 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
     char format[BUFF_SIZE];
     bzero(request,BUFF_SIZE+256);
     int i = 0;
-    // sprintf(format,"%s\r\n","GET / HTTP/1.0");
-    // strcat(request,format);
-    // sprintf(format,"%s\r\n","Host: www.example.com");
-    // strcat(request,format);
     while(i < lines_len-1)
     {
         // mac only problem
@@ -434,21 +429,6 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
     write(clisockfd,buffer,bytes_read);
     n = bytes_read;
     printf("Servers response:\n%s",buffer);
-    i = 0;
-    /*
-    while(buffer[i] != '\r' && buffer[i] != '\n' && buffer[i]!=0){i++;};
-    memcpy(response,buffer,i);
-    response[i]=0;
-    printf("serv response:%s\n",response);
-    char* date_p = strstr(buffer,"Date:");
-    if(date_p != NULL)
-    {
-        i = 0;
-        while(date_p[i] != '\r' && date_p[i] != '\n' && date_p[i]!=0){i++;};
-        memcpy(date,date_p,i);
-        printf("date:%s\n",date);
-    }
-    */
     keep_connection = getConnection(buffer);
     while((bytes_read = read(sockfd,buffer,BUFF_SIZE))!=0)
     {
@@ -458,40 +438,6 @@ int fetch_response(int sockfd,char** lines,char* host,int lines_len,int clisockf
         n += bytes_read;
        // printf("%s",buffer);
     }
-    /* some fucking headers dont have content-length wtf! 
-    int headerSize = getHeaderSize(buffer);
-    bytes_read = bytes_read - headerSize;
-    int content_size = getContentLength(buffer);
-    if(content_size == 0 && headerSize != 0)
-    {
-        return 0;
-    }
-    int left_over;
-    if(content_size > bytes_read)
-    {
-        left_over = content_size - bytes_read;
-    }
-    else
-    {
-        left_over = bytes_read - content_size;
-    }
-    char body[left_over+1];
-    n = left_over+10;
-    // let n be the total read
-    while((bytes_read = read(sockfd,body,n))!=0)
-    {
-        if (bytes_read < 0) perror("ERROR reading from socket");
-        body[bytes_read]=0;
-        write(clisockfd,body,bytes_read);
-        n -= bytes_read;
-        
-        printf("%s",body);
-    }
-
-   // printf("\nContent_Length: %i\n",content_size);
-    printf("\nmissing bytes: %i\n",n);
-        */
-   // printf("\nfucking here\n");
     return keep_connection;
 }
 // 0 for invalid, 1 for HEAD and 2 for GET
