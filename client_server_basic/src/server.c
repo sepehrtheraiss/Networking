@@ -76,6 +76,8 @@ int main( int argc, char** argv) {
    while(x == 0){ // loop forever
       /* Accept actual connection from the client */
       clisockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
+      if(fork()==0)
+      {
       bzero(client_key,STRING_SIZE);
       bzero(buffer,buff_size);
 
@@ -177,6 +179,7 @@ int main( int argc, char** argv) {
             }//end else if stack size is not zero
           }//else not exit
     }// end inner server while loop, waiting for exit command
+    }
       if(close(clisockfd) != 0){
          perror("ERROR close clisockfd");
          exit(EXIT_FAILURE);
