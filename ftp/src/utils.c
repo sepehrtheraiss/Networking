@@ -1,16 +1,4 @@
 #include "../include/utils.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <strings.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 int bindIpp(char* ip,int port, struct sockaddr_in* addr)
 {
@@ -24,7 +12,7 @@ int bindIpp(char* ip,int port, struct sockaddr_in* addr)
    }
    
    /* Initialize socket structure */
-   bzero((char *) &addr, sizeof(addr));
+   bzero((char *) addr, sizeof((*addr)));
 
    if(inet_pton(AF_INET,ip,&IP)<1){
       perror("ERROR pasring IP address");
@@ -32,13 +20,13 @@ int bindIpp(char* ip,int port, struct sockaddr_in* addr)
    } 
 
    /* INADDR_ANY (0.0.0.0) means any address avaiable for binding*/
-   addr.sin_family = AF_INET;
-   addr.sin_addr.s_addr = IP; 
-   addr.sin_port = htons(port);
+   addr->sin_family = AF_INET;
+   addr->sin_addr.s_addr = IP; 
+   addr->sin_port = htons(port);
 
    
-   /* Now bind the host address using bind() call.*/
-   if (bind(sockfd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
+   /* bind the host address using bind() call.*/
+   if (bind(sockfd, (struct sockaddr *) addr, sizeof((*addr))) < 0) {
       perror("ERROR on binding");
       exit(EXIT_FAILURE);
    }
@@ -46,9 +34,9 @@ int bindIpp(char* ip,int port, struct sockaddr_in* addr)
     return sockfd;
 }
    
-void conn(int sockfd,struct sockaddr_in* saddr)
+void conn(int sockfd,struct sockaddr_in* addr)
 {
-   if (connect(sockfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+   if (connect(sockfd, (struct sockaddr*)addr, sizeof((*addr))) < 0) {
       perror("ERROR connecting");
       exit(EXIT_FAILURE);
    }
@@ -62,13 +50,13 @@ off_t sendFile(int sockfd,char* buff,off_t size)
     int chuncks = ceil((double)size / BUFF_SIZE);
     /* if 0 good otherwise positive send n 0's */
     off_t left_over = (chuncks*BUFF_SIZE) - size; 
-    printf("read left overs: %i\n"left_over);
+    printf("read left overs: %lli\n",left_over);
     
-    off_t n = 0;
+    off_t bytes_wrote = 0;
     int i=0;
-    while(i < chunks)
+    while(i < chuncks)
     {
-        n += BUFF_SIZE;
+        bytes_wrote += BUFF_SIZE;
         write(sockfd,buff+(i*BUFF_SIZE),BUFF_SIZE);
         i++;
     }
@@ -79,13 +67,13 @@ off_t sendFile(int sockfd,char* buff,off_t size)
         write(sockfd,buff,left_over);
     }
 
-    return BUFF_SIZE+left_over;
+    return bytes_wrote+left_over;
 }
 
 off_t recvFile(int sockfd,char* buff,int fd)
 {
 
-    off_t read = 0;
+    off_t bytes_read = 0;
     int n = 0;
     while( n > 0)
     {
@@ -94,8 +82,8 @@ off_t recvFile(int sockfd,char* buff,int fd)
         if(fd != -1)
             write(fd,buff,n);
 
-        read += n;
+        bytes_read += n;
     }
         
-    return read;
+    return bytes_read;
 }
