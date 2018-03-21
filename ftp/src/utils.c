@@ -61,7 +61,7 @@ off_t sendFile(int sockfd,char* buff,off_t size)
     int chuncks = ceil((double)size / BUFF_SIZE);
     /* if 0 good otherwise positive send n 0's */
     off_t left_over = (chuncks*BUFF_SIZE) - size; 
-    printf("read left overs: %lli\n",left_over);
+    //printf("read left overs: %lli\n",left_over);
     
     off_t bytes_write = 0;
     int i=0;
@@ -106,9 +106,8 @@ void dealWithServer(char* cmdBuff,char* args,struct sockaddr_in* cli_addr)
     memcpy(&data_adrr,cli_addr,sizeof((*cli_addr)));
     data_adrr.sin_port += 1;
     int dsockfd;
-    printf("here\n");
     dsockfd = bindIpp(0,0,&data_adrr,1);
-    printf("data port:%i\n",data_adrr.sin_port);
+   // printf("data port:%i\n",data_adrr.sin_port);
     int re_try =0;
     while(dsockfd < 0)
     {
@@ -192,7 +191,7 @@ int sendCMD(int sockfd,char* cmdBuff,char* args,struct sockaddr_in* cli_addr)
     return -1;
   }
   write(sockfd,buff,MAX_CMD_LEN);
-  write(1,buff,MAX_CMD_LEN);
+  //write(1,buff,MAX_CMD_LEN);
   dPort = fork();
   //dPort=1;
   if(dPort != 0)
@@ -276,16 +275,16 @@ int recvCMD(int sockfd,struct sockaddr_in* cli_addr)
   int n;
   int nt = splitString(":",buff,token);
 
-  printf("nt:%i\nt1: %s\nt2:%s %s\n",nt,token[0],token[1],token[2]);
+ // printf("nt:%i\nt1: %s\nt2:%s %s\n",nt,token[0],token[1],token[2]);
   /* data port */
   struct sockaddr_in data_adrr;
   memcpy(&data_adrr,cli_addr,sizeof(data_adrr));
-  printf("cli:%i\n",cli_addr->sin_port);
+  //printf("cli:%i\n",cli_addr->sin_port);
   // data_adrr.sin_family = AF_INET;
   // data_adrr.sin_addr.s_addr = cli_addr->sin_addr.s_addr; 
   // data_adrr.sin_port = cli_addr->sin_port +1;
   data_adrr.sin_port += 1;
-  printf("data port:%i\n",data_adrr.sin_port);
+  //printf("data port:%i\n",data_adrr.sin_port);
   int datafd = socket(AF_INET, SOCK_STREAM, 0);
   char buffer[BUFF_SIZE];
   memset(buffer,0,BUFF_SIZE);
@@ -312,7 +311,7 @@ int recvCMD(int sockfd,struct sockaddr_in* cli_addr)
         //snprintf(cmdBuff,MAX_CMD_LEN,"ls %s",token[2]);
         sprintf(cmdBuff,"ls %s",token[2]);
         
-        printf("data conn:%i\n",conn(datafd,&data_adrr));
+       // printf("data conn:%i\n",conn(datafd,&data_adrr));
 
         FILE* ex = popen(cmdBuff,"r");
         while((n = fread(buffer,1,BUFF_SIZE,ex)) > 0){
@@ -396,6 +395,7 @@ int errorCode(char* cmdBuff,char* args,struct sockaddr_in* addr)
   if(addr != NULL)
   {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    sleep(2);
     if(conn(sockfd,addr) == -1)
     {
       return 425;
