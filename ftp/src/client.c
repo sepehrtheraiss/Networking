@@ -11,12 +11,13 @@ int main(int argc, char** argv) {
    struct sockaddr_in serv_addr,cli_addr;
    int portno = 6969;
    char* sIP = strdup("127.0.0.1");
-
+   sockfd = bindIpp(sIP,portno, &cli_addr,0);
+/*
    while((sockfd = bindIpp(sIP,portno, &cli_addr,0))<0)
    {
       portno++;
    }
-
+*/
    /* server */
 	if(inet_pton(AF_INET,argv[1],&IP)<1){
       perror("ERROR pasring IP address");
@@ -52,6 +53,7 @@ int main(int argc, char** argv) {
          write(1,msg,5);
    		n = read(STDIN_FILENO,buffer,MAX_CMD_LEN); // returns counted characters, exclude \0
    		nt = splitString(" ",buffer,token);
+         //printf("nt:%i %s %s\n",nt,token[0],token[1]);
    		if(sendCMD(sockfd,token[0],token[1],&cli_addr)==221)
    		{
    			q = 1;

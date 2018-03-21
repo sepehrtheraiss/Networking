@@ -9,19 +9,19 @@ MEMCHECK = valgrind --leak-check=full --track-origins=yes
 all: $(EXE)
 
 bin/ftpserver: obj/server.o  obj/utils.o
-	cc -o bin/ftpserver obj/server.o obj/utils.o $(FLAG) 
+	gcc -o bin/ftpserver obj/server.o obj/utils.o $(FLAG) 
 
 obj/server.o: src/server.c include/utils.h
-	cc -c src/server.c -o obj/server.o
+	gcc -c src/server.c -o obj/server.o
 
 bin/ftpclient: obj/client.o obj/utils.o 
-	cc -o bin/ftpclient obj/client.o obj/utils.o $(FLAG) 
+	gcc -o bin/ftpclient obj/client.o obj/utils.o $(FLAG) 
 
 obj/client.o: src/client.c  include/utils.h 
-	cc -c src/client.c -o obj/client.o 
+	gcc -c src/client.c -o obj/client.o 
 
 obj/utils.o: src/utils.c include/utils.h
-	cc -c src/utils.c -o obj/utils.o
+	gcc -c src/utils.c -o obj/utils.o
 
 clean:
 	rm -f $(OBJ) $(EXE) $(EXE_T)

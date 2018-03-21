@@ -103,24 +103,28 @@ void dealWithServer(char* cmdBuff,char* args,struct sockaddr_in* cli_addr)
 {
   struct sockaddr_in data_adrr,serv_addr;
   char* token[4];
-    memcpy(&data_adrr,cli_addr,sizeof(data_adrr));
+    memcpy(&data_adrr,cli_addr,sizeof((*cli_addr)));
     data_adrr.sin_port += 1;
     int dsockfd;
+    printf("here\n");
     dsockfd = bindIpp(0,0,&data_adrr,1);
+    printf("data port:%i\n",data_adrr.sin_port);
     int re_try =0;
     while(dsockfd < 0)
     {
-      printf("data prot unavailable, re-trying\n");
+      printf("data port unavailable, re-trying\n");
       sleep(1);
       dsockfd = bindIpp(0,0,&data_adrr,1);
       re_try++;
       if(re_try > 10)
       {
           printf("sorry data port is unavailable please try again later\n");
+          exit(1);
       }
     }
     listen(dsockfd,1);
     socklen_t servlen = sizeof(serv_addr);
+    /* later on loop until killed */
     int ssockfd = accept(dsockfd, (struct sockaddr *)&serv_addr, &servlen);
     char buffer[BUFF_SIZE];
     if(wCMD(cmdBuff)==QUIT)
@@ -162,7 +166,16 @@ int sendCMD(int sockfd,char* cmdBuff,char* args,struct sockaddr_in* cli_addr)
   char buff[MAX_ARGS_LEN];
   memset(buff,0,MAX_ARGS_LEN);
   //int n = snprintf(buff,MAX_CMD_LEN,"CMD:%s:%s",cmdBuff,args);
-  int n = sprintf(buff,"CMD:%s:%s",cmdBuff,args);
+  char ACMD[5];
+  memcpy(ACMD,cmdBuff,3);
+  ACMD[4]=0;
+  if(ACMD[2]=='\n')
+  {
+    ACMD[2]=0;
+  }
+  /* 4 bytes command */
+  strCMD(ACMD);
+  int n = sprintf(buff,"CMD:%s:%s",ACMD,args);
   pid_t dPort;
   if(n >= MAX_CMD_LEN)
   {
@@ -170,22 +183,29 @@ int sendCMD(int sockfd,char* cmdBuff,char* args,struct sockaddr_in* cli_addr)
     return -1;
   }
   write(sockfd,buff,MAX_CMD_LEN);
+  write(1,buff,MAX_CMD_LEN);
   dPort = fork();
+  //dPort=1;
   if(dPort != 0)
   {
     read(sockfd,buff,3);
-    printf("status code:%s\n",buff);
+    //printf("status code:\n");
+    //write(1,buff,3);
     if(buff[0] == '2')
     {
       if(buff[1] == '0' && buff[2] == '0')
       {
         printf("200: Command Ok\n");
+        /* the idea is for the read to wait until the data transmission is compelete or failed */
+        kill(dPort, SIGKILL);
         return 200;
       }
       
       else
       {
         printf("221: GoodBye\n");
+        /* the idea is for the read to wait until the data transmission is compelete or failed */
+        kill(dPort, SIGKILL);
         return 221;
       }
         
@@ -197,6 +217,8 @@ int sendCMD(int sockfd,char* cmdBuff,char* args,struct sockaddr_in* cli_addr)
         if(buff[2]=='0')
         {
           printf("500: Syntax error (unrecognized command)\n");
+          /* the idea is for the read to wait until the data transmission is compelete or failed */
+          kill(dPort, SIGKILL);
           return 500;
         }
         else
@@ -209,12 +231,12 @@ int sendCMD(int sockfd,char* cmdBuff,char* args,struct sockaddr_in* cli_addr)
         if(buff[1]=='2' && buff[2]=='5')
         {
           printf("425: cant open data connection\n");
+          /* the idea is for the read to wait until the data transmission is compelete or failed */
+          kill(dPort, SIGKILL);
           return 425;
         }
       }
     }
-    /* the idea is for the read to wait until the data transmission is compelete or faield */
-    kill(dPort, SIGKILL);
   }
   else if(dPort == 0)
   {
@@ -243,13 +265,18 @@ int recvCMD(int sockfd,struct sockaddr_in* cli_addr)
    */
   char* token[4]; 
   int n;
-  int nt =splitString(":",buff,token);
+  int nt = splitString(":",buff,token);
 
-  printf("nt:%i\nt1: %s\nt2:%s %s\n",n,token[0],token[1],token[2]);
+  printf("nt:%i\nt1: %s\nt2:%s %s\n",nt,token[0],token[1],token[2]);
   /* data port */
   struct sockaddr_in data_adrr;
   memcpy(&data_adrr,cli_addr,sizeof(data_adrr));
+  printf("cli:%i\n",cli_addr->sin_port);
+  // data_adrr.sin_family = AF_INET;
+  // data_adrr.sin_addr.s_addr = cli_addr->sin_addr.s_addr; 
+  // data_adrr.sin_port = cli_addr->sin_port +1;
   data_adrr.sin_port += 1;
+  printf("data port:%i\n",data_adrr.sin_port);
   int datafd = socket(AF_INET, SOCK_STREAM, 0);
   char buffer[BUFF_SIZE];
   memset(buffer,0,BUFF_SIZE);
@@ -352,6 +379,10 @@ int errorCode(char* cmdBuff,char* args,struct sockaddr_in* addr)
       }      
     }
   }
+  if(code == QUIT)
+  {
+    return 221;
+  }
   /* is data port is open */
   if(addr != NULL)
   {
@@ -362,10 +393,7 @@ int errorCode(char* cmdBuff,char* args,struct sockaddr_in* addr)
     }
     close(sockfd);
   }
-  if(code == QUIT)
-  {
-    return 221;
-  }
+
     return 200;
   fprintf(stderr, "erroCode: error not implemented \n");
 }
@@ -378,7 +406,9 @@ void strCMD(char* cmdBuff)
       memcpy(cmdBuff,"RETR",4);
   else if(strcmp(cmdBuff,"put")==0)
       memcpy(cmdBuff,"STOR",4);
-}
+  else if(strcmp(cmdBuff,"qui")==0)
+      memcpy(cmdBuff,"QUIT",4);
+}     
 /* which cmdBuff */
 int wCMD(char* cmdBuff)
 {
