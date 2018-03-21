@@ -6,20 +6,28 @@ int main(int argc, char** argv) {
 		fprintf(stderr, "usage: %s server-ip server-port\n",argv[0]);
 		exit(1);
 	}
+   uint32_t IP;
+   int sockfd;
+   struct sockaddr_in serv_addr,cli_addr;
+   int portno = 6969;
+   char* sIP = strdup("127.0.0.1");
 
+   while((sockfd = bindIpp(sIP,portno, &cli_addr,0))<0)
+   {
+      portno++;
+   }
+
+   /* server */
 	if(inet_pton(AF_INET,argv[1],&IP)<1){
       perror("ERROR pasring IP address");
       exit(EXIT_FAILURE);
    	} 
    portno = atoi(argv[2]);
-   /* Create a socket point */
-   sockfd = socket(AF_INET, SOCK_STREAM, 0);
    
    if (sockfd < 0) {
       perror("ERROR opening socket");
       exit(EXIT_FAILURE);
    }
-	struct sockaddr_in serv_addr;
    bzero((char *) &serv_addr, sizeof(serv_addr));
    serv_addr.sin_family = AF_INET;
    serv_addr.sin_addr.s_addr = IP;//htonl(INADDR_LOOPBACK);
@@ -34,19 +42,23 @@ int main(int argc, char** argv) {
    char buffer[MAX_CMD_LEN];
    memset(buffer,0,MAX_CMD_LEN);
    int n;
+   int nt;
    int q=0;
    char* token[3];
+   char* msg = "ftp> ";
    while(q!=1)
    {
-   		printf("ftp> ");
+   		//printf("ftp> ");
+         write(1,msg,5);
    		n = read(STDIN_FILENO,buffer,MAX_CMD_LEN); // returns counted characters, exclude \0
-   		splitString(" ",buffer,token);
-   		if(sendCMD(sockfd,token[0],token[1],&serv_addr)==221)
+   		nt = splitString(" ",buffer,token);
+   		if(sendCMD(sockfd,token[0],token[1],&cli_addr)==221)
    		{
    			q = 1;
    		}
+   		freeTokens(token,nt);
    }
 
-
+   free(sIP);
 	return 0;
 }

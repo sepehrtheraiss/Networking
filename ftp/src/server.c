@@ -6,7 +6,9 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 	struct sockaddr_in serv_addr,cli_addr;
-	int sockfd = bindIpp("0.0.0.0",atoi(argv[2]),&serv_addr,0);
+	socklen_t clilen;
+	char* sIP = strdup("127.0.0.1");
+	int sockfd = bindIpp(sIP,atoi(argv[1]),&serv_addr,0);
 
 	listen(sockfd,5);
 	while(1)
@@ -14,8 +16,9 @@ int main(int argc, char** argv) {
 		int clisockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
 		if(fork()==0)
 		{
-			while(recvCMD(int sockfd,struct sockaddr_in* cli_addr) != 221);
+			while(recvCMD(sockfd,&cli_addr) != 221);
 		}			
 	}
+	free(sIP);
 	return 0;
 }

@@ -44,29 +44,30 @@ off_t recvFile(int sockfd,char* buff,int fd);
  * if it is a retrivial type of command it will fork then open the data port
  * if there was an issue on the server side a reply from the server will kill the child
  */
-void sendCMD(int sockfd,char* cmd,char* args,struct sockaddr_in* cli_addr);
+int sendCMD(int sockfd,char* cmdBuff,char* args,struct sockaddr_in* cli_addr);
 /* 
  * formats the command with the recvived args then checks for error checking
  * if it is a retrivial type of command it will fork then open the data port
  * if there was an issue on the server side a reply from the server will kill the child
  */
-void recvCMD(int sockfd,struct sockaddr_in* cli_addr);
+int recvCMD(int sockfd,struct sockaddr_in* cli_addr);
 
 /* Helper functions */
 
 /*
  * checks for error validation then returns the status code. Checks in this order:
- * 1. 500: syntax cmd
+ * 1. 500: syntax cmdBuff
  * 2. 501: syntax args
  * 3. 425: can't open data port
  * 4. 200: ok
  * 5. 452: Error writing a file is special 
  */
-int errorCode(char* cmd,char* args);
-/* inserts the actual cmd into cmd */
-void strCMD(char* cmd);
-/* returns the corresponding macro for cmd */
-int wCMD(char* cmd);
+int errorCode(char* cmdBuff,char* args,struct sockaddr_in* addr);
+/* inserts the actual cmdBuff into cmdBuff */
+void strCMD(char* cmdBuff);
+/* returns the corresponding macro for cmdBuff */
+int wCMD(char* cmdBuff);
 int splitString(char* c,char* str,char** buffer);
 void freeTokens(char** buffer,int ntoks);
+void errorCheck(int cond, char* errmsg, int mode);
 #endif

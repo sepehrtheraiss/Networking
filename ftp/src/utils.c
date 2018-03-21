@@ -42,13 +42,14 @@ int bindIpp(char* ip,int port, struct sockaddr_in* addr,int mode)
 
     return sockfd;
 }
-int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
 int conn(int sockfd,struct sockaddr_in* addr)
 {
    if (connect(sockfd, (struct sockaddr*)addr, sizeof((*addr))) < 0) {
       perror("ERROR connecting");
       return -1;
    }
+   return 0;
 }
 /* void append() this function will be used for huge files such that it calls sendFile * n times because its too big to fit in memory */
 
@@ -98,10 +99,11 @@ off_t recvFile(int sockfd,char* buff,int fd)
         
     return bytes_read;
 }
-void dealWithServer(char* cmd,char* args,struct sockaddr_in* cli_addr)
+void dealWithServer(char* cmdBuff,char* args,struct sockaddr_in* cli_addr)
 {
   struct sockaddr_in data_adrr,serv_addr;
-    memcpy(data_adrr,(*cli_addr),sizeof(data_adrr));
+  char* token[4];
+    memcpy(&data_adrr,cli_addr,sizeof(data_adrr));
     data_adrr.sin_port += 1;
     int dsockfd;
     dsockfd = bindIpp(0,0,&data_adrr,1);
@@ -121,14 +123,14 @@ void dealWithServer(char* cmd,char* args,struct sockaddr_in* cli_addr)
     socklen_t servlen = sizeof(serv_addr);
     int ssockfd = accept(dsockfd, (struct sockaddr *)&serv_addr, &servlen);
     char buffer[BUFF_SIZE];
-    if(wCMD(cmd)==QUIT)
+    if(wCMD(cmdBuff)==QUIT)
         exit(1);
-    if(wCMD(cmd)==LIST)
+    if(wCMD(cmdBuff)==LIST)
     {
       read(ssockfd,buffer,BUFF_SIZE);
       printf("%s",buffer);
     }
-    else if(wCMD(cmd)==RETR)
+    else if(wCMD(cmdBuff)==RETR)
     {
       errorCheck(args == NULL, "sendCMD: args is null\n", 0);
       int fd = open(args,O_TRUNC | O_CREAT | O_WRONLY | O_APPEND);
@@ -136,7 +138,7 @@ void dealWithServer(char* cmd,char* args,struct sockaddr_in* cli_addr)
       close(ssockfd);
       close(fd);
     }
-    else if(wCMD(cmd)==STOR)
+    else if(wCMD(cmdBuff)==STOR)
     {
       int fd = open(token[2],O_RDONLY);
       struct stat buf;
@@ -154,17 +156,18 @@ void dealWithServer(char* cmd,char* args,struct sockaddr_in* cli_addr)
  * then binds to data port and reads
  * returns the status code
  */
-int sendCMD(int sockfd,char* cmd,char* args,struct sockaddr_in* cli_addr)
+int sendCMD(int sockfd,char* cmdBuff,char* args,struct sockaddr_in* cli_addr)
 {
 
   char buff[MAX_ARGS_LEN];
   memset(buff,0,MAX_ARGS_LEN);
-  int n = snprintf(buff,MAX_CMD_LEN,"CMD:%s:%s",cmd,args);
+  //int n = snprintf(buff,MAX_CMD_LEN,"CMD:%s:%s",cmdBuff,args);
+  int n = sprintf(buff,"CMD:%s:%s",cmdBuff,args);
   pid_t dPort;
   if(n >= MAX_CMD_LEN)
   {
     fprintf(stderr, "sendCMD > MAX_CMD_LEN:%s\n",buff);
-    return;
+    return -1;
   }
   write(sockfd,buff,MAX_CMD_LEN);
   dPort = fork();
@@ -174,7 +177,7 @@ int sendCMD(int sockfd,char* cmd,char* args,struct sockaddr_in* cli_addr)
     printf("status code:%s\n",buff);
     if(buff[0] == '2')
     {
-      if(buff[1] = '0' && buff[2] == '0')
+      if(buff[1] == '0' && buff[2] == '0')
       {
         printf("200: Command Ok\n");
         return 200;
@@ -215,9 +218,9 @@ int sendCMD(int sockfd,char* cmd,char* args,struct sockaddr_in* cli_addr)
   }
   else if(dPort == 0)
   {
-    dealWithServer(cmd,args,cli_addr);
+    dealWithServer(cmdBuff,args,cli_addr);
   } 
-
+  return 0;
 
 
 }
@@ -234,17 +237,18 @@ int recvCMD(int sockfd,struct sockaddr_in* cli_addr)
   read(sockfd,buff,MAX_CMD_LEN);
   /* 
    * 0: CMD
-   * 1: cmd
+   * 1: cmdBuff
    * 2: args
    * 3: NULL
    */
   char* token[4]; 
-  int n = splitString(":",buff,tokens);
+  int n;
+  int nt =splitString(":",buff,token);
 
-  printf("nt:%i\nt1: %s\nt2:%s\n",n,token[0],token[1],token[2]);
+  printf("nt:%i\nt1: %s\nt2:%s %s\n",n,token[0],token[1],token[2]);
   /* data port */
   struct sockaddr_in data_adrr;
-  memcpy(data_adrr,(*cli_addr),sizeof(data_adrr));
+  memcpy(&data_adrr,cli_addr,sizeof(data_adrr));
   data_adrr.sin_port += 1;
   int datafd = socket(AF_INET, SOCK_STREAM, 0);
   char buffer[BUFF_SIZE];
@@ -252,35 +256,37 @@ int recvCMD(int sockfd,struct sockaddr_in* cli_addr)
 
   int which_CMD = wCMD(token[1]);
   int code = errorCode(token[1],token[2],cli_addr);
-  printf("code:%s\n",code);
+  printf("code:%i\n",code);
   if(code == 221)
   {
     char* good = "221";
     write(sockfd,good,3);
-    freeTokens(tokens,n);
+    freeTokens(token,nt);
     return code;
   }
   /* good proceed */
   if(code == 200)
   {
+    char cmdBuff[MAX_CMD_LEN];
+    int fd; 
     switch(which_CMD)
     {
       case LIST:
-        char cmd[MAX_CMD_LEN];
-        memset(cmd,0,MAX_CMD_LEN);
-        snprintf(cmd,MAX_CMD_LEN,"ls %s",token[2]);
+        memset(cmdBuff,0,MAX_CMD_LEN);
+        //snprintf(cmdBuff,MAX_CMD_LEN,"ls %s",token[2]);
+        sprintf(cmdBuff,"ls %s",token[2]);
         
-        printf("data conn:%i\n",conn(datafd,data_adrr));
+        printf("data conn:%i\n",conn(datafd,&data_adrr));
 
-        FILE* ex = popen(cmd);
+        FILE* ex = popen(cmdBuff,"r");
         while((n = fread(buffer,1,BUFF_SIZE,ex)) > 0){
-          ex[n]=0;
+          buffer[n]=0;
           write(datafd,buffer,BUFF_SIZE);
         }
-        pclose(file);
+        pclose(ex);
         break;
       case RETR:
-        int fd = open(token[2],O_RDONLY);
+        fd = open(token[2],O_RDONLY);
         struct stat buf;
         fstat(fd,&buf);
         read(fd,buffer,buf.st_size);
@@ -289,7 +295,7 @@ int recvCMD(int sockfd,struct sockaddr_in* cli_addr)
         close(fd);
         break;
       case STOR:
-        int fd = open(token[2],O_TRUNC | O_CREAT | O_WRONLY | O_APPEND);
+        fd = open(token[2],O_TRUNC | O_CREAT | O_WRONLY | O_APPEND);
         recvFile(sockfd,buffer,datafd);
         close(datafd);
         close(fd);
@@ -305,25 +311,26 @@ int recvCMD(int sockfd,struct sockaddr_in* cli_addr)
   }
   else
   {
-    snprintf(buff,,"%i",code);
+    //snprintf(buff,,"%i",code);
+    sprintf(buff,"%i",code);
     write(sockfd,buff,3);
   }
-  freeTokens(tokens,n);
+  freeTokens(token,nt);
   return code;
   
 }
 /*
  * checks for error validation then returns the status code. Checks in this order:
- * 1. 500: syntax cmd
+ * 1. 500: syntax cmdBuff
  * 2. 501: syntax args
  * 3. 425: can't open data port
  * 4. 200: ok
  * 5. 452: Error writing a file is special error checking
  */
-int errorCode(char* cmd,char* args,struct sockaddr_in* addr)
+int errorCode(char* cmdBuff,char* args,struct sockaddr_in* addr)
 {
-  int code = wCMD(cmd);
-  /* known cmd */
+  int code = wCMD(cmdBuff);
+  /* known cmdBuff */
   if(code == -1)
   {
     return 500;
@@ -362,27 +369,27 @@ int errorCode(char* cmd,char* args,struct sockaddr_in* addr)
     return 200;
   fprintf(stderr, "erroCode: error not implemented \n");
 }
-void strCMD(char* cmd)
+void strCMD(char* cmdBuff)
 {
-  errorCheck((cmd == NULL), "strCMD NULL\n", 0);
-  if(strcmp(cmd,"ls")==0)
-      memcpy(cmd,"LIST",4);
-  else if(strcmp(cmd,"get")==0)
-      memcpy(cmd,"RETR",4);
-  else if(strcmp(cmd,"put")==0)
-      memcpy(cmd,"STOR",4);
+  errorCheck((cmdBuff == NULL), "strCMD NULL\n", 0);
+  if(strcmp(cmdBuff,"ls")==0)
+      memcpy(cmdBuff,"LIST",4);
+  else if(strcmp(cmdBuff,"get")==0)
+      memcpy(cmdBuff,"RETR",4);
+  else if(strcmp(cmdBuff,"put")==0)
+      memcpy(cmdBuff,"STOR",4);
 }
-/* which cmd */
-int wCMD(char* cmd)
+/* which cmdBuff */
+int wCMD(char* cmdBuff)
 {
-  errorCheck((cmd == NULL), "wCMD NULL\n", 0);
-  if(strcmp(cmd,"LIST")==0)
+  errorCheck((cmdBuff == NULL), "wCMD NULL\n", 0);
+  if(strcmp(cmdBuff,"LIST")==0)
       return LIST;
-  if(strcmp(cmd,"RETR")==0)
+  if(strcmp(cmdBuff,"RETR")==0)
       return RETR;
-  if(strcmp(cmd,"STOR")==0)
+  if(strcmp(cmdBuff,"STOR")==0)
       return STOR;
-  if(strcmp(cmd,"QUIT")==0) 
+  if(strcmp(cmdBuff,"QUIT")==0) 
       return QUIT;
   return -1;
 }
