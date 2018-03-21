@@ -169,6 +169,7 @@ int sendCMD(int sockfd,char* cmdBuff,char* args,struct sockaddr_in* cli_addr)
   char ACMD[5];
   memcpy(ACMD,cmdBuff,3);
   ACMD[4]=0;
+  ACMD[3]=0;
   if(ACMD[2]=='\n')
   {
     ACMD[2]=0;
