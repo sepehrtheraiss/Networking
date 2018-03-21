@@ -58,9 +58,10 @@ int recvCMD(int sockfd,struct sockaddr_in* cli_addr);
  * checks for error validation then returns the status code. Checks in this order:
  * 1. 500: syntax cmdBuff
  * 2. 501: syntax args
- * 3. 425: can't open data port
- * 4. 200: ok
- * 5. 452: Error writing a file is special 
+ * 3. 221: good bye
+ * 4. 425: can't open data port
+ * 5. 200: ok
+ * 6. 452: Error writing a file is special 
  */
 int errorCode(char* cmdBuff,char* args,struct sockaddr_in* addr);
 /* inserts the actual cmdBuff into cmdBuff */

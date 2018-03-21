@@ -1,0 +1,46 @@
+The flow of the program goes like so
+
+Protocol: CMD:CMD:args
+maximum command length is 42 with the null terminator
+all return status codes are 3 bytes.
+for data channel only data flows thru and the channel is closed once the 200 ok message is recieved.
+
+server:
+    1. bind
+    2. accept user then fork
+    3. read clients command
+    4. check if the command is valid 
+    5. if so check the data port if its open and if not send error msg to the command port that is not open
+    6. errors will be checked in the following
+     * checks for error validation then returns the status code. Checks in this order:
+     * 1. 500: syntax cmdBuff
+     * 2. 501: syntax args
+     * 3. 221: QUIT good bye
+     * 4. 425: can't open data port
+     * 5. 200: ok
+     * 6. 452: Error writing a file is special
+     error checking is done with the function call errorCode() which returns the corresponding status code
+    7. function wCMD returns the number corresponding to the command 
+    8. recvCMD is the main function for server to first validate then see which command to execute
+    9. if 'ls' it simply opens a pipe executes the command then writes to data port. Once its done it sends the command 200 ok 
+    10. when a transaction needs to take place such as put or get their correspodning function will be called:
+    11. for write it calls send file. if the file is too big it will divide it up by the max buffer size and send chunk by chunk.
+        The problem is the extra left over garbage bytes. To deal with this it will zero out the n left over bytes.
+    12. for get it calls recv bytes: this function is very simple it creates a new file which is appendable and while there is no
+        bytes left to read it reads and on each read it writes it to the file.
+
+client:
+    1. connect
+    2. ftp prompt
+    3. get user command
+    4. fork for data port listen
+    5. server sends the status code to determine the next step to take.
+
+Problems:
+    1. Couldn't couldn't connect server to data channel. on the server side it will says connection refused which is the indication that the port is not
+    open.
+    2. After the server has accepted the client, the port number will always be zero. This resulted me to hard coding the ip and port.
+
+how could I improve this:
+    More time and not due during finals week.
+    Unforchunantly my other class also gave me assignment due finals week resulting me in juggling.

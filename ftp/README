@@ -1,0 +1,38 @@
+Sepehr Raissian
+CMPE-156
+FTP
+
+usage: 
+    ftpserver: usage: ftpserver listen-port
+    ftpclient: usage: ftpclient server-ip server-port
+
+files:
+    README
+    Makefile    make executable ftpclient & ftpserver
+
+folder:
+    bin     executable files
+    docs    documentation
+    include header files
+    obj     obj files
+    src     source codes
+
+./bin:
+ftpclient
+ftpserver
+
+./docs:
+DESIGN
+
+./include:
+utils.h
+
+./obj:
+client.o
+server.o
+utils.o
+
+./src:
+client.c
+server.c
+utils.c     utility functions used in both client and server
