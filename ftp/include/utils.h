@@ -27,6 +27,7 @@
 #define LIST 0
 #define RETR 1
 #define STOR 2
+#define QUIT 3
 /* returns the file descriptor */
 int bindIpp(char* ip,int port, struct sockaddr_in* addr,int mode);
 /* makes connection
@@ -49,7 +50,7 @@ void sendCMD(int sockfd,char* cmd,char* args,struct sockaddr_in* cli_addr);
  * if it is a retrivial type of command it will fork then open the data port
  * if there was an issue on the server side a reply from the server will kill the child
  */
-void recvCMD(int sockfd);
+void recvCMD(int sockfd,struct sockaddr_in* cli_addr);
 
 /* Helper functions */
 

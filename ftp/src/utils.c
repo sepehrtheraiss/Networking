@@ -98,59 +98,9 @@ off_t recvFile(int sockfd,char* buff,int fd)
         
     return bytes_read;
 }
-/* CLEINT
- * sends the command
- * then binds to data port and reads
- */
-void sendCMD(int sockfd,char* cmd,char* args,struct sockaddr_in* cli_addr)
+void dealWithServer(char* cmd,char* args,struct sockaddr_in* cli_addr)
 {
-
-  char buff[MAX_ARGS_LEN];
-  memset(buff,0,MAX_ARGS_LEN);
-  int n = snprintf(buff,MAX_CMD_LEN,"CMD:%s:%s",cmd,args);
-  pid_t dPort;
-  if(n >= MAX_CMD_LEN)
-  {
-    fprintf(stderr, "sendCMD > MAX_CMD_LEN:%s\n",buff);
-    return;
-  }
-  write(sockfd,buff,MAX_CMD_LEN);
-  dPort = fork();
-  if(dPort != 0)
-  {
-    read(sockfd,buff,3);
-    printf("status code:%s\n",buff);
-    if(buff[0] == '2')
-    {
-      printf("Command Ok\n");
-    }
-    else
-    { 
-      if(buff[0] == '5')
-      {
-        if(buff[2]=='0')
-        {
-          printf("500: Syntax error (unrecognized command)\n");
-        }
-        else
-        {
-          printf("501: Syntax error (invalid arguments)\n"); 
-        }
-      }
-      else if(buff[0]=='4')
-      {
-        if(buff[1]=='2' && buff[2]=='5')
-        {
-          printf("425: cant open data connection\n");
-        }
-      }
-    }
-    /* the idea is for the read to wait until the data transmission is compelete or faield */
-    kill(dPort, SIGKILL);
-  }
-  else if(dPort == 0)
-  {
-    struct sockaddr_in data_adrr,serv_addr;
+  struct sockaddr_in data_adrr,serv_addr;
     memcpy(data_adrr,(*cli_addr),sizeof(data_adrr));
     data_adrr.sin_port += 1;
     int dsockfd;
@@ -171,6 +121,8 @@ void sendCMD(int sockfd,char* cmd,char* args,struct sockaddr_in* cli_addr)
     socklen_t servlen = sizeof(serv_addr);
     int ssockfd = accept(dsockfd, (struct sockaddr *)&serv_addr, &servlen);
     char buffer[BUFF_SIZE];
+    if(wCMD(cmd)==QUIT)
+        exit(1);
     if(wCMD(cmd)==LIST)
     {
       read(ssockfd,buffer,BUFF_SIZE);
@@ -195,7 +147,75 @@ void sendCMD(int sockfd,char* cmd,char* args,struct sockaddr_in* cli_addr)
       close(fd);
     }
     close(dsockfd);
-    close(ssockfd);
+    close(ssockfd);  
+}
+/* CLEINT
+ * sends the command
+ * then binds to data port and reads
+ * returns the status code
+ */
+int sendCMD(int sockfd,char* cmd,char* args,struct sockaddr_in* cli_addr)
+{
+
+  char buff[MAX_ARGS_LEN];
+  memset(buff,0,MAX_ARGS_LEN);
+  int n = snprintf(buff,MAX_CMD_LEN,"CMD:%s:%s",cmd,args);
+  pid_t dPort;
+  if(n >= MAX_CMD_LEN)
+  {
+    fprintf(stderr, "sendCMD > MAX_CMD_LEN:%s\n",buff);
+    return;
+  }
+  write(sockfd,buff,MAX_CMD_LEN);
+  dPort = fork();
+  if(dPort != 0)
+  {
+    read(sockfd,buff,3);
+    printf("status code:%s\n",buff);
+    if(buff[0] == '2')
+    {
+      if(buff[1] = '0' && buff[2] == '0')
+      {
+        printf("200: Command Ok\n");
+        return 200;
+      }
+      
+      else
+      {
+        printf("221: GoodBye\n");
+        return 221;
+      }
+        
+    }
+    else
+    { 
+      if(buff[0] == '5')
+      {
+        if(buff[2]=='0')
+        {
+          printf("500: Syntax error (unrecognized command)\n");
+          return 500;
+        }
+        else
+        {
+          printf("501: Syntax error (invalid arguments)\n"); 
+        }
+      }
+      else if(buff[0]=='4')
+      {
+        if(buff[1]=='2' && buff[2]=='5')
+        {
+          printf("425: cant open data connection\n");
+          return 425;
+        }
+      }
+    }
+    /* the idea is for the read to wait until the data transmission is compelete or faield */
+    kill(dPort, SIGKILL);
+  }
+  else if(dPort == 0)
+  {
+    dealWithServer(cmd,args,cli_addr);
   } 
 
 
@@ -205,8 +225,9 @@ void sendCMD(int sockfd,char* cmd,char* args,struct sockaddr_in* cli_addr)
  * formats the command with the recvived args then checks for error checking
  * if it is a retrivial type of command it will fork then open the data port
  * if there was an issue on the server side a reply from the server will kill the child
+ * returns status code
  */
-void recvCMD(int sockfd,struct sockaddr_in* cli_addr)
+int recvCMD(int sockfd,struct sockaddr_in* cli_addr)
 {
   char buff[MAX_CMD_LEN];
   memset(buff,0,MAX_CMD_LEN);
@@ -232,6 +253,13 @@ void recvCMD(int sockfd,struct sockaddr_in* cli_addr)
   int which_CMD = wCMD(token[1]);
   int code = errorCode(token[1],token[2],cli_addr);
   printf("code:%s\n",code);
+  if(code == 221)
+  {
+    char* good = "221";
+    write(sockfd,good,3);
+    freeTokens(tokens,n);
+    return code;
+  }
   /* good proceed */
   if(code == 200)
   {
@@ -281,6 +309,7 @@ void recvCMD(int sockfd,struct sockaddr_in* cli_addr)
     write(sockfd,buff,3);
   }
   freeTokens(tokens,n);
+  return code;
   
 }
 /*
@@ -326,7 +355,11 @@ int errorCode(char* cmd,char* args,struct sockaddr_in* addr)
     }
     close(sockfd);
   }
-  return 200;
+  if(code == QUIT)
+  {
+    return 221;
+  }
+    return 200;
   fprintf(stderr, "erroCode: error not implemented \n");
 }
 void strCMD(char* cmd)
@@ -349,6 +382,8 @@ int wCMD(char* cmd)
       return RETR;
   if(strcmp(cmd,"STOR")==0)
       return STOR;
+  if(strcmp(cmd,"QUIT")==0) 
+      return QUIT;
   return -1;
 }
 
