@@ -14,15 +14,58 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <math.h>
+#include <signal.h>
 
 #define BUFF_SIZE 1024
+#define MAX_ARGS_LEN 32
+/* 
+ * CMD:CMDD(4+4)
+ * :args (1+32)
+ * 0:+1 
+ */
+#define MAX_CMD_LEN 42
+#define LIST 0
+#define RETR 1
+#define STOR 2
 /* returns the file descriptor */
-int bindIpp(char* ip,int port, struct sockaddr_in* addr);
-/* makes connection */
-void conn(int sockfd,struct sockaddr_in* addr);
+int bindIpp(char* ip,int port, struct sockaddr_in* addr,int mode);
+/* makes connection
+ * returns -1 on fail
+ */
+int conn(int sockfd,struct sockaddr_in* addr);
 /* if size > buff_size => chuncks = buff_size/size */
 /* returns num bytes send */
-off_t sendFile(int fd,char* buff,off_t size);
+off_t sendFile(int sockfd,char* buff,off_t size);
 /* returns num bytes read */
 off_t recvFile(int sockfd,char* buff,int fd);
+/* 
+ * formats the command with args then sends it
+ * if it is a retrivial type of command it will fork then open the data port
+ * if there was an issue on the server side a reply from the server will kill the child
+ */
+void sendCMD(int sockfd,char* cmd,char* args,struct sockaddr_in* cli_addr);
+/* 
+ * formats the command with the recvived args then checks for error checking
+ * if it is a retrivial type of command it will fork then open the data port
+ * if there was an issue on the server side a reply from the server will kill the child
+ */
+void recvCMD(int sockfd);
+
+/* Helper functions */
+
+/*
+ * checks for error validation then returns the status code. Checks in this order:
+ * 1. 500: syntax cmd
+ * 2. 501: syntax args
+ * 3. 425: can't open data port
+ * 4. 200: ok
+ * 5. 452: Error writing a file is special 
+ */
+int errorCode(char* cmd,char* args);
+/* inserts the actual cmd into cmd */
+void strCMD(char* cmd);
+/* returns the corresponding macro for cmd */
+int wCMD(char* cmd);
+int splitString(char* c,char* str,char** buffer);
+void freeTokens(char** buffer,int ntoks);
 #endif
