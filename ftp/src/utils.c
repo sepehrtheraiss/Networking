@@ -174,8 +174,16 @@ int sendCMD(int sockfd,char* cmdBuff,char* args,struct sockaddr_in* cli_addr)
   {
     ACMD[2]=0;
   }
+
   /* 4 bytes command */
   strCMD(ACMD);
+  if(ACMD[0]=='q')
+  {
+    ACMD[0]='Q';
+    ACMD[1]='U';
+    ACMD[2]='I';
+    ACMD[4]='T';
+  }
   int n = sprintf(buff,"CMD:%s:%s",ACMD,args);
   pid_t dPort;
   if(n >= MAX_CMD_LEN)
