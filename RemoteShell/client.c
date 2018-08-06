@@ -22,18 +22,28 @@ int main(int argc,char** argv)
     bool e = 0;
     while(!e)
     {
-        scanf("%s",cmd);
-        if(strncmp(cmd,"exit",BUFFSIZE) == 0){
-            e = 1;
+        fputs("client$ ",stdout);
+        if(!fgets(cmd,BUFFSIZE,stdin))
+        {
+            perror("fgets: ");
         }
-        sendMSG(&rmtHost,cmd,strnlen(cmd,BUFFSIZE)+1);
-        if(!e){
-            readMSG(&rmtHost,(void**)&buffer);
-            puts(buffer);
-            free(buffer);
-            buffer = NULL;
+        else{
+            if(strncmp(cmd,"exit",BUFFSIZE) == 0){
+                e = 1;
+            }
+            if((buffer=strchr(cmd,'\n')) != nil )
+            {
+                *buffer = 0;
+                
+            }
+            sendMSG(&rmtHost,cmd,strnlen(cmd,BUFFSIZE)+1);
+            if(!e){
+                readMSG(&rmtHost,(void**)&buffer);
+                puts(buffer);
+                free(buffer);
+                buffer = NULL;
+            }
         }
-
     }
     close(rmtHost.sockfd);
     return 0;
