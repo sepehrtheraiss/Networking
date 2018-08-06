@@ -17,8 +17,24 @@ int main(int argc,char** argv)
         fprintf(stderr,"error: initSock()\n");
         return -1;
     }
-    char msg[]="hello from the other side";
-    sendMSG(&rmtHost,msg,sizeof(msg));
+    char cmd[BUFFSIZE];
+    char* buffer;
+    bool e = 0;
+    while(!e)
+    {
+        scanf("%s",cmd);
+        if(strncmp(cmd,"exit",BUFFSIZE) == 0){
+            e = 1;
+        }
+        sendMSG(&rmtHost,cmd,strnlen(cmd,BUFFSIZE)+1);
+        if(!e){
+            readMSG(&rmtHost,(void**)&buffer);
+            puts(buffer);
+            free(buffer);
+            buffer = NULL;
+        }
+
+    }
     close(rmtHost.sockfd);
     return 0;
 }

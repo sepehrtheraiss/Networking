@@ -101,21 +101,36 @@ char* sendMSG(struct host* dst,void* payload,unsigned int size)
     memset(packetSize,'0',10-strlen(hex)); 
     /* offset after extra zeros 0x0 */
     memcpy(packetSize+(10-strlen(hex)),hex,strlen(hex));
-    //printf("hex: %s dec: %d strlen: %lu\n",hex,size,strlen(hex));
-    //printf("packet size: %s sizeof:%lu \n",packetSize,sizeof(packetSize));
-    write(dst->sockfd,packetSize,sizeof(packetSize));
-    write(dst->sockfd,payload,size);
-    close(dst->sockfd);
+
+    fprintf(stderr,"debug: sendMSG: hex: %s dec: %d \n",hex,size);
+
+    if(write(dst->sockfd,packetSize,sizeof(packetSize))<0)
+    {
+        perror("sendMSG write: ");
+    }
+    //puts(payload);
+    if(write(dst->sockfd,payload,size)<0)
+    {
+        perror("sendMSG write: ");
+    }
     return nil;
 }
 /* reads pakcet, if tcp bool on returns error msg on error else udp return nil */
-char* readMSG(struct host* dst,void* payload)
+char* readMSG(struct host* dst,void** payload)
 {
-    read(dst->sockfd,payload,11);
-    char* hex = strrchr(payload,'0');
+    char buffer[11];
+    if(read(dst->sockfd,buffer,11)<0)
+    {
+        perror("read payload size: ");
+    }
+
+    char* hex = strrchr(buffer,'0');
     unsigned int payloadSize = (unsigned int)strtol(hex, (char **)NULL, 16);
-//    printf("read: payload size: %s %d\n",hex,payloadSize);
-    read(dst->sockfd,payload,payloadSize);
-//    printf("payload: %s\n",payload);
+    fprintf(stderr,"debug: readMSG: payload size hex: %s dec:%u\n",hex,payloadSize);
+    *payload = malloc(sizeof(char)*payloadSize);
+    if(read(dst->sockfd,*payload,payloadSize)<0)
+    {
+        perror("read payload: ");   
+    }
     return nil;
 }

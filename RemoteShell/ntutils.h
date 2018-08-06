@@ -39,6 +39,7 @@ void closeRmtHost(struct host* h);
 pid_t acceptSession(struct host* src, struct host* dst);
 /* sends pakcet, if tcp bool on returns error msg else udp return nil */
 char* sendMSG(struct host* dst,void* payload,unsigned int size);
-char* readMSG(struct host* dst,void* payload);
+/* dynamically allocates buffer for payload */
+char* readMSG(struct host* dst,void** payload);
 /* */
 #endif

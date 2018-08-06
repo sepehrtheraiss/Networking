@@ -1,4 +1,7 @@
 #include "ntutils.h"
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 int main(int argc,char** argv)
 {
     if(argc != 3)
@@ -7,13 +10,12 @@ int main(int argc,char** argv)
         return -1;
     }
 
-    printf("[server pid: %i]\n",getpid());
-
     struct host localhost = {
         .IPv4Str = argv[1],
         .portStr = argv[2],
         .proto = TCP
     };
+
     if (!initSock(&localhost))
     {
         fprintf(stderr,"error: initSock()\n");
@@ -21,20 +23,67 @@ int main(int argc,char** argv)
     }
     listen(localhost.sockfd,BACKLOG);
     struct host rmtHost[BACKLOG];
+    char pwd[BUFFSIZE];
+    if(!getcwd(pwd,BUFFSIZE))
+    {
+        perror("getpwd: ");
+    }
+    fprintf(stderr,"[pwd: %s]\n",pwd);
+    printf("[server pid: %i]\n",getpid());
     while(true){
         pid_t pid = acceptSession(&localhost,rmtHost);
-        printf("[pid: %i]\n",pid);
+        fprintf(stderr,"[pid: %i]\n",pid);
+
         if(pid == 0){
-            char buffer[BUFFSIZE];
-            readMSG(rmtHost,buffer);
-            printf("%s\n",buffer);
+            snprintf(pwd,BUFFSIZE,"%s/tmp.%i",pwd,getpid());
+            int fd = open(pwd, O_CREAT | O_TRUNC |  O_WRONLY, 0000666);
+            if(fd < 0)
+            {
+                perror("creat tmp: ");
+                exit(1);
+            }
+            close(fd);
+            bool e = 0;
+            while(!e){
+                char* buffer = NULL;
+                char redirect[BUFFSIZE];
+                if(readMSG(rmtHost,(void**)&buffer) == nil)
+                {
+                    fprintf(stderr,"[cmd: %s]\n",buffer);
+                    if(strcmp(buffer,"exit") != 0)
+                    {
+                        snprintf(redirect,BUFFSIZE,"%s > %s",buffer,pwd);
+                        if(system(redirect) > -1){
+                            fprintf(stderr,"debug: open tmp: %s\n",pwd);
+                            fd = open(pwd,O_RDONLY);
+                            struct stat st;
+                            if(fstat(fd,&st)<0)
+                            {
+                                perror("fstat: ");
+                            }
+                            /*
+                            fprintf(stderr,"debug: st_size: %lld\n",st.st_size);
+                            fprintf(stderr,"debug: st_blocks: %lld\n",st.st_blocks);
+                            fprintf(stderr,"debug: st_uid: %u\n",st.st_uid);
+                            */
+                            buffer = realloc(buffer,st.st_size);
+                            read(fd,buffer,st.st_size);
+                            sendMSG(rmtHost,buffer,st.st_size+1);
+                            close(fd);
+                        }
+                        else{
+                            perror("system failed");
+                        }
+                    }
+                    else{
+                        e = 1;
+                    }
+                    free(buffer);
+                    buffer = NULL;
+                }
+            }
             exit(EXIT_SUCCESS);
         }
-        /*
-        else{
-            wait(nil); 
-        }
-        */
     }
     closeRmtHost(rmtHost);
     close(localhost.sockfd);
