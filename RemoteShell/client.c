@@ -28,12 +28,13 @@ int main(int argc,char** argv)
             perror("fgets: ");
         }
         else{
-            if(strncmp(cmd,"exit",BUFFSIZE) == 0){
-                e = 1;
-            }
             if((buffer=strchr(cmd,'\n')) != nil )
             {
                 *buffer = 0;
+            }
+
+            if(strncmp(cmd,"exit",BUFFSIZE) == 0){
+                e = 1;
             }
             sendMSG(&rmtHost,cmd,strnlen(cmd,BUFFSIZE)+1);
             if(!e){

@@ -52,7 +52,7 @@ int main(int argc,char** argv)
                     fprintf(stderr,"[cmd: %s]\n",buffer);
                     if(strcmp(buffer,"exit") != 0)
                     {
-                        snprintf(redirect,BUFFSIZE,"%s > %s",buffer,pwd);
+                        snprintf(redirect,BUFFSIZE,"%s &> %s",buffer,pwd);
                         if(system(redirect) > -1){
                             //fprintf(stderr,"debug: open tmp: %s\n",pwd);
                             fd = open(pwd,O_RDONLY);
