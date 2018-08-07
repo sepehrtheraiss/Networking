@@ -1,4 +1,4 @@
-#include "ntutils.h"
+#include "../include/ntutils.h"
 int main(int argc,char** argv)
 {
     if(argc != 3)

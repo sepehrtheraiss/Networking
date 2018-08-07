@@ -1,4 +1,4 @@
-#include "ntutils.h"
+#include "../include/ntutils.h"
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -35,7 +35,7 @@ int main(int argc,char** argv)
         fprintf(stderr,"[pid: %i]\n",pid);
 
         if(pid == 0){
-            snprintf(pwd,BUFFSIZE,"%s/tmp.%i",pwd,getpid());
+            snprintf(pwd,BUFFSIZE,"%s/tmp/tmp.%i",pwd,getpid());
             int fd = open(pwd, O_CREAT | O_TRUNC |  O_WRONLY, 0000666);
             if(fd < 0)
             {
@@ -54,7 +54,6 @@ int main(int argc,char** argv)
                     {
                         snprintf(redirect,BUFFSIZE,"%s &> %s",buffer,pwd);
                         if(system(redirect) > -1){
-                            //fprintf(stderr,"debug: open tmp: %s\n",pwd);
                             fd = open(pwd,O_RDONLY);
                             struct stat st;
                             if(fstat(fd,&st)<0)
@@ -63,7 +62,6 @@ int main(int argc,char** argv)
                             }
                             buffer = realloc(buffer,st.st_size);
                             read(fd,buffer,st.st_size);
-                            puts(buffer);
                             buffer[st.st_size] = 0;
                             sendMSG(rmtHost,buffer,st.st_size+1);
                             close(fd);

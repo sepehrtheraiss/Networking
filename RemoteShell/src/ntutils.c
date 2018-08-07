@@ -1,4 +1,4 @@
-#include "ntutils.h"
+#include "../include/ntutils.h"
 /*
 struct host{
     uint32_t IPv4;
@@ -102,7 +102,7 @@ char* sendMSG(struct host* dst,void* payload,unsigned int size)
     /* offset after extra zeros 0x0 */
     memcpy(packetSize+(10-strlen(hex)),hex,strlen(hex));
 
-    fprintf(stderr,"debug: sendMSG: hex: %s dec: %d \n",hex,size);
+    //fprintf(stderr,"debug: sendMSG: hex: %s dec: %d \n",hex,size);
 
     if(write(dst->sockfd,packetSize,sizeof(packetSize))<0)
     {
@@ -125,7 +125,7 @@ char* readMSG(struct host* dst,void** payload)
     }
     char* hex = strchr(buffer,'x');
     unsigned int payloadSize = (unsigned int)strtol(hex+1, (char **)NULL, 16);
-    fprintf(stderr,"debug: readMSG: payload size hex: %s dec:%u\n",hex,payloadSize);
+    //fprintf(stderr,"debug: readMSG: payload size hex: %s dec:%u\n",hex,payloadSize);
     *payload = malloc(sizeof(char)*payloadSize);
     if(read(dst->sockfd,*payload,payloadSize)<0)
     {

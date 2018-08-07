@@ -1,23 +1,23 @@
 FLAG = -std=c99 -Wall
 SRC  = server.c ntutils.c
-EXE  = server client
+EXE  = bin/server bin/client
 
 all: $(EXE)
 
-server: server.o ntutils.o
-	cc -o server server.o ntutils.o 
+bin/server: obj/server.o obj/ntutils.o
+	cc -o bin/server obj/server.o obj/ntutils.o 
 
-server.o: server.c ntutils.h
-	cc -c $(FLAG) server.c
+obj/server.o: src/server.c include/ntutils.h
+	cc -c $(FLAG) src/server.c -o obj/server.o
 
-client: client.o ntutils.o
-	cc -o client client.o ntutils.o 
+bin/client: obj/client.o obj/ntutils.o
+	cc -o bin/client obj/client.o obj/ntutils.o 
 
-client.o: client.c ntutils.h
-	cc -c $(FLAG) client.c
+obj/client.o: src/client.c include/ntutils.h
+	cc -c $(FLAG) src/client.c -o obj/client.o
 
-ntutils.o: ntutils.c ntutils.h 
-	cc -c $(FLAG) ntutils.c
+obj/ntutils.o: src/ntutils.c include/ntutils.h 
+	cc -c $(FLAG) src/ntutils.c -o obj/ntutils.o
 
 clean:
-	rm -f $(EXE) *.o
+	rm -f $(EXE) obj/*.o

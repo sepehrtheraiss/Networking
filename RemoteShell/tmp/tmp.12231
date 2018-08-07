@@ -1,0 +1,190 @@
+
+MALLOC(3)                BSD Library Functions Manual                MALLOC(3)
+
+NNAAMMEE
+     ccaalllloocc, ffrreeee, mmaalllloocc, rreeaalllloocc, rreeaallllooccff, vvaalllloocc -- memory allocation
+
+SSYYNNOOPPSSIISS
+     ##iinncclluuddee <<ssttddlliibb..hh>>
+
+     _v_o_i_d _*
+     ccaalllloocc(_s_i_z_e___t _c_o_u_n_t, _s_i_z_e___t _s_i_z_e);
+
+     _v_o_i_d
+     ffrreeee(_v_o_i_d _*_p_t_r);
+
+     _v_o_i_d _*
+     mmaalllloocc(_s_i_z_e___t _s_i_z_e);
+
+     _v_o_i_d _*
+     rreeaalllloocc(_v_o_i_d _*_p_t_r, _s_i_z_e___t _s_i_z_e);
+
+     _v_o_i_d _*
+     rreeaallllooccff(_v_o_i_d _*_p_t_r, _s_i_z_e___t _s_i_z_e);
+
+     _v_o_i_d _*
+     vvaalllloocc(_s_i_z_e___t _s_i_z_e);
+
+DDEESSCCRRIIPPTTIIOONN
+     The mmaalllloocc(), ccaalllloocc(), vvaalllloocc(), rreeaalllloocc(), and rreeaallllooccff() functions
+     allocate memory.  The allocated memory is aligned such that it can be
+     used for any data type, including AltiVec- and SSE-related types.  The
+     ffrreeee() function frees allocations that were created via the preceding
+     allocation functions.
+
+     The mmaalllloocc() function allocates _s_i_z_e bytes of memory and returns a
+     pointer to the allocated memory.
+
+     The ccaalllloocc() function contiguously allocates enough space for _c_o_u_n_t
+     objects that are _s_i_z_e bytes of memory each and returns a pointer to the
+     allocated memory.  The allocated memory is filled with bytes of value
+     zero.
+
+     The vvaalllloocc() function allocates _s_i_z_e bytes of memory and returns a
+     pointer to the allocated memory.  The allocated memory is aligned on a
+     page boundary.
+
+     The rreeaalllloocc() function tries to change the size of the allocation pointed
+     to by _p_t_r to _s_i_z_e, and returns _p_t_r.  If there is not enough room to
+     enlarge the memory allocation pointed to by _p_t_r, rreeaalllloocc() creates a new
+     allocation, copies as much of the old data pointed to by _p_t_r as will fit
+     to the new allocation, frees the old allocation, and returns a pointer to
+     the allocated memory.  If _p_t_r is NULL, rreeaalllloocc() is identical to a call
+     to mmaalllloocc() for _s_i_z_e bytes.  If _s_i_z_e is zero and _p_t_r is not NULL, a new,
+     minimum sized object is allocated and the original object is freed.  When
+     extending a region allocated with calloc(3), realloc(3) does not guaran-
+     tee that the additional memory is also zero-filled.
+
+     The rreeaallllooccff() function is identical to the rreeaalllloocc() function, except
+     that it will free the passed pointer when the requested memory cannot be
+     allocated.  This is a FreeBSD specific API designed to ease the problems
+     with traditional coding styles for realloc causing memory leaks in
+     libraries.
+
+     The ffrreeee() function deallocates the memory allocation pointed to by _p_t_r.
+     _I_f _p_t_r is a NULL pointer, no operation is performed.
+
+RREETTUURRNN VVAALLUUEESS
+     If successful, ccaalllloocc(), mmaalllloocc(), rreeaalllloocc(), rreeaallllooccff(), and vvaalllloocc()
+     functions return a pointer to allocated memory.  If there is an error,
+     they return a NULL pointer and set _e_r_r_n_o to ENOMEM.
+
+     For rreeaalllloocc(), the input pointer is still valid if reallocation failed.
+     For rreeaallllooccff(), the input pointer will have been freed if reallocation
+     failed.
+
+     The ffrreeee() function does not return a value.
+
+DDEEBBUUGGGGIINNGG AALLLLOOCCAATTIIOONN EERRRROORRSS
+     A number of facilities are provided to aid in debugging allocation errors
+     in applications.  These facilities are primarily controlled via environ-
+     ment variables.  The recognized environment variables and their meanings
+     are documented below.
+
+EENNVVIIRROONNMMEENNTT
+     The following environment variables change the behavior of the alloca-
+     tion-related functions.
+
+     MallocLogFile <f>            Create/append messages to the given file
+                                  path _<_f_> instead of writing to the standard
+                                  error.
+
+     MallocGuardEdges             If set, add a guard page before and after
+                                  each large block.
+
+     MallocDoNotProtectPrelude    If set, do not add a guard page before large
+                                  blocks, even if the MallocGuardEdges envi-
+                                  ronment variable is set.
+
+     MallocDoNotProtectPostlude   If set, do not add a guard page after large
+                                  blocks, even if the MallocGuardEdges envi-
+                                  ronment variable is set.
+
+     MallocStackLogging           The default behavior if this is set is to
+                                  record all allocation and deallocation
+                                  events to an on-disk log, along with stacks,
+                                  so that tools like leaks(1) and
+                                  malloc_history(1) can be used.
+
+                                  Set to "vm" to record only allocation of
+                                  virtual memory regions allocated by system
+                                  calls and mach traps, such as by mmap(1)
+
+                                  Set to "malloc" to record only allocations
+                                  via malloc(3) and related interfaces, not
+                                  virtual memory regions.
+
+                                  Set to "lite" to record current allocations
+                                  only, not history.   These are recorded by
+                                  in-memory data structures, instead of an on-
+                                  disk log.
+
+     MallocStackLoggingNoCompact  If set, record all stacks in a manner that
+                                  is compatible with the mmaalllloocc__hhiissttoorryy pro-
+                                  gram.
+
+     MallocStackLoggingDirectory  If set, records stack logs to the directory
+                                  specified instead of saving them to the
+                                  default location (/tmp).
+
+     MallocScribble               If set, fill memory that has been allocated
+                                  with 0xaa bytes.  This increases the likeli-
+                                  hood that a program making assumptions about
+                                  the contents of freshly allocated memory
+                                  will fail.  Also if set, fill memory that
+                                  has been deallocated with 0x55 bytes.  This
+                                  increases the likelihood that a program will
+                                  fail due to accessing memory that is no
+                                  longer allocated.
+
+     MallocCheckHeapStart <s>     If set, specifies the number of allocations
+                                  _<_s_> to wait before begining periodic heap
+                                  checks every _<_n_> as specified by
+                                  MallocCheckHeapEach.  If
+                                  MallocCheckHeapStart is set but
+                                  MallocCheckHeapEach is not specified, the
+                                  default check repetition is 1000.
+
+     MallocCheckHeapEach <n>      If set, run a consistency check on the heap
+                                  every _<_n_> operations.  MallocCheckHeapEach
+                                  is only meaningful if MallocCheckHeapStart
+                                  is also set.
+
+     MallocCheckHeapSleep <t>     Sets the number of seconds to sleep (waiting
+                                  for a debugger to attach) when
+                                  MallocCheckHeapStart is set and a heap cor-
+                                  ruption is detected.  The default is 100
+                                  seconds.  Setting this to zero means not to
+                                  sleep at all.  Setting this to a negative
+                                  number means to sleep (for the positive num-
+                                  ber of seconds) only the very first time a
+                                  heap corruption is detected.
+
+     MallocCheckHeapAbort <b>     When MallocCheckHeapStart is set and this is
+                                  set to a non-zero value, causes abort(3) to
+                                  be called if a heap corruption is detected,
+                                  instead of any sleeping.
+
+     MallocErrorAbort             If set, causes abort(3) to be called if an
+                                  error was encountered in malloc(3) or
+                                  free(3) , such as a calling free(3) on a
+                                  pointer previously freed.
+
+     MallocCorruptionAbort        Similar to MallocErrorAbort but will not
+                                  abort in out of memory conditions, making it
+                                  more useful to catch only those errors which
+                                  will cause memory corruption.  MallocCorrup-
+                                  tionAbort is always set on 64-bit processes.
+
+     MallocHelp                   If set, print a list of environment vari-
+                                  ables that are paid heed to by the alloca-
+                                  tion-related functions, along with short
+                                  descriptions.  The list should correspond to
+                                  this documentation.
+
+DDIIAAGGNNOOSSTTIICC MMEESSSSAAGGEESS
+SSEEEE AALLSSOO
+     leaks(1), malloc_history(1), abort(3), malloc_size(3),
+     malloc_zone_malloc(3), posix_memalign(3), libgmalloc(3)
+
+BSD                              Aug 13, 2008                              BSD
