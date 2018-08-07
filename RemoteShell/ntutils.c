@@ -123,9 +123,8 @@ char* readMSG(struct host* dst,void** payload)
     {
         perror("read payload size: ");
     }
-
-    char* hex = strrchr(buffer,'0');
-    unsigned int payloadSize = (unsigned int)strtol(hex, (char **)NULL, 16);
+    char* hex = strchr(buffer,'x');
+    unsigned int payloadSize = (unsigned int)strtol(hex+1, (char **)NULL, 16);
     fprintf(stderr,"debug: readMSG: payload size hex: %s dec:%u\n",hex,payloadSize);
     *payload = malloc(sizeof(char)*payloadSize);
     if(read(dst->sockfd,*payload,payloadSize)<0)

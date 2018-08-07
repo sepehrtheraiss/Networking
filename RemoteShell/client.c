@@ -34,7 +34,6 @@ int main(int argc,char** argv)
             if((buffer=strchr(cmd,'\n')) != nil )
             {
                 *buffer = 0;
-                
             }
             sendMSG(&rmtHost,cmd,strnlen(cmd,BUFFSIZE)+1);
             if(!e){

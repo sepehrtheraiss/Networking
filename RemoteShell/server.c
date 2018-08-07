@@ -54,20 +54,17 @@ int main(int argc,char** argv)
                     {
                         snprintf(redirect,BUFFSIZE,"%s > %s",buffer,pwd);
                         if(system(redirect) > -1){
-                            fprintf(stderr,"debug: open tmp: %s\n",pwd);
+                            //fprintf(stderr,"debug: open tmp: %s\n",pwd);
                             fd = open(pwd,O_RDONLY);
                             struct stat st;
                             if(fstat(fd,&st)<0)
                             {
                                 perror("fstat: ");
                             }
-                            /*
-                            fprintf(stderr,"debug: st_size: %lld\n",st.st_size);
-                            fprintf(stderr,"debug: st_blocks: %lld\n",st.st_blocks);
-                            fprintf(stderr,"debug: st_uid: %u\n",st.st_uid);
-                            */
                             buffer = realloc(buffer,st.st_size);
                             read(fd,buffer,st.st_size);
+                            puts(buffer);
+                            buffer[st.st_size] = 0;
                             sendMSG(rmtHost,buffer,st.st_size+1);
                             close(fd);
                         }
