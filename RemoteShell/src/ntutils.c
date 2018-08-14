@@ -91,7 +91,7 @@ char* sendMSG(struct host* dst,void* payload,unsigned int size)
     {
         return errors[0];        
     }
-    /* 32 bytes + 0x + /0 */
+    /* 32 bits + 0x + /0 */
     char hex[HEXSIZE+3]={0};   
     char header[HEXSIZE+3]={0};
     snprintf(hex,HEXSIZE,"0x%X",size);
@@ -119,7 +119,7 @@ char* sendMSG(struct host* dst,void* payload,unsigned int size)
 /* dynamically allocates buffer for payload */
 char* readMSG(struct host* dst,void** payload)
 {
-    /* 32 bytes + 0x + /0 */
+    /* 32 bits + 0x + /0 */
     char buffer[HEXSIZE+3];
     if(read(dst->sockfd,buffer,HEXSIZE+3)<0)
     {
