@@ -14,6 +14,7 @@
 #define HEXSIZE 8
 #define MAXHEX 0xFFFFFFFF
 #define BACKLOG 1
+#define MAXCLI  5
 #define TCP 0
 #define UDP 1
 #define CLITCP 3
