@@ -1,6 +1,6 @@
 # Remote Shell
 
-**This program Currently only handle read only commands**
+**This program currently only handles read only commands**
 
 Protocol:
    SendMsg formats a header size of packet in hex format. Max format header size is 32Bytes + 3 bytes 0x and null terminator.
