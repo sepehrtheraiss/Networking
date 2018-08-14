@@ -1,15 +1,5 @@
 #include "../include/ntutils.h"
-/*
-struct host{
-    uint32_t IPv4;
-    uint16_t port;
-    uint8_t proto;
-    int sockfd;
-    struct sockaddr_in addr;
-    char* IPv4Str;
-    char* portStr;
-};
-*/
+
 /* binds scoket return 0 on fail and 1 on success */
 bool initSock(struct host* h)
 {
@@ -63,6 +53,8 @@ bool initSock(struct host* h)
         return true;
 
 }
+
+/* closes all remote hosts */
 void closeRmtHost(struct host* h)
 {
     for(int i =0;i<BACKLOG;i++)
@@ -70,6 +62,7 @@ void closeRmtHost(struct host* h)
         close(h->sockfd);
     }
 }
+
 /* returns forked pid */
 pid_t acceptSession(struct host* src,struct host* dst)
 {
@@ -90,46 +83,61 @@ pid_t acceptSession(struct host* src,struct host* dst)
         return pid;
     }
 }
-/* sends pakcet, if tcp bool on returns error msg on error else udp return nil */
+
+/* formats and sends pakcet */
 char* sendMSG(struct host* dst,void* payload,unsigned int size)
 {
-    /* 4 bytes + /0 */
-    char hex[11]={0};   
-    char packetSize[11]={0};
-    snprintf(hex,11,"0x%X",size);
-    /* left over zeros */
-    memset(packetSize,'0',10-strlen(hex)); 
-    /* offset after extra zeros 0x0 */
-    memcpy(packetSize+(10-strlen(hex)),hex,strlen(hex));
+    if(size > MAXHEX)
+    {
+        return errors[0];        
+    }
+    /* 32 bytes + 0x + /0 */
+    char hex[HEXSIZE+3]={0};   
+    char header[HEXSIZE+3]={0};
+    snprintf(hex,HEXSIZE,"0x%X",size);
+    /* left over zeros prepend 0x */
+    memset(header,'0',(HEXSIZE-2)-strlen(hex)); 
+    /* offset after extra zeros. 0xA append 000 */
+    memcpy(header+((HEXSIZE-2)-strlen(hex)),hex,strlen(hex));
 
     //fprintf(stderr,"debug: sendMSG: hex: %s dec: %d \n",hex,size);
 
-    if(write(dst->sockfd,packetSize,sizeof(packetSize))<0)
+    if(write(dst->sockfd,header,sizeof(header))<0)
     {
         perror("sendMSG write: ");
+        return errors[2];
     }
     //puts(payload);
     if(write(dst->sockfd,payload,size)<0)
     {
         perror("sendMSG write: ");
+        return errors[2];
     }
     return nil;
 }
-/* reads pakcet, if tcp bool on returns error msg on error else udp return nil */
+
+/* dynamically allocates buffer for payload */
 char* readMSG(struct host* dst,void** payload)
 {
-    char buffer[11];
-    if(read(dst->sockfd,buffer,11)<0)
+    /* 32 bytes + 0x + /0 */
+    char buffer[HEXSIZE+3];
+    if(read(dst->sockfd,buffer,HEXSIZE+3)<0)
     {
         perror("read payload size: ");
+        return errors[1];
     }
     char* hex = strchr(buffer,'x');
+    if(*(hex-1) != '0')
+    {
+       return errors[3]; 
+    }
     unsigned int payloadSize = (unsigned int)strtol(hex+1, (char **)NULL, 16);
     //fprintf(stderr,"debug: readMSG: payload size hex: %s dec:%u\n",hex,payloadSize);
     *payload = malloc(sizeof(char)*payloadSize);
     if(read(dst->sockfd,*payload,payloadSize)<0)
     {
         perror("read payload: ");   
+        return errors[1];
     }
     return nil;
 }

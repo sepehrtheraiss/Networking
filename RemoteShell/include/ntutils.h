@@ -11,6 +11,8 @@
 
 #define nil NULL
 #define BUFFSIZE 256
+#define HEXSIZE 8
+#define MAXHEX 0xFFFFFFFF
 #define BACKLOG 1
 #define TCP 0
 #define UDP 1
@@ -19,8 +21,12 @@ typedef int bool;
 #define true 1
 #define false 0
 
-//struct host;
-
+static char errors[4][30]={
+    "payload size exceed",
+    "read error",
+    "write error",
+    "service not implemented"
+};
 struct host{
     uint32_t IPv4;
     uint16_t port;
@@ -37,9 +43,9 @@ bool initSock(struct host* h);
 void closeRmtHost(struct host* h);
 /* returns forked pid */
 pid_t acceptSession(struct host* src, struct host* dst);
-/* sends pakcet, if tcp bool on returns error msg else udp return nil */
+/* formats and sends pakcet */
 char* sendMSG(struct host* dst,void* payload,unsigned int size);
 /* dynamically allocates buffer for payload */
 char* readMSG(struct host* dst,void** payload);
-/* */
+
 #endif

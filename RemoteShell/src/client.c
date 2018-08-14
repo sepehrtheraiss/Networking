@@ -20,6 +20,7 @@ int main(int argc,char** argv)
     char cmd[BUFFSIZE];
     char* buffer;
     bool e = 0;
+    char* err;
     while(!e)
     {
         fputs("client$ ",stdout);
@@ -36,9 +37,13 @@ int main(int argc,char** argv)
             if(strncmp(cmd,"exit",BUFFSIZE) == 0){
                 e = 1;
             }
-            sendMSG(&rmtHost,cmd,strnlen(cmd,BUFFSIZE)+1);
+            if((err=sendMSG(&rmtHost,cmd,strnlen(cmd,BUFFSIZE)+1)) != nil){
+                fprintf(stderr,"%s",err);
+            }
             if(!e){
-                readMSG(&rmtHost,(void**)&buffer);
+                if((err=readMSG(&rmtHost,(void**)&buffer)) != nil){
+                    fprintf(stderr,"%s",err);
+                }
                 puts(buffer);
                 free(buffer);
                 buffer = NULL;

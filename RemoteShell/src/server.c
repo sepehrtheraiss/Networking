@@ -47,7 +47,8 @@ int main(int argc,char** argv)
             while(!e){
                 char* buffer = NULL;
                 char redirect[BUFFSIZE];
-                if(readMSG(rmtHost,(void**)&buffer) == nil)
+                char* err;
+                if((err=readMSG(rmtHost,(void**)&buffer)) == nil)
                 {
                     fprintf(stderr,"[cmd: %s]\n",buffer);
                     if(strcmp(buffer,"exit") != 0)
@@ -63,7 +64,9 @@ int main(int argc,char** argv)
                             buffer = realloc(buffer,st.st_size);
                             read(fd,buffer,st.st_size);
                             buffer[st.st_size] = 0;
-                            sendMSG(rmtHost,buffer,st.st_size+1);
+                            if((err=sendMSG(rmtHost,buffer,st.st_size+1)) != nil){
+                                fprintf(stderr,"%s",err);
+                            }
                             close(fd);
                         }
                         else{
@@ -72,9 +75,16 @@ int main(int argc,char** argv)
                     }
                     else{
                         e = 1;
+                        if(remove(pwd) < 0)
+                        {
+                            perror("remove: ");
+                        }
                     }
                     free(buffer);
                     buffer = NULL;
+                }
+                else{
+                    fprintf(stderr,"%s",err);
                 }
             }
             exit(EXIT_SUCCESS);
