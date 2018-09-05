@@ -28,22 +28,18 @@ static char errors[4][30]={
     "write error",
     "service not implemented"
 };
-struct host{
-    uint32_t IPv4;
-    uint16_t port;
-    uint8_t proto;
-    int sockfd;
-    struct sockaddr_in addr;
-    char* IPv4Str;
-    char* portStr;
-};
 
+struct host;
+/* returns new host, nil on err */
+struct host* initHost(char* ip, char* port, uint8_t proto);
 /* binds scoket */
 bool initSock(struct host* h);
 /* closes all remote hosts */
 void closeRmtHost(struct host* h);
+/* closes socket and frees host */
+void closeHost(struct host* h);
 /* returns forked pid */
-pid_t acceptSession(struct host* src, struct host* dst);
+pid_t acceptSession(struct host* src, struct host** dst);
 /* formats and sends pakcet */
 char* sendMSG(struct host* dst,void* payload,unsigned int size);
 /* dynamically allocates buffer for payload */

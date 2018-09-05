@@ -1,5 +1,40 @@
 #include "../include/ntutils.h"
 
+struct host{
+    uint32_t IPv4;
+    uint16_t port;
+    uint8_t proto : 4;
+    int sockfd;
+    struct sockaddr_in addr;
+    char* IPv4Str;
+    char* portStr;
+    /*
+    void (*closeHosts)();
+    pid_t (*accept)(struct host* src, struct host* dst);
+    char* (*writeTo)(struct host* dst, void* payload, unsigned int size);
+    char* (*readFrom)(struct host* dst, void** payload);
+    void (*close)(struct host* h);
+    */
+};
+
+/* returns new host, nil on err */
+struct host* initHost(char* ip, char* port, uint8_t proto)
+{
+    struct host* h = malloc(sizeof(struct host));
+
+    h->IPv4Str = ip;
+    h->portStr = port;
+    h->proto = proto;
+
+    if (!initSock(h))
+    {
+        fprintf(stderr,"error: initSock()\n");
+        return nil;
+    }
+
+    listen(h->sockfd,BACKLOG);
+    return h;
+}
 /* binds scoket return 0 on fail and 1 on success */
 bool initSock(struct host* h)
 {
@@ -17,10 +52,12 @@ bool initSock(struct host* h)
             default:
                 fprintf(stderr,"[proto invalid]\n");
         }
+
         if(h->sockfd < 0){
             perror("error opening socket");
             return false;
         }
+
         if (!inet_pton(AF_INET,h->IPv4Str,&h->IPv4)){
             perror("inet_pton error");
             return false;
@@ -46,12 +83,14 @@ bool initSock(struct host* h)
                   exit(EXIT_FAILURE);
                }
                 break;
+            case UDP:
+                break;
             default:
                 fprintf(stderr,"proto undefined %i\n",h->proto);
                 return false;
         }
-        return true;
 
+        return true;
 }
 
 /* closes all remote hosts */
@@ -63,11 +102,20 @@ void closeRmtHost(struct host* h)
     }
 }
 
-/* returns forked pid */
-pid_t acceptSession(struct host* src,struct host* dst)
+/* closes socket and frees host */
+void closeHost(struct host* h)
 {
-    socklen_t clilen = sizeof(dst->addr);
-    dst->sockfd = accept(src->sockfd, (struct sockaddr *)&dst->addr, &clilen);
+    close(h->sockfd);
+    free(h);
+    h = nil;
+}
+
+/* returns forked pid */
+pid_t acceptSession(struct host* src,struct host** dst)
+{
+    socklen_t clilen = sizeof((*dst)->addr);
+    *dst = malloc(sizeof(struct host));
+    (*dst)->sockfd = accept(src->sockfd, (struct sockaddr *)&((*dst)->addr), &clilen);
     pid_t pid = fork();
     if(pid != 0)
     {

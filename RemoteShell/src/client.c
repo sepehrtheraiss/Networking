@@ -7,16 +7,13 @@ int main(int argc,char** argv)
         return -1;
     }
 
-    struct host rmtHost = {
-        .IPv4Str = argv[1],
-        .portStr = argv[2],
-        .proto = CLITCP
-    };
-    if (!initSock(&rmtHost))
+    struct host* rmtHost = initHost(argv[1], argv[2], CLITCP);
+    if (rmtHost == nil)
     {
-        fprintf(stderr,"error: initSock()\n");
+        fprintf(stderr,"initHost failed\n");
         return -1;
     }
+
     char cmd[BUFFSIZE];
     char* buffer;
     bool e = 0;
@@ -37,11 +34,11 @@ int main(int argc,char** argv)
             if(strncmp(cmd,"exit",BUFFSIZE) == 0){
                 e = 1;
             }
-            if((err=sendMSG(&rmtHost,cmd,strnlen(cmd,BUFFSIZE)+1)) != nil){
+            if((err=sendMSG(rmtHost,cmd,strnlen(cmd,BUFFSIZE)+1)) != nil){
                 fprintf(stderr,"%s",err);
             }
             if(!e){
-                if((err=readMSG(&rmtHost,(void**)&buffer)) != nil){
+                if((err=readMSG(rmtHost,(void**)&buffer)) != nil){
                     fprintf(stderr,"%s",err);
                 }
                 puts(buffer);
@@ -50,6 +47,6 @@ int main(int argc,char** argv)
             }
         }
     }
-    close(rmtHost.sockfd);
+    closeHost(rmtHost);
     return 0;
 }
