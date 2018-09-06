@@ -127,24 +127,43 @@ pid_t acceptSession(struct host* src,struct host** dst)
 }
 
 /* formats and sends pakcet */
-char* sendMSG(struct host* dst, uint32_t id, uint8_t state, uint32_t size, void* payload)
+bool sendMSG(struct host* dst, uint16_t id, uint8_t state, uint32_t size, void* payload)
 {
-    char packet[BUFFSIZE];
-    snprintf(packet, BUFFSIZE, PCKT(id,state,size,(char*)payload));
-    fprintf(stderr,"packet: %s\n",packet);
-    //fprintf(stderr,PCKT(id,state,size,(char*)payload));
-    if(write(dst->sockfd,packet,BUFFSIZE)<0)
+    char headerSize[BUFFSIZE]={0};
+    char header[BUFFSIZE]={0};
+    char packet[BUFFSIZE]={0};
+
+    int n = snprintf(header, BUFFSIZE, "%i:%i:%i", id, state, size);  
+    if (n >= BUFFSIZE){
+        fprintf(stderr, "header size overflow");
+        return false;
+    }
+
+    snprintf(headerSize, BUFFSIZE, "%i", n);
+    
+    if(write(dst->sockfd,headerSize,BUFFSIZE)<0)
     {
         perror("sendMSG write: ");
-        return errors[2];
+        return false;
     }
-    return nil;
+    if(write(dst->sockfd,header,n)<0)
+    {
+        perror("sendMSG write: ");
+        return false;
+    }
+    if(write(dst->sockfd,payload,size)<0)
+    {
+        perror("sendMSG write: ");
+        return false;
+    }
+
+    return true;
 }
 
 /* stripes header
  * sets id and state
  * returns size of buffer */
-size_t readMSG(struct host* dst,uint32_t* id, uint8_t* state, void* payload)
+int readMSG(struct host* dst,uint32_t* id, uint8_t* state, void* payload)
 {
     int n;
     if((n=read(dst->sockfd,payload,BUFFSIZE)) < 0)
