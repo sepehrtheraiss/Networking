@@ -15,9 +15,13 @@ int main(int argc,char** argv)
     }
 
     char cmd[BUFFSIZE];
-    char* buffer;
+    char* s;
+    char buffer[BUFFSIZE];
     bool e = 0;
+    uint32_t id = 0;
+    uint8_t state; 
     char* err;
+    int n;
     while(!e)
     {
         fputs("client$ ",stdout);
@@ -26,24 +30,22 @@ int main(int argc,char** argv)
             perror("fgets: ");
         }
         else{
-            if((buffer=strchr(cmd,'\n')) != nil )
+            if((s=strchr(cmd,'\n')) != nil )
             {
-                *buffer = 0;
+                *s = 0;
             }
 
             if(strncmp(cmd,"exit",BUFFSIZE) == 0){
                 e = 1;
             }
-            if((err=sendMSG(rmtHost,cmd,strnlen(cmd,BUFFSIZE)+1)) != nil){
+            if((err=sendMSG(rmtHost, id, START, strnlen(cmd,BUFFSIZE), cmd)) != nil){
                 fprintf(stderr,"%s",err);
             }
             if(!e){
-                if((err=readMSG(rmtHost,(void**)&buffer)) != nil){
+                if((n=readMSG(rmtHost,&id,&state,&buffer)) != -1){
                     fprintf(stderr,"%s",err);
                 }
                 puts(buffer);
-                free(buffer);
-                buffer = NULL;
             }
         }
     }

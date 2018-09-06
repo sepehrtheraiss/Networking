@@ -44,55 +44,40 @@ int main(int argc,char** argv)
             }
 
             if(pid == 0){
-                snprintf(pwd,BUFFSIZE,"%s/tmp/tmp.%i",pwd,getpid());
-                int fd = open(pwd, O_CREAT | O_TRUNC |  O_WRONLY, 0000666);
-                if(fd < 0)
-                {
-                    perror("creat tmp: ");
-                    exit(1);
-                }
-                close(fd);
-
                 bool e = 0;
                 while(!e){
-                    char* buffer = NULL;
-                    char redirect[BUFFSIZE];
-                    char* err;
-                    if((err=readMSG(hosts[cli%MAXCLI].rmtHost,(void**)&buffer)) == nil)
+                    FILE* f = NULL;
+                    char buffer[BUFFSIZE];
+                    char* err = nil;
+                    size_t n;
+                    uint32_t id = 0;
+                    uint8_t state;
+
+                    if((n=readMSG(hosts[cli%MAXCLI].rmtHost, &id, &state, buffer)) != -1)
                     {
                         fprintf(stderr,"[cmd: %s]\n",buffer);
                         if(strcmp(buffer,"exit") != 0)
                         {
-                            snprintf(redirect,BUFFSIZE,"%s &> %s",buffer,pwd);
-                            if(system(redirect) > -1){
-                                fd = open(pwd,O_RDONLY);
-                                struct stat st;
-                                if(fstat(fd,&st)<0)
-                                {
-                                    perror("fstat: ");
-                                }
-
-                                buffer = realloc(buffer,st.st_size);
-                                read(fd,buffer,st.st_size);
-                                buffer[st.st_size] = 0;
-                                if((err=sendMSG(hosts[cli%MAXCLI].rmtHost,buffer,st.st_size+1)) != nil){
+                            if((f = popen(buffer,"r")) != nil)
+                            {
+                                if((err=sendMSG(hosts[cli%MAXCLI].rmtHost, id, START, n, buffer)) != nil){
                                     fprintf(stderr,"%s",err);
                                 }
-                                close(fd);
+                                else{
+                                    while(!feof(f)){
+                                        n = fread(buffer, BUFFSIZE, 1, f);
+                                      //  sendMSG(buffer,n);
+                                    }
+                                    pclose(f);
+                                }
                             }
                             else{
-                                perror("system failed");
+                                fprintf(stderr,"popen failed\n");
                             }
                         }
                         else{
                             e = 1;
-                            if(remove(pwd) < 0)
-                            {
-                                perror("remove: ");
-                            }
                         }
-                        free(buffer);
-                        buffer = NULL;
                     }
                     else{
                         fprintf(stderr,"%s",err);

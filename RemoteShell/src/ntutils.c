@@ -8,13 +8,7 @@ struct host{
     struct sockaddr_in addr;
     char* IPv4Str;
     char* portStr;
-    /*
-    void (*closeHosts)();
-    pid_t (*accept)(struct host* src, struct host* dst);
-    char* (*writeTo)(struct host* dst, void* payload, unsigned int size);
-    char* (*readFrom)(struct host* dst, void** payload);
-    void (*close)(struct host* h);
-    */
+    uint8_t state;
 };
 
 /* returns new host, nil on err */
@@ -133,30 +127,13 @@ pid_t acceptSession(struct host* src,struct host** dst)
 }
 
 /* formats and sends pakcet */
-char* sendMSG(struct host* dst,void* payload,unsigned int size)
+char* sendMSG(struct host* dst, uint32_t id, uint8_t state, uint32_t size, void* payload)
 {
-    if(size > MAXHEX)
-    {
-        return errors[0];        
-    }
-    /* 32 bits + 0x + /0 */
-    char hex[HEXSIZE+3]={0};   
-    char header[HEXSIZE+3]={0};
-    snprintf(hex,HEXSIZE,"0x%X",size);
-    /* left over zeros prepend 0x */
-    memset(header,'0',(HEXSIZE-2)-strlen(hex)); 
-    /* offset after extra zeros. 0xA append 000 */
-    memcpy(header+((HEXSIZE-2)-strlen(hex)),hex,strlen(hex));
-
-    //fprintf(stderr,"debug: sendMSG: hex: %s dec: %d \n",hex,size);
-
-    if(write(dst->sockfd,header,sizeof(header))<0)
-    {
-        perror("sendMSG write: ");
-        return errors[2];
-    }
-    //puts(payload);
-    if(write(dst->sockfd,payload,size)<0)
+    char packet[BUFFSIZE];
+    snprintf(packet, BUFFSIZE, PCKT(id,state,size,(char*)payload));
+    fprintf(stderr,"packet: %s\n",packet);
+    //fprintf(stderr,PCKT(id,state,size,(char*)payload));
+    if(write(dst->sockfd,packet,BUFFSIZE)<0)
     {
         perror("sendMSG write: ");
         return errors[2];
@@ -164,28 +141,26 @@ char* sendMSG(struct host* dst,void* payload,unsigned int size)
     return nil;
 }
 
-/* dynamically allocates buffer for payload */
-char* readMSG(struct host* dst,void** payload)
+/* stripes header
+ * sets id and state
+ * returns size of buffer */
+size_t readMSG(struct host* dst,uint32_t* id, uint8_t* state, void* payload)
 {
-    /* 32 bits + 0x + /0 */
-    char buffer[HEXSIZE+3];
-    if(read(dst->sockfd,buffer,HEXSIZE+3)<0)
+    int n;
+    if((n=read(dst->sockfd,payload,BUFFSIZE)) < 0)
     {
-        perror("read payload size: ");
-        return errors[1];
+        perror("read packet: ");   
+        return -1;
     }
-    char* hex = strchr(buffer,'x');
-    if(*(hex-1) != '0')
-    {
-       return errors[3]; 
+
+    char* token;
+    //char** buffer = malloc(sizeof(char*)*4);
+    char* buffer[4];
+    int i =0;
+    while((token=strsep((char**)&payload,":"))!= nil) {
+        buffer[i++] = token;
     }
-    unsigned int payloadSize = (unsigned int)strtol(hex+1, (char **)NULL, 16);
-    //fprintf(stderr,"debug: readMSG: payload size hex: %s dec:%u\n",hex,payloadSize);
-    *payload = malloc(sizeof(char)*payloadSize);
-    if(read(dst->sockfd,*payload,payloadSize)<0)
-    {
-        perror("read payload: ");   
-        return errors[1];
-    }
-    return nil;
+
+    fprintf(stderr,"%s %s %s %s",buffer[0],buffer[1],buffer[2],buffer[3]);
+    return n;
 }
