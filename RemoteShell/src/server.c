@@ -48,39 +48,51 @@ int main(int argc,char** argv)
                 while(!e){
                     FILE* f = NULL;
                     char buffer[BUFFSIZE];
-                    char* err = nil;
                     size_t n;
-                    uint32_t id = 0;
-                    uint8_t state;
+                    uint16_t id = 0;
+                    int state;
 
-                    if((n=readMSG(hosts[cli%MAXCLI].rmtHost, &id, &state, buffer)) != -1)
+                    if((n=readMSG(hosts[cli%MAXCLI].rmtHost, &id, &state, buffer)) > 0)
                     {
                         fprintf(stderr,"[cmd: %s]\n",buffer);
-                        if(strcmp(buffer,"exit") != 0)
-                        {
-                            if((f = popen(buffer,"r")) != nil)
+                        if(state == START){
+                            if(strcmp(buffer,"exit") != 0)
                             {
-                                if((err=sendMSG(hosts[cli%MAXCLI].rmtHost, id, START, n, buffer)) != nil){
-                                    fprintf(stderr,"%s",err);
-                                }
-                                else{
+                                if((f = popen(buffer,"r")) != nil)
+                                {
                                     while(!feof(f)){
                                         n = fread(buffer, BUFFSIZE, 1, f);
-                                      //  sendMSG(buffer,n);
+                                        if(n == 0)
+                                        {
+                                            n = strnlen(buffer, BUFFSIZE);
+                                        }
+                                        sendMSG(hosts[cli%MAXCLI].rmtHost, id++, state, n, buffer);
+
+                                        // change state
+                                        switch(state){
+                                            case START:
+                                                state = CON;
+                                                break;
+                                            case CON:
+                                                break;
+                                            default:
+                                                fprintf(stderr,"Invalid state: %i\n",state);
+                                        }
                                     }
                                     pclose(f);
+                                    state = END;
+                                    sendMSG(hosts[cli%MAXCLI].rmtHost, id, state, 0, buffer);
+                                    id = 0;
+
+                                }
+                                else{
+                                    fprintf(stderr,"popen failed\n");
                                 }
                             }
                             else{
-                                fprintf(stderr,"popen failed\n");
+                                e = 1;
                             }
                         }
-                        else{
-                            e = 1;
-                        }
-                    }
-                    else{
-                        fprintf(stderr,"%s",err);
                     }
                 }
                 exit(EXIT_SUCCESS);

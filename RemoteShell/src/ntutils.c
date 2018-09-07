@@ -11,6 +11,22 @@ struct host{
     uint8_t state;
 };
 
+int stateInt(char* str){
+        if (!strcmp(str,"START"))
+            return START;
+        if (!strcmp(str,"CON"))
+            return CON;
+        if (!strcmp(str,"STOP"))
+            return STOP;
+        if (!strcmp(str,"RETRY"))
+            return RETRY;
+        if (!strcmp(str,"FAILED"))
+            return FAILED;
+        if (!strcmp(str,"END"))
+            return END;
+
+        return -1;
+}
 /* returns new host, nil on err */
 struct host* initHost(char* ip, char* port, uint8_t proto)
 {
@@ -127,25 +143,25 @@ pid_t acceptSession(struct host* src,struct host** dst)
 }
 
 /* formats and sends pakcet */
-bool sendMSG(struct host* dst, uint16_t id, uint8_t state, uint32_t size, void* payload)
+bool sendMSG(struct host* dst, uint16_t id, int state, size_t size, void* payload)
 {
     char headerSize[BUFFSIZE]={0};
     char header[BUFFSIZE]={0};
-    char packet[BUFFSIZE]={0};
 
-    int n = snprintf(header, BUFFSIZE, "%i:%i:%i", id, state, size);  
+    int n = snprintf(header, BUFFSIZE, "%i:%i:%zu", id, state, size);  
     if (n >= BUFFSIZE){
         fprintf(stderr, "header size overflow");
         return false;
     }
 
     snprintf(headerSize, BUFFSIZE, "%i", n);
-    
+    //fprintf(stderr,"headerSize: %s header: %s\n", headerSize, header);
     if(write(dst->sockfd,headerSize,BUFFSIZE)<0)
     {
         perror("sendMSG write: ");
         return false;
     }
+
     if(write(dst->sockfd,header,n)<0)
     {
         perror("sendMSG write: ");
@@ -160,26 +176,55 @@ bool sendMSG(struct host* dst, uint16_t id, uint8_t state, uint32_t size, void* 
     return true;
 }
 
-/* stripes header
+/* 
+ * stripes header
  * sets id and state
- * returns size of buffer */
-int readMSG(struct host* dst,uint32_t* id, uint8_t* state, void* payload)
+ * returns size of buffer 
+ */
+int readMSG(struct host* dst, uint16_t* id, int* state, void* payload)
 {
+
+    char headerSizeStr[BUFFSIZE]={0};
     int n;
-    if((n=read(dst->sockfd,payload,BUFFSIZE)) < 0)
+
+    if((n=read(dst->sockfd,headerSizeStr,BUFFSIZE)) < 0)
+    {
+        perror("read packet: ");   
+        return -1;
+    }
+    
+    size_t headerSize = (size_t)strtol(headerSizeStr, (char**)NULL, 10);
+    char header[headerSize+1];
+    memset(header,0,headerSize+1);
+    if((n=read(dst->sockfd,header,headerSize)) < 0)
     {
         perror("read packet: ");   
         return -1;
     }
 
-    char* token;
-    //char** buffer = malloc(sizeof(char*)*4);
-    char* buffer[4];
-    int i =0;
-    while((token=strsep((char**)&payload,":"))!= nil) {
+    char *token, *string, *tofree;
+    char* buffer[3];
+    int i = 0;
+
+    tofree = string = strdup(header);
+    assert(string != NULL);
+
+    while ((token = strsep(&string, ":")) != nil){
         buffer[i++] = token;
     }
 
-    fprintf(stderr,"%s %s %s %s",buffer[0],buffer[1],buffer[2],buffer[3]);
+    free(tofree);
+
+    //fprintf(stderr,"id: %s state: %s size: %s\n",buffer[0],buffer[1],buffer[2]);
+
+    *state = atoi(buffer[1]);
+    printf("state: %i\n",*state);
+    if((n=read(dst->sockfd,payload,atoi(buffer[2]))) < 0)
+    {
+        perror("read packet: ");   
+        return -1;
+    }
     return n;
 }
+
+

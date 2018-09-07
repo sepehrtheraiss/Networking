@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #define nil NULL
 #define BUFFSIZE 256
@@ -53,7 +54,7 @@ void closeHost(struct host* h);
 pid_t acceptSession(struct host* src, struct host** dst);
 
 /* formats and sends pakcet */
-bool sendMSG(struct host* dst, uint16_t id, uint8_t state, uint32_t size, void* payload);
+bool sendMSG(struct host* dst, uint16_t id, int state, size_t size, void* payload);
 
 /* stripes header
  * sets id and state
@@ -61,6 +62,6 @@ bool sendMSG(struct host* dst, uint16_t id, uint8_t state, uint32_t size, void* 
  * -1 on error
  * 0 indiciates end of packet
  */
-int readMSG(struct host* dst,uint32_t* id, uint8_t* state, void* payload);
+int readMSG(struct host* dst,uint16_t* id, int* state, void* payload);
 
 #endif

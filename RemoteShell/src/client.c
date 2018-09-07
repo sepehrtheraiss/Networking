@@ -17,10 +17,9 @@ int main(int argc,char** argv)
     char cmd[BUFFSIZE];
     char* s;
     char buffer[BUFFSIZE];
-    bool e = 0;
-    uint32_t id = 0;
-    uint8_t state; 
-    char* err;
+    bool e = false;
+    uint16_t id = 0;
+    int state; 
     int n;
     while(!e)
     {
@@ -30,22 +29,23 @@ int main(int argc,char** argv)
             perror("fgets: ");
         }
         else{
-            if((s=strchr(cmd,'\n')) != nil )
-            {
+            if((s=strchr(cmd,'\n')) != nil ){
                 *s = 0;
             }
 
             if(strncmp(cmd,"exit",BUFFSIZE) == 0){
-                e = 1;
+                e = true;
             }
-            if((err=sendMSG(rmtHost, id, START, strnlen(cmd,BUFFSIZE), cmd)) != nil){
-                fprintf(stderr,"%s",err);
-            }
-            if(!e){
-                if((n=readMSG(rmtHost,&id,&state,&buffer)) != -1){
-                    fprintf(stderr,"%s",err);
+            if(sendMSG(rmtHost, id, START, strnlen(cmd,BUFFSIZE), cmd)){
+                state = START;
+                if(!e){
+                    while(state != END){
+                        if((n=readMSG(rmtHost,&id,&state,&buffer)) > 0){
+                            puts(buffer);
+                        }
+                        printf("state: %i\n",state);
+                    }
                 }
-                puts(buffer);
             }
         }
     }
