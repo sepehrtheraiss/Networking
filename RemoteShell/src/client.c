@@ -16,7 +16,7 @@ int main(int argc,char** argv)
 
     char cmd[BUFFSIZE];
     char* s;
-    char buffer[BUFFSIZE];
+    char buffer[BUFFSIZE+1];
     bool e = false;
     uint16_t id = 0;
     int state; 
@@ -24,6 +24,7 @@ int main(int argc,char** argv)
     while(!e)
     {
         fputs("client$ ",stdout);
+        memset(buffer,0,BUFFSIZE);
         if(!fgets(cmd,BUFFSIZE,stdin))
         {
             perror("fgets: ");
@@ -40,10 +41,9 @@ int main(int argc,char** argv)
                 state = START;
                 if(!e){
                     while(state != END){
-                        if((n=readMSG(rmtHost,&id,&state,&buffer)) > 0){
-                            puts(buffer);
+                        if((n=readMSG(rmtHost, &id, &state, &buffer)) > 0){
+                            write(1, buffer, n);
                         }
-                        printf("state: %i\n",state);
                     }
                 }
             }

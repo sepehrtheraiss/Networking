@@ -194,6 +194,7 @@ int readMSG(struct host* dst, uint16_t* id, int* state, void* payload)
     }
     
     size_t headerSize = (size_t)strtol(headerSizeStr, (char**)NULL, 10);
+    // need null terminator for strsep
     char header[headerSize+1];
     memset(header,0,headerSize+1);
     if((n=read(dst->sockfd,header,headerSize)) < 0)
@@ -213,16 +214,18 @@ int readMSG(struct host* dst, uint16_t* id, int* state, void* payload)
         buffer[i++] = token;
     }
 
+    *state = atoi(buffer[1]);
     free(tofree);
 
     //fprintf(stderr,"id: %s state: %s size: %s\n",buffer[0],buffer[1],buffer[2]);
 
-    *state = atoi(buffer[1]);
-    printf("state: %i\n",*state);
-    if((n=read(dst->sockfd,payload,atoi(buffer[2]))) < 0)
-    {
-        perror("read packet: ");   
-        return -1;
+    n = 0;
+    if(*state != END){
+        if((n=read(dst->sockfd,payload,atoi(buffer[2]))) < 0)
+        {
+            perror("read packet: ");   
+            return -1;
+        }
     }
     return n;
 }

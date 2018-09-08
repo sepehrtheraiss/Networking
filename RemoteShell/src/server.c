@@ -47,25 +47,24 @@ int main(int argc,char** argv)
                 bool e = 0;
                 while(!e){
                     FILE* f = NULL;
-                    char buffer[BUFFSIZE];
+                    char buffer[BUFFSIZE+1];
                     size_t n;
                     uint16_t id = 0;
                     int state;
 
                     if((n=readMSG(hosts[cli%MAXCLI].rmtHost, &id, &state, buffer)) > 0)
                     {
+                        buffer[n]=0;
                         fprintf(stderr,"[cmd: %s]\n",buffer);
                         if(state == START){
                             if(strcmp(buffer,"exit") != 0)
                             {
                                 if((f = popen(buffer,"r")) != nil)
                                 {
-                                    while(!feof(f)){
-                                        n = fread(buffer, BUFFSIZE, 1, f);
-                                        if(n == 0)
-                                        {
-                                            n = strnlen(buffer, BUFFSIZE);
-                                        }
+                                    //memset(buffer,0,BUFFSIZE);
+                                    while(!feof(f) && !ferror(f)){
+
+                                        n = fread(buffer, 1, BUFFSIZE, f);
                                         sendMSG(hosts[cli%MAXCLI].rmtHost, id++, state, n, buffer);
 
                                         // change state
@@ -81,7 +80,7 @@ int main(int argc,char** argv)
                                     }
                                     pclose(f);
                                     state = END;
-                                    sendMSG(hosts[cli%MAXCLI].rmtHost, id, state, 0, buffer);
+                                    sendMSG(hosts[cli%MAXCLI].rmtHost, id, state, 0, nil);
                                     id = 0;
 
                                 }
