@@ -24,7 +24,6 @@ int stateInt(char* str){
             return FAILED;
         if (!strcmp(str,"END"))
             return END;
-
         return -1;
 }
 /* returns new host, nil on err */
@@ -103,15 +102,6 @@ bool initSock(struct host* h)
         return true;
 }
 
-/* closes all remote hosts */
-void closeRmtHost(struct host* h)
-{
-    for(int i =0;i<BACKLOG;i++)
-    {
-        close(h->sockfd);
-    }
-}
-
 /* closes socket and frees host */
 void closeHost(struct host* h)
 {
@@ -155,7 +145,6 @@ bool sendMSG(struct host* dst, uint16_t id, int state, size_t size, void* payloa
     }
 
     snprintf(headerSize, BUFFSIZE, "%i", n);
-    //fprintf(stderr,"headerSize: %s header: %s\n", headerSize, header);
     if(write(dst->sockfd,headerSize,BUFFSIZE)<0)
     {
         perror("sendMSG write: ");
@@ -176,10 +165,11 @@ bool sendMSG(struct host* dst, uint16_t id, int state, size_t size, void* payloa
     return true;
 }
 
-/* 
- * stripes header
+/* stripes header
  * sets id and state
- * returns size of buffer 
+ * returns size of buffer
+ * -1 on error
+ * 0 indiciates end of packet
  */
 int readMSG(struct host* dst, uint16_t* id, int* state, void* payload)
 {

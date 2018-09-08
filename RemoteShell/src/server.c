@@ -61,7 +61,6 @@ int main(int argc,char** argv)
                             {
                                 if((f = popen(buffer,"r")) != nil)
                                 {
-                                    //memset(buffer,0,BUFFSIZE);
                                     while(!feof(f) && !ferror(f)){
 
                                         n = fread(buffer, 1, BUFFSIZE, f);

@@ -12,9 +12,6 @@
 
 #define nil NULL
 #define BUFFSIZE 256
-#define BUFFCHR 4
-#define HEXSIZE 8
-#define MAXHEX 0xFFFFFFFF
 #define BACKLOG 1
 #define MAXCLI  5
 #define TCP 0
@@ -23,17 +20,11 @@
 typedef int bool;
 #define true 1
 #define false 0
+
 /* protocol */
 enum protocol {
     START, CON, STOP,
     RETRY, FAILED, END
-};
-
-static char errors[4][30]={
-    "payload size exceed",
-    "read error",
-    "write error",
-    "service not implemented"
 };
 
 struct host;

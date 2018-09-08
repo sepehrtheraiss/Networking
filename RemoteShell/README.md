@@ -1,14 +1,12 @@
 # Remote Shell
 
-**This program currently only handles read only commands**
+**This program currently handles read only commands**
 
 #### Protocol:  
-  * SendMsg formats a header size of packet in hex format.  
-  * Max format header size is 8 + 3 Bytes 0x and null terminator.  
-  * Unoccupied space in format header is padded with zeros prepended to 0x.  
-  * Max packet size is 11 Bytes.  
-  * ReadMsg finds the first occurance of 'x' then examines the rest of header format.  
-
+  * A header consist of packet ID, state and size of payload seperated by ':' 
+  * After header is created a header size pakcet consist of size of header will be preppend to header.(header size will always be size of BUFFSIZE, filled with \0)
+  * After header the payload is send
+  * Example: 5 0:0:2 ls
 #### Files:
 
     Makefile
@@ -22,3 +20,6 @@
     ntutils.c
     server.c
 
+TODO: 
+    * optimize header size packet to be max of header size. i.e less than BUFFSIZE
+    * handle signals such has Control-C for htop to resume 
