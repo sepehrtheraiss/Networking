@@ -1,4 +1,4 @@
-FLAG = -std=c99 -Wall
+FLAG = -std=gnu99 -Wall
 SRC  = server.c ntutils.c
 EXE  = bin/server bin/client
 

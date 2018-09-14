@@ -213,7 +213,7 @@ int readMSG(struct host* dst, uint16_t* id, int* state, void* payload)
     *state = atoi(buffer[1]);
     free(tofree);
 
-    //fprintf(stderr,"id: %s state: %s size: %s\n",buffer[0],buffer[1],buffer[2]);
+    fprintf(stderr,"id: %s state: %s size: %s\n",buffer[0],buffer[1],buffer[2]);
 
     n = 0;
     if(*state != END){
