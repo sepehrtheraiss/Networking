@@ -145,17 +145,20 @@ bool sendMSG(struct host* dst, uint16_t id, int state, size_t size, void* payloa
     }
 
     snprintf(headerSize, BUFFSIZE, "%i", n);
+    printf("write: headerSize: %s\n",headerSize);
     if(write(dst->sockfd,headerSize,BUFFSIZE)<0)
     {
         perror("sendMSG write: ");
         return false;
     }
 
+    printf("write: header: %s\n",headerSize);
     if(write(dst->sockfd,header,n)<0)
     {
         perror("sendMSG write: ");
         return false;
     }
+    printf("write: payload: %s\n",headerSize);
     if(write(dst->sockfd,payload,size)<0)
     {
         perror("sendMSG write: ");
@@ -182,6 +185,7 @@ int readMSG(struct host* dst, uint16_t* id, int* state, void* payload)
         perror("read packet: ");   
         return -1;
     }
+    printf("read: headerSizeStr :%s\n",headerSizeStr);
     
     size_t headerSize = (size_t)strtol(headerSizeStr, (char**)NULL, 10);
     // need null terminator for strsep
@@ -193,6 +197,7 @@ int readMSG(struct host* dst, uint16_t* id, int* state, void* payload)
         return -1;
     }
 
+    printf("read: header: %s\n",header);
     char *token, *string, *tofree;
     char* buffer[3];
     int i = 0;
@@ -202,6 +207,7 @@ int readMSG(struct host* dst, uint16_t* id, int* state, void* payload)
 
     while ((token = strsep(&string, ":")) != nil){
         buffer[i++] = token;
+        printf("buffer: %s\n",buffer[i-1]);
     }
 
     *state = atoi(buffer[1]);
