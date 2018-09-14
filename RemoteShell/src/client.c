@@ -42,7 +42,6 @@ int main(int argc,char** argv)
                 state = START;
                 if(!e){
                     while(state != END){
-                        printf("read\n");
                         if((n=readMSG(rmtHost, &id, &state, &buffer)) > 0){
                             write(1, buffer, n);
                         }

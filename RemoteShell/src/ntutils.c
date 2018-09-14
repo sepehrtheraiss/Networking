@@ -145,20 +145,26 @@ bool sendMSG(struct host* dst, uint16_t id, int state, size_t size, void* payloa
     }
 
     snprintf(headerSize, BUFFSIZE, "%i", n);
-    printf("write: headerSize: %s\n",headerSize);
+    #if DEBUG
+        printf("write: headerSize: %s\n",headerSize);
+    #endif 
     if(write(dst->sockfd,headerSize,BUFFSIZE)<0)
     {
         perror("sendMSG write: ");
         return false;
     }
 
-    printf("write: header: %s\n",headerSize);
+    #if DEBUG
+        printf("write: header: %s\n",header);
+    #endif
     if(write(dst->sockfd,header,n)<0)
     {
         perror("sendMSG write: ");
         return false;
     }
-    printf("write: payload: %s\n",headerSize);
+    #if DEBUG
+        printf("write: payload: %s\n",(char*)payload);
+    #endif
     if(write(dst->sockfd,payload,size)<0)
     {
         perror("sendMSG write: ");
@@ -185,8 +191,10 @@ int readMSG(struct host* dst, uint16_t* id, int* state, void* payload)
         perror("read packet: ");   
         return -1;
     }
-    printf("read: headerSizeStr :%s\n",headerSizeStr);
-    
+    #if DEBUG
+        printf("read: headerSizeStr: %s\n",headerSizeStr);
+    #endif
+
     size_t headerSize = (size_t)strtol(headerSizeStr, (char**)NULL, 10);
     // need null terminator for strsep
     char header[headerSize+1];
@@ -196,8 +204,10 @@ int readMSG(struct host* dst, uint16_t* id, int* state, void* payload)
         perror("read packet: ");   
         return -1;
     }
+    #if DEBUG
+        printf("read: header: %s\n",header);
+    #endif
 
-    printf("read: header: %s\n",header);
     char *token, *string, *tofree;
     char* buffer[3];
     int i = 0;
@@ -207,15 +217,13 @@ int readMSG(struct host* dst, uint16_t* id, int* state, void* payload)
 
     while ((token = strsep(&string, ":")) != nil){
         buffer[i++] = token;
-        printf("buffer: %s\n",buffer[i-1]);
     }
-
-    *state = atoi(buffer[1]);
-    free(tofree);
-
-    fprintf(stderr,"id: %s state: %s size: %s\n",buffer[0],buffer[1],buffer[2]);
+    #if DEBUG
+        fprintf(stderr,"id: %s state: %s size: %s\n",buffer[0],buffer[1],buffer[2]);
+    #endif
 
     n = 0;
+    *state = atoi(buffer[1]);
     if(*state != END){
         if((n=read(dst->sockfd,payload,atoi(buffer[2]))) < 0)
         {
@@ -223,6 +231,7 @@ int readMSG(struct host* dst, uint16_t* id, int* state, void* payload)
             return -1;
         }
     }
+    free(tofree);
     return n;
 }
 
