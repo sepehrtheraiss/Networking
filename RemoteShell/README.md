@@ -21,5 +21,5 @@
     server.c
 
 TODO: 
-    * optimize header size packet to be max of header size. i.e less than BUFFSIZE
-    * handle signals such has Control-C for htop to resume 
+  * Optimize header size packet to be max of header size. i.e less than BUFFSIZE.
+  * Handle signals such as Control-C for htop to resume.
