@@ -26,11 +26,18 @@ while data != '0':
 
     if data  == '2':
         print >>sys.stderr, "\n\n+[2] Large file selected"
-        system("python udp_bigfileS.py")
+        stat = system("python udp_bigfileS.py")
+        print >>sys.stderr, "status: %s" %stat
 
     if data == '3':
-        print "[3] UDP using Write instead of sendto selected"
-        system("./udpWrite")
+        print >>sys.stderr, "\n\n+[3] UDP using Write instead of sendto selected"
+        stat = system("python udp_quickMsgSWrite.py")
+        print >>sys.stderr, "status: %s" %stat
+
+    if data == '4':
+        print "\n\n+[4] UDP using Write instead of sendto selected"
+        stat = system("python udp_bigfileSWrite.py")
+        print >>sys.stderr, "status: %s" %stat
 
 print >>sys.stderr, "closing"
 sock.close()

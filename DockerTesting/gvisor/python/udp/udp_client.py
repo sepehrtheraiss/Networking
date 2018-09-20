@@ -22,8 +22,16 @@ while msg != '0':
             print >>sys.stderr, "\n+[1] Quick response selected"
             system("python udp_clientQuickMsg.py")
         if msg == '2':
-            print >>sys.stderr, "\n[2] Large file"
+            print >>sys.stderr, "\n[2] Large file selected"
             system("python udp_clientBigfile.py")
+
+        if msg == '3':
+            print >>sys.stderr, "\n+[3] UDP using Write instead of sendto (quick msg) selected"
+            system("python udp_clientQuickMsg.py")
+        if msg == '4':
+            print >>sys.stderr, "\n+[4] UDP using Write instead of sendto (large file) selected"
+            system("python udp_clientBigfile.py")
+
     except Exception as e:
         print >>sys.stderr,e
 
