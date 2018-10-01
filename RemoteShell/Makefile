@@ -1,8 +1,11 @@
 FLAG = -std=gnu99 -Wall
 SRC  = server.c ntutils.c
 EXE  = bin/server bin/client
+SH   = $(shell if [ ! -d "bin" ] && [ ! -d "obj" ]; then\
+	mkdir bin obj;\
+	fi)
 
-all: $(EXE)
+all: $(EXE) $(SH)
 
 bin/server: obj/server.o obj/ntutils.o
 	cc -o bin/server obj/server.o obj/ntutils.o 
